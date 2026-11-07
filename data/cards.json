@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-11-07",
-  "_comment": "やることカードの定義。1カード1行動、専門用語なし、断定しない。根拠（sources）の無い行動は書かない。URL・電話番号は開発者が承認した公式のものだけ。",
+  "_comment": "やることカードの定義。1カード1行動、専門用語なし、断定しない。根拠（sources）の無い行動は書かない。URL・電話番号は開発者が承認した公式のものだけ。 reason=その行動が必要な理由（1文）、minutes=所要時間の目安、info_types.urgency=並び順（1が最優先）。",
   "sources": {
     "ipa-2026-10-26": {
       "title": "IPA「自分の個人情報等が漏えいした際の『対処』と『日頃の対策』」",
@@ -41,254 +41,434 @@
   },
   "official_contacts": {
     "_comment": "カードに表示してよい公式の連絡先。開発者が承認したものだけ追加する。verified_on が null のものは表示前に要確認。",
-    "intl-call-stop": { "label": "国際電話不取扱受付センター（固定電話の国際電話を止める。通話料無料）", "phone": "0120-210-364", "url": "https://www.kokusai-teishi.com/", "hours": "オペレーター 平日9:00〜17:00、自動音声 24時間", "verified_on": "2026-11-07", "verified_via": "公式サイト、総務省FAQ、警視庁 都民向け資料 p.3。NTT東西の回線は2025年6月からNTT東西でも発着信の休止を一括受付" },
-    "mynumber-call": { "label": "マイナンバー総合フリーダイヤル（通話料無料）", "phone": "0120-95-0178", "url": "https://www.digital.go.jp/policies/mynumber_contact", "hours": "平日9:30〜20:00、土日祝9:30〜17:30（年末年始除く）", "verified_on": "2026-11-07", "verified_via": "デジタル庁「マイナンバー制度に関するお問合せ」" },
-    "police-consult": { "label": "警察相談専用電話（通話料がかかります）", "phone": "#9110", "url": "https://www.npa.go.jp/goiken_index.html", "hours": "平日8:30〜17:15が目安（都道府県警察で異なる）", "verified_on": "2026-11-07", "verified_via": "警察庁「ご意見・ご要望等」ページ" },
-    "consumer-hotline": { "label": "消費者ホットライン（相談は無料。通話料がかかります）", "phone": "188", "url": "https://www.caa.go.jp/policies/policy/local_cooperation/local_consumer_administration/hotline/", "hours": "最寄りの消費生活センターにつながる（窓口により異なる）", "verified_on": "2026-11-07", "verified_via": "消費者庁「消費者ホットライン」ページ" },
-    "jicc": { "label": "日本信用情報機構（JICC）本人申告", "phone": null, "url": "https://www.jicc.co.jp/comment", "verified_on": "2026-11-07" },
-    "cic": { "label": "シー・アイ・シー（CIC）本人申告", "phone": null, "url": "https://www.cic.co.jp/guide/statements/", "verified_on": "2026-11-07" },
-    "ksc": { "label": "全国銀行個人信用情報センター 本人申告", "phone": null, "url": "https://www.zenginkyo.or.jp/pcic/return/", "verified_on": "2026-11-07" },
-    "ipa-anshin": { "label": "IPA 情報セキュリティ安心相談窓口", "phone": null, "url": "https://www.ipa.go.jp/security/anshin/about.html", "verified_on": "2026-11-07" }
+    "intl-call-stop": {
+      "label": "国際電話不取扱受付センター（固定電話の国際電話を止める。通話料無料）",
+      "phone": "0120-210-364",
+      "url": "https://www.kokusai-teishi.com/",
+      "hours": "オペレーター 平日9:00〜17:00、自動音声 24時間",
+      "verified_on": "2026-11-07",
+      "verified_via": "公式サイト、総務省FAQ、警視庁 都民向け資料 p.3。NTT東西の回線は2025年6月からNTT東西でも発着信の休止を一括受付"
+    },
+    "mynumber-call": {
+      "label": "マイナンバー総合フリーダイヤル（通話料無料）",
+      "phone": "0120-95-0178",
+      "url": "https://www.digital.go.jp/policies/mynumber_contact",
+      "hours": "平日9:30〜20:00、土日祝9:30〜17:30（年末年始除く）",
+      "verified_on": "2026-11-07",
+      "verified_via": "デジタル庁「マイナンバー制度に関するお問合せ」"
+    },
+    "police-consult": {
+      "label": "警察相談専用電話（通話料がかかります）",
+      "phone": "#9110",
+      "url": "https://www.npa.go.jp/goiken_index.html",
+      "hours": "平日8:30〜17:15が目安（都道府県警察で異なる）",
+      "verified_on": "2026-11-07",
+      "verified_via": "警察庁「ご意見・ご要望等」ページ"
+    },
+    "consumer-hotline": {
+      "label": "消費者ホットライン（相談は無料。通話料がかかります）",
+      "phone": "188",
+      "url": "https://www.caa.go.jp/policies/policy/local_cooperation/local_consumer_administration/hotline/",
+      "hours": "最寄りの消費生活センターにつながる（窓口により異なる）",
+      "verified_on": "2026-11-07",
+      "verified_via": "消費者庁「消費者ホットライン」ページ"
+    },
+    "jicc": {
+      "label": "日本信用情報機構（JICC）本人申告",
+      "phone": null,
+      "url": "https://www.jicc.co.jp/comment",
+      "verified_on": "2026-11-07"
+    },
+    "cic": {
+      "label": "シー・アイ・シー（CIC）本人申告",
+      "phone": null,
+      "url": "https://www.cic.co.jp/guide/statements/",
+      "verified_on": "2026-11-07"
+    },
+    "ksc": {
+      "label": "全国銀行個人信用情報センター 本人申告",
+      "phone": null,
+      "url": "https://www.zenginkyo.or.jp/pcic/return/",
+      "verified_on": "2026-11-07"
+    },
+    "ipa-anshin": {
+      "label": "IPA 情報セキュリティ安心相談窓口",
+      "phone": null,
+      "url": "https://www.ipa.go.jp/security/anshin/about.html",
+      "verified_on": "2026-11-07"
+    }
   },
   "always_first_card": {
     "id": "first-no-links",
     "title": "{service}を名乗るメール・SMSのリンクは押さない",
     "detail": "漏えいのあとは、その会社を名乗る「おわび」「返金」「ポイント進呈」などのニセメールが出回ります。メールやSMSの中のリンクは押さず、確認したいときはアプリか、自分で検索して開いた公式サイトから行います。",
-    "sources": ["ipa-2026-10-26"],
-    "reopen_on_confirm": false
+    "sources": [
+      "ipa-2026-10-26"
+    ],
+    "reopen_on_confirm": false,
+    "reason": "漏えいのあとは、その会社を名乗るニセのメールやSMSが増えるためです。",
+    "minutes": 1
   },
   "info_types": [
     {
       "key": "credentials",
       "label": "ID・パスワード",
-      "matches": ["credentials", "password"],
+      "matches": [
+        "credentials",
+        "password"
+      ],
       "cards": [
         {
           "id": "cred-change-password",
           "title": "{service}のパスワードを変える",
           "detail": "アプリか、自分で検索して開いた公式サイトから変えます。長くて、他で使っていないものにします。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "漏れたパスワードでサービスに入られるのを防ぐためです。",
+          "minutes": 5
         },
         {
           "id": "cred-change-reused",
           "title": "同じパスワードを使っている他のサービスも変える",
           "detail": "銀行、通販、メールなど、同じパスワードを使い回しているところがあれば、そちらも変えます。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "同じパスワードを使っている別のサービスに入られるのを防ぐためです。",
+          "minutes": 10
         },
         {
           "id": "cred-enable-2fa",
-          "title": "二段階認証（ログイン時の確認コード）を設定する",
-          "detail": "設定できるサービスでは、ログインのときにスマホに届く確認コードや「パスキー」を使うようにします。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "title": "確認コードを使う設定（二段階認証）をする",
+          "detail": "設定できるサービスでは、サービスに入るときにスマホに届く確認コードや「パスキー」を使うようにします。",
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "パスワードが知られても、確認コードがなければ入れなくするためです。",
+          "minutes": 5
         }
       ],
       "skip_if": [
         "会社がすでにパスワードを無効化（強制リセット）している場合は、次にログインするときに新しいパスワードを設定すれば足ります。別途変える必要はありません。"
       ],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 2
     },
     {
       "key": "credit_card",
       "label": "クレジットカード番号",
-      "matches": ["credit_card"],
+      "matches": [
+        "credit_card"
+      ],
       "cards": [
         {
           "id": "card-call-issuer",
           "title": "カード裏面の電話番号に電話して、停止・再発行を相談する",
           "detail": "電話番号は、自分のカードの裏面に書いてあるものを使います。身に覚えのない利用がないかも一緒に確認してもらいます。",
-          "sources": ["ipa-2026-10-26", "mpd-tomin"],
-          "reopen_on_confirm": true
+          "sources": [
+            "ipa-2026-10-26",
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": true,
+          "reason": "カード番号が使われる前に止めるためです。",
+          "minutes": 10
         },
         {
           "id": "card-check-statement",
           "title": "しばらくのあいだ、利用明細を確認する",
           "detail": "数か月は明細を見て、身に覚えのない支払いがないか確認します。あればカード会社に連絡します。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "身に覚えのない支払いに早く気づくためです。",
+          "minutes": 3
         },
         {
           "id": "card-ignore-auth",
           "title": "身に覚えのない「本人確認」「認証コード」の連絡には応じない",
           "detail": "買い物をしていないのに認証コードや本人確認の連絡が来たら、不正利用の途中かもしれません。応じずにカード会社に連絡します。",
-          "sources": ["mpd-tomin"],
-          "reopen_on_confirm": false
+          "sources": [
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "不正利用の途中で送られてくる確認に応じてしまうのを防ぐためです。",
+          "minutes": 1
         }
       ],
       "skip_if": [
         "会社がすでにカードの差し替え（再発行）を案内している場合は、その案内に従えば足ります。自分からも重ねて手続きする必要はありません。"
       ],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 1
     },
     {
       "key": "contact",
       "label": "メールアドレス・電話番号・住所・氏名",
-      "matches": ["email", "phone", "address", "name", "birthdate"],
+      "matches": [
+        "email",
+        "phone",
+        "address",
+        "name",
+        "birthdate"
+      ],
       "cards": [
         {
           "id": "contact-ignore-messages",
           "title": "突然届くメール・SMSは詐欺と考え、開かず削除する",
           "detail": "リンクを押さない、返信しない、書いてある番号にかけない。画像になっているリンクも同じです。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "漏れた連絡先に、本物そっくりの詐欺メールが届くためです。",
+          "minutes": 1
         },
         {
           "id": "contact-stop-intl-calls",
           "title": "知らない番号、特に「+」で始まる国際電話には出ない",
           "detail": "固定電話は、国際電話の発着信を無料で止めることができます。下の窓口に申し込みます（NTTの回線を使っている人は、NTTでも受け付けています）。",
           "contact": "intl-call-stop",
-          "sources": ["mpd-tomin"],
-          "reopen_on_confirm": false
+          "sources": [
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "詐欺電話の多くが国際電話からかかってくるためです。",
+          "minutes": 5
         },
         {
           "id": "contact-refuse-parcels",
           "title": "身に覚えのない郵便物・着払いの荷物は受け取らない",
           "detail": "頼んでいない着払いは、その場で受け取りを断ります。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "漏れた住所に、頼んでいない着払いが送りつけられることがあるためです。",
+          "minutes": 1
         }
       ],
       "skip_if": [],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 3
     },
     {
       "key": "id_document",
       "label": "運転免許証などの本人確認書類の画像",
-      "matches": ["id_document_image"],
+      "matches": [
+        "id_document_image"
+      ],
       "cards": [
         {
           "id": "iddoc-self-declare",
           "title": "信用情報機関に「本人申告」をする",
           "detail": "「自分の本人確認書類が漏れたおそれがある」と登録しておくと、他人が勝手にローンやカードを申し込むのを防ぐ助けになります。3つの機関があり、それぞれ申告できます。",
-          "contact_list": ["jicc", "cic", "ksc"],
-          "sources": ["ipa-2026-10-26", "atmarkit-2026-11-02"],
-          "reopen_on_confirm": true
+          "contact_list": [
+            "jicc",
+            "cic",
+            "ksc"
+          ],
+          "sources": [
+            "ipa-2026-10-26",
+            "atmarkit-2026-11-02"
+          ],
+          "reopen_on_confirm": true,
+          "reason": "他人があなたの名前でローンやカードを申し込むのを防ぐ助けになるためです。",
+          "minutes": 15
         },
         {
           "id": "iddoc-unknown-contract",
           "title": "身に覚えのない契約書や請求が届いたら、送付元と警察に連絡する",
           "detail": "自分名義で勝手に契約された可能性があります。送ってきた会社と警察相談専用電話に連絡します。",
           "contact": "police-consult",
-          "sources": ["mpd-tomin", "atmarkit-2026-11-02"],
-          "reopen_on_confirm": false
+          "sources": [
+            "mpd-tomin",
+            "atmarkit-2026-11-02"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "自分名義で勝手に契約された可能性に早く気づくためです。",
+          "minutes": 5
         }
       ],
       "skip_if": [
         "すでに信用情報機関に本人申告をした人は、出し直す必要はありません。"
       ],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 1
     },
     {
       "key": "bank_account",
       "label": "銀行口座",
-      "matches": ["bank_account"],
+      "matches": [
+        "bank_account"
+      ],
       "cards": [
         {
           "id": "bank-contact",
           "title": "銀行に連絡して、事情を伝えて相談する",
           "detail": "通帳やキャッシュカードに書いてある銀行の番号にかけます。口座番号が漏れたおそれがあることを伝え、どうすればよいか相談します。",
-          "sources": ["atmarkit-2026-11-02", "mpd-tomin"],
-          "reopen_on_confirm": true
+          "sources": [
+            "atmarkit-2026-11-02",
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": true,
+          "reason": "口座が不正に使われていないか、銀行に見てもらうためです。",
+          "minutes": 10
         },
         {
           "id": "bank-change-password",
           "title": "ネットバンキングのパスワードを変える",
           "detail": "アプリか、自分で検索して開いた公式サイトから変えます。",
-          "sources": ["atmarkit-2026-11-02"],
-          "reopen_on_confirm": false
+          "sources": [
+            "atmarkit-2026-11-02"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "ネットバンキングに入られるのを防ぐためです。",
+          "minutes": 5
         },
         {
           "id": "bank-check-history",
           "title": "入出金の履歴を確認する",
           "detail": "身に覚えのない出金があれば、すぐ銀行に連絡します。",
-          "sources": ["atmarkit-2026-11-02", "mpd-tomin"],
-          "reopen_on_confirm": false
+          "sources": [
+            "atmarkit-2026-11-02",
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "身に覚えのない出金に早く気づくためです。",
+          "minutes": 3
         }
       ],
       "skip_if": [],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 1
     },
     {
       "key": "my_number",
       "label": "マイナンバー",
-      "matches": ["my_number"],
+      "matches": [
+        "my_number"
+      ],
       "cards": [
         {
           "id": "mynumber-consult",
           "title": "市区町村の窓口か、マイナンバー総合フリーダイヤルに相談する",
           "detail": "どうすればよいかを、まず相談します。",
           "contact": "mynumber-call",
-          "sources": ["atmarkit-2026-11-02", "gov-online-mynumber"],
-          "reopen_on_confirm": true
+          "sources": [
+            "atmarkit-2026-11-02",
+            "gov-online-mynumber"
+          ],
+          "reopen_on_confirm": true,
+          "reason": "どうすればよいかを、公式の窓口に確認するためです。",
+          "minutes": 10
         },
         {
           "id": "mynumber-change",
           "title": "不正に使われるおそれがあるときは、番号の変更を相談する",
           "detail": "マイナンバーは、不正に使われるおそれがある場合に限って変更できます。変えるかどうかは窓口で相談して決めます。",
-          "sources": ["atmarkit-2026-11-02", "gov-online-mynumber"],
-          "reopen_on_confirm": false
+          "sources": [
+            "atmarkit-2026-11-02",
+            "gov-online-mynumber"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "不正に使われるおそれがあるときだけ、番号を変えられるためです。",
+          "minutes": 10
         }
       ],
       "skip_if": [],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 1
     },
     {
       "key": "assets_family",
       "label": "金融資産・家族構成（住所とあわせて）",
-      "matches": ["financial_assets", "family_composition"],
+      "matches": [
+        "financial_assets",
+        "family_composition"
+      ],
       "cards": [
         {
           "id": "assets-door",
           "title": "訪問業者が来ても、ドアを開けずに対応する",
           "detail": "インターホン越しに話します。「点検」「買い取り」「役所から」と言われても同じです。",
-          "sources": ["mpd-tomin"],
-          "reopen_on_confirm": false
+          "sources": [
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "資産や家族構成が漏れると、訪問して様子を探る手口があるためです。",
+          "minutes": 1
         },
         {
           "id": "assets-money-talk",
           "title": "「お金の話が出たら詐欺」と覚えておく",
           "detail": "警察、役所、銀行を名乗って、お金やカード、暗証番号の話をしてきたら詐欺です。いったん切って、家族に相談します。",
-          "sources": ["mpd-tomin"],
-          "reopen_on_confirm": false
+          "sources": [
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "警察や役所を名乗ってお金の話をする電話は詐欺だからです。",
+          "minutes": 1
         },
         {
           "id": "assets-police",
           "title": "不安なときは警察相談専用電話に相談する",
           "detail": "緊急でなくても相談できます。最寄りの警察署でも直接受け付けています。",
           "contact": "police-consult",
-          "sources": ["mpd-tomin"],
-          "reopen_on_confirm": false
+          "sources": [
+            "mpd-tomin"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "不安なときは、一人で判断せず相談できるためです。",
+          "minutes": 5
         }
       ],
       "skip_if": [],
-      "needs_research": false
+      "needs_research": false,
+      "urgency": 3
     },
     {
       "key": "medical",
       "label": "病歴・診療の情報",
-      "matches": ["medical"],
+      "matches": [
+        "medical"
+      ],
       "cards": [
         {
           "id": "medical-suspect-calls",
           "title": "病院や保険会社を名乗る連絡は、いったん切ってかけ直す",
           "detail": "病気のことを知っている相手からの連絡でも信用せず、自分で調べた番号にかけ直して確認します。",
-          "sources": ["ipa-2026-10-26"],
-          "reopen_on_confirm": false
+          "sources": [
+            "ipa-2026-10-26"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "病気のことを知っている相手を装う連絡があるためです。",
+          "minutes": 1
         },
         {
           "id": "medical-consult",
           "title": "不安があれば相談窓口に相談する",
           "detail": "何をすればよいか迷ったら、IPAの相談窓口や消費者ホットラインに相談できます。",
-          "contact_list": ["ipa-anshin", "consumer-hotline"],
-          "sources": ["ipa-anshin-madoguchi"],
-          "reopen_on_confirm": false
+          "contact_list": [
+            "ipa-anshin",
+            "consumer-hotline"
+          ],
+          "sources": [
+            "ipa-anshin-madoguchi"
+          ],
+          "reopen_on_confirm": false,
+          "reason": "何をすればよいか迷ったときに相談できるためです。",
+          "minutes": 5
         }
       ],
       "skip_if": [],
       "needs_research": true,
-      "research_note": "病歴・診療情報が漏れた場合の公的な推奨行動が見つかっていない。IPA資料にも記載なし（2026-11-07確認）。見つかるまでは「疑う」と「相談窓口」にとどめる。"
+      "research_note": "病歴・診療情報が漏れた場合の公的な推奨行動が見つかっていない。IPA資料にも記載なし（2026-11-07確認）。見つかるまでは「疑う」と「相談窓口」にとどめる。",
+      "urgency": 4
     }
   ]
 }

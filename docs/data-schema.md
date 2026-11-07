@@ -83,7 +83,9 @@
 - `always_first_card`：どの事案でも先頭に出すカード。`{service}` がサービス名に置換される。
 - `info_types[]`：漏れた情報の種類ごとのカード群。
   - `matches`：上の表のキー。事案の `leaked_info_types` に1つでも含まれれば表示。
-  - `cards[]`：1カード1行動。`title`（行動）、`detail`（短い補足）、`contact` / `contact_list`（`official_contacts` のキー）、`sources`（`sources` のキー）、`reopen_on_confirm`。
+  - `urgency`：やることの並び順（1が最優先。カード・口座・本人確認書類・マイナンバー=1、パスワード=2、連絡先=3、その他=4）。
+  - `cards[]`：1カード1行動。`title`（行動）、`reason`（その行動が必要な理由、1文）、`detail`（やり方）、`minutes`（所要時間の目安）、`contact` / `contact_list`（`official_contacts` のキー）、`sources`（`sources` のキー）、`reopen_on_confirm`。
+  - 文言：外来語（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）は避ける。検証で警告になる。
   - `skip_if[]`：やらなくていいこと。
   - `needs_research`：公的根拠が足りない種別。モックでは「調査中」と明示する。
 - `official_contacts`：表示してよい電話番号・URL。`verified_on` が null のものは公開前に要確認。
@@ -97,7 +99,8 @@
   "name": "タイムズカー",                 // 通称（利用者が認識している呼び名）
   "operator": "タイムズモビリティ株式会社",
   "category": "mobility",               // categories[] の key
-  "aliases": ["タイムズカーシェア", "Times Car"],
+  "aliases": ["タイムズカーシェア", "Times Car", "たいむず"], // 検索の別名。ひらがな・略称を含める
+  "popular_rank": 3,                    // 「よく使われているサービス」の固定順（任意。10件まで）
   "password_change_url": null,          // 公式のパスワード変更ページ。開発者が確認したものだけ
   "official_contact_phone": null,       // 公式の問い合わせ番号。同上
   "verified_on": null
