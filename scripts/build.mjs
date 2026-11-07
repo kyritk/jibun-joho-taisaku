@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,6 +18,11 @@ const TAGLINE = '使っているサービスの漏えいと、やることだけ
 const REPO_URL = 'https://github.com/kyritk/jibun-joho-taisaku';
 
 const read = (p) => JSON.parse(fs.readFileSync(path.join(root, p), 'utf8'));
+// Subresource Integrity：app.css / app.js の内容ハッシュを HTML に埋め、配信経路での改ざんをブラウザに検出させる（T2）
+const APP_CSS = fs.readFileSync(path.join(root, 'src/app.css'));
+const APP_JS = fs.readFileSync(path.join(root, 'src/app.js'));
+const sri = (buf) => 'sha384-' + crypto.createHash('sha384').update(buf).digest('base64');
+const SRI = { css: sri(APP_CSS), js: sri(APP_JS) };
 const readDir = (dir, approved) => {
   const full = path.join(root, 'data', 'incidents', dir);
   if (!fs.existsSync(full)) return [];
@@ -94,6 +100,7 @@ const avatarHtml = (svc, size = '') => {
 const CSP = [
   "default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'", "connect-src 'self'", "manifest-src 'self'",
   "base-uri 'none'", "object-src 'none'", "form-action 'none'", "require-trusted-types-for 'script'", "trusted-types 'none'",
+  'upgrade-insecure-requests',
 ].join('; ');
 
 function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '' }) {
@@ -112,7 +119,7 @@ function page({ rel, title, description, body, canonical, withApp = false, dataJ
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
 ${canonical !== undefined ? `<link rel="canonical" href="${esc(SITE_URL + canonical)}">` : ''}
-<link rel="stylesheet" href="${rel}app.css">
+<link rel="stylesheet" href="${rel}app.css" integrity="${SRI.css}">
 <link rel="icon" href="${rel}icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${rel}icon-180.png">
 <link rel="manifest" href="${rel}manifest.webmanifest">
@@ -145,7 +152,7 @@ ${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info-c
   </div>
 </footer>
 ${dataJson ? `<script id="data" type="application/json">${dataJson}</script>` : ''}
-${withApp ? `<script src="${rel}app.js" defer></script>` : ''}
+${withApp ? `<script src="${rel}app.js" integrity="${SRI.js}" defer></script>` : ''}
 </body>
 </html>
 `;
@@ -415,8 +422,20 @@ write('faq.html', faqPage());
 write('404.html', notFoundPage());
 write('incidents/index.html', incidentIndexPage());
 for (const inc of incidents) write(`incidents/${inc.id}/index.html`, incidentPage(inc));
-write('app.css', fs.readFileSync(path.join(root, 'src/app.css')));
-write('app.js', fs.readFileSync(path.join(root, 'src/app.js')));
+write('app.css', APP_CSS);
+write('app.js', APP_JS);
+// RFC 9116 security.txt：脆弱性の報告先を機械可読で示す。Expires はビルド日から1年
+{
+  const exp = new Date(today + 'T00:00:00Z'); exp.setUTCFullYear(exp.getUTCFullYear() + 1);
+  write('.well-known/security.txt', [
+    `Contact: ${REPO_URL}/security/advisories/new`,
+    `Expires: ${exp.toISOString().replace(/\.\d{3}Z$/, 'Z')}`,
+    `Preferred-Languages: ja, en`,
+    `Canonical: ${SITE_URL}.well-known/security.txt`,
+    `Policy: ${REPO_URL}/blob/main/SECURITY.md`,
+    '',
+  ].join('\n'));
+}
 write('data.json', JSON.stringify({ generated_at: today, cards, services, incidents: incidents.map(({ _approved, ...i }) => i) }, null, 0));
 write('icon.svg', ICON_SVG);
 write('icon-180.png', makeIconPng(180));

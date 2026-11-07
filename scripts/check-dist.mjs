@@ -3,9 +3,12 @@
 // 出力HTMLで守られているかを機械的に確認する。違反があれば exit 1。
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 
 const dir = process.argv[2] || 'dist';
 const errors = [];
+const sriCache = {};
+const sriOf = (file) => (sriCache[file] ||= 'sha384-' + crypto.createHash('sha384').update(fs.readFileSync(path.join(dir, file))).digest('base64'));
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
 const files = walk(dir);
 const htmlFiles = files.filter((f) => f.endsWith('.html'));
@@ -39,6 +42,19 @@ for (const f of htmlFiles) {
     if (!/rel="noopener noreferrer"/.test(m[0])) errors.push(`${rel}: 外部リンクに rel が無い ${m[0].slice(0, 80)}`);
   }
   if (/javascript:/i.test(html)) errors.push(`${rel}: javascript: URL がある`);
+  // 転送・埋め込み・フォームの経路が無い
+  if (/<meta\b[^>]*http-equiv="refresh"/i.test(html)) errors.push(`${rel}: meta refresh がある`);
+  if (/\bsrcdoc=/.test(html)) errors.push(`${rel}: srcdoc がある`);
+  if (/\b(href|src)="data:/.test(html)) errors.push(`${rel}: data: URL がある`);
+  if (/<form\b/.test(html)) errors.push(`${rel}: form がある（form-action 'none'）`);
+  if (/\bhref="http:\/\//.test(html)) errors.push(`${rel}: http: のリンクがある`);
+  // Subresource Integrity：app.css / app.js の integrity が実ファイルと一致する
+  for (const m of html.matchAll(/<(link|script)\b[^>]*\b(?:href|src)="[^"]*\b(app\.(?:css|js))"[^>]*>/g)) {
+    const tag = m[0], file = m[2];
+    const im = tag.match(/\bintegrity="([^"]+)"/);
+    if (!im) { errors.push(`${rel}: ${file} に integrity が無い`); continue; }
+    if (im[1] !== sriOf(file)) errors.push(`${rel}: ${file} の integrity が実ファイルと一致しない`);
+  }
   // アイコンは同一文書のスプライトだけを参照する（外部SVGは CSP とブラウザ差で遮断されうる）
   for (const m of html.matchAll(/<use\b[^>]*>/g)) {
     if (!/\bhref="#i-[a-z0-9-]+"/.test(m[0])) errors.push(`${rel}: <use> が同一文書の #i-… 以外を参照 ${m[0].slice(0, 80)}`);
@@ -56,6 +72,12 @@ for (const f of files.filter((x) => x.endsWith('.js'))) {
     if (js.includes(sink)) errors.push(`${rel}: 危険なシンク ${sink}`);
   }
   if (/\bfetch\(\s*['"`]https?:/.test(js)) errors.push(`${rel}: 外部への fetch`);
+}
+// security.txt（RFC 9116）がある
+{
+  const st = path.join(dir, '.well-known', 'security.txt');
+  if (!fs.existsSync(st)) errors.push('.well-known/security.txt が無い');
+  else { const t = fs.readFileSync(st, 'utf8'); if (!/^Contact: https:\/\//m.test(t) || !/^Expires: \d{4}-/m.test(t)) errors.push('security.txt に Contact/Expires が無い'); }
 }
 // Service Worker を置いていない（T5）
 if (files.some((f) => /(^|[\\/])(sw|service-worker)\.js$/.test(f))) errors.push('Service Worker ファイルがある（フェーズ1では置かない）');

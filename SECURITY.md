@@ -5,7 +5,7 @@
 
 ## 報告先
 
-- 技術的な脆弱性：GitHub の **Private vulnerability reporting**（リポジトリの Security タブ）から報告してください。公開 Issue には書かないでください。
+- 技術的な脆弱性：GitHub の **Private vulnerability reporting**（リポジトリの Security タブ）から報告してください。公開 Issue には書かないでください。機械可読の連絡先は `https://kyritk.github.io/jibun-joho-taisaku/.well-known/security.txt`（RFC 9116）にあります。
 - 表示内容の誤り・訂正依頼（企業の方を含む）：GitHub Issues の「訂正・削除の依頼」テンプレートを使ってください。急ぎの場合は Issue のタイトルに「至急」と付けてください。
 
 ## 対応の目安
