@@ -48,3 +48,14 @@ npm run all             # 上の3つをまとめて
 2. 問題なければ `review.approved: true`、`approved_on`、`approved_by` を入れ、`data/incidents/approved/` へ移す。
 3. `npm run validate` が通ることを確認する。
 4. 続報が出たら `announcements` に追記し、`changes` に何が変わったかを書く（`docs/data-schema.md`）。
+
+## ライセンス
+
+| 対象 | ライセンス | 要点 |
+| --- | --- | --- |
+| コード（`src/`、`scripts/`、`.github/`、自作アイコンなど、`data/` 以外） | [GNU AGPL-3.0](LICENSE) | 自由に使えるが、改変して配信・提供する場合は改変後のソースも公開する |
+| データ（`data/` 配下。承認済み事案DB、やることカード、サービスマスタ、許可リスト） | [CC BY-NC-SA 4.0](data/LICENSE) | 出典を示せば非営利目的で利用・改変できる。商用利用は個別にご相談ください |
+| 第三者素材（Tabler Icons など） | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | それぞれのライセンスに従う |
+
+事案の事実そのもの（企業の公表内容）は各社のものです。本リポジトリが権利を主張するのは、事実を選別・整理・承認した編集物としてのデータです。
+企業・自治体で利用したい場合（商用ライセンス、ホワイトラベル提供）は、GitHub の Issue からご連絡ください。

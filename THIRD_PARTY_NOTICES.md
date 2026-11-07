@@ -1,5 +1,6 @@
 # 第三者の素材と、そのライセンス
 
+このリポジトリ自体のライセンスは、コードが GNU AGPL-3.0（`LICENSE`）、`data/` 配下のデータが CC BY-NC-SA 4.0（`data/LICENSE`）です（README「ライセンス」参照）。
 次の素材は別の作者の著作物で、それぞれのライセンスに従います。
 ライセンス全文をここに同梱することで利用条件を満たしています。画面上への表示義務はありません。
 
@@ -35,7 +36,7 @@ SOFTWARE.
 
 ## 自作アイコン（`assets/icons/` のうち、先頭にコメント `custom:` があるファイル）
 
-`ring.svg`、`bank.svg`、`store.svg`、`mynumber.svg`、`mail-x.svg` はこのリポジトリのために描いたもので、リポジトリ本体と同じ扱いです。
+`ring.svg`、`bank.svg`、`store.svg`、`mynumber.svg`、`mail-x.svg` はこのリポジトリのために描いたもので、コードと同じ AGPL-3.0 です。
 
 ## 使っていないもの
 
