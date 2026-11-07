@@ -52,6 +52,10 @@ const checkCard = (c, where) => {
   if (c.contact && !contactKeys.has(c.contact)) err(`${where}/${c.id}: 未定義の contact "${c.contact}"`);
   for (const k of c.contact_list || []) if (!contactKeys.has(k)) err(`${where}/${c.id}: 未定義の contact "${k}"`);
   if (typeof c.reopen_on_confirm !== 'boolean') err(`${where}/${c.id}: reopen_on_confirm は boolean`);
+  if (c.scope !== 'once' && c.scope !== 'service') err(`${where}/${c.id}: scope は "once"（1回で全事案に効く）か "service"（サービスごと）`);
+  if (typeof c.renew_on_new_incident !== 'boolean') err(`${where}/${c.id}: renew_on_new_incident は boolean`);
+  if (c.scope === 'service' && c.renew_on_new_incident) err(`${where}/${c.id}: service のカードに renew_on_new_incident は使わない`);
+  if (c.scope === 'once' && /\{service\}/.test(c.title)) err(`${where}/${c.id}: once のカードの title には {service} ではなく {services} を使う`);
   if (!c.reason || typeof c.reason !== 'string') err(`${where}/${c.id}: reason（理由1文）が必要`);
   if (!Number.isInteger(c.minutes) || c.minutes < 1) err(`${where}/${c.id}: minutes（所要時間の目安、分）が必要`);
   if (c.steps !== undefined && (!Array.isArray(c.steps) || !c.steps.length || c.steps.some((s) => typeof s !== 'string' || !s))) err(`${where}/${c.id}: steps は空でない文字列の配列`);

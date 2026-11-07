@@ -138,36 +138,66 @@
     }
     return d;
   }
-  function cardsFor(inc) {
-    const out = [];
-    const push = (card, infoType) => {
-      const key = `${inc.id}:${card.id}`;
-      const rd = reopenDate(inc, card, infoType);
-      const doneOn = typeof done[key] === 'string' ? done[key] : null;
-      const isDone = !!doneOn && doneOn >= rd;
-      const reopened = !!doneOn && !isDone;
-      out.push({ inc, card, infoType, key, isDone, reopened, doneOn, reopenDate: rd, unseen: reopened && seen[key] !== rd });
-    };
-    push(cards.always_first_card, null);
+  // 事案1件に当てはまるカード列（事案別ページと同じ判断。完了状態は含まない）
+  function cardListFor(inc) {
+    const out = [{ card: cards.always_first_card, infoType: null }];
     const limited = inc.limited_info_types || {};
     const leaked = new Set(inc.leaked_info_types.filter((k) => !(k in limited)));
     for (const t of infoTypesSorted) {
       if (!t.matches.some((k) => leaked.has(k))) continue;
-      for (const c of t.cards) push(c, t);
+      for (const c of t.cards) out.push({ card: c, infoType: t });
     }
     return out;
   }
+  // 行（やること）＝行動の単位（docs/ux-dedupe-research.md §4）
+  //   scope "once"   ：事案が何件あっても1行。完了キー `*:<カードID>`。旧キー `<事案ID>:<カードID>` が済みなら引き継ぐ
+  //   scope "service"：事案ごとに1行。完了キー `<事案ID>:<カードID>`
+  // 戻す日（reopenDate）より完了日が古ければ「再確認」。once は renew_on_new_incident のとき新しい事案の公表日でも戻る
+  const typeOrder = (t) => (t ? infoTypesSorted.indexOf(t) + 1 : 0);
+  function rowsFor(incs) {
+    const rows = [];
+    const onceMap = new Map();
+    for (const inc of incs) {
+      for (const { card, infoType } of cardListFor(inc)) {
+        if (card.scope === 'service') rows.push({ card, infoType, incs: [inc], key: `${inc.id}:${card.id}` });
+        else {
+          let r = onceMap.get(card.id);
+          if (!r) { r = { card, infoType, incs: [], key: `*:${card.id}` }; onceMap.set(card.id, r); rows.push(r); }
+          r.incs.push(inc);
+        }
+      }
+    }
+    for (const r of rows) {
+      const dates = r.incs.map((inc) => reopenDate(inc, r.card, r.infoType));
+      r.reopenDate = r.card.scope === 'service' || r.card.renew_on_new_incident ? dates.reduce((a, b) => (a > b ? a : b)) : dates.reduce((a, b) => (a < b ? a : b));
+      let doneOn = typeof done[r.key] === 'string' ? done[r.key] : null;
+      if (r.card.scope !== 'service') for (const inc of r.incs) { const v = done[`${inc.id}:${r.card.id}`]; if (typeof v === 'string' && (!doneOn || v > doneOn)) doneOn = v; }
+      r.doneOn = doneOn;
+      r.isDone = !!doneOn && doneOn >= r.reopenDate;
+      r.reopened = !!doneOn && !r.isDone;
+      r.unseen = r.reopened && seen[r.key] !== r.reopenDate;
+      r.newIncs = r.reopened ? r.incs.filter((inc) => reopenDate(inc, r.card, r.infoType) > doneOn) : [];
+    }
+    // 並び：共通（once）を先頭カード→緊急度順に、そのあと会社ごと（service）を事案順に
+    const onceRows = rows.filter((r) => r.card.scope !== 'service').sort((a, b) => typeOrder(a.infoType) - typeOrder(b.infoType));
+    const serviceRows = rows.filter((r) => r.card.scope === 'service');
+    return [...onceRows, ...serviceRows];
+  }
+  const rowsOf = (rows, inc) => rows.filter((r) => r.incs.includes(inc));
+  const markDone = (r) => { done[r.key] = today; save(LS.done, done); };
+  const unmarkDone = (r) => { delete done[r.key]; if (r.card.scope !== 'service') for (const inc of r.incs) delete done[`${inc.id}:${r.card.id}`]; save(LS.done, done); };
   const myIncidents = () => incidents.filter((i) => i.service_ids.some((sid) => selected.has(sid)));
   // 並び：要対応がある事案 → 全部済んだ事案 → 取り下げ。同じ段の中は新しい公表が先
-  const rank = (inc) => (inc.status === 'denied' ? 2 : cardsFor(inc).every((x) => x.isDone) ? 1 : 0);
-  const orderIncidents = (list) => [...list].sort((a, b) => rank(a) - rank(b) || (a.last_updated < b.last_updated ? 1 : -1));
+  const rank = (inc, rows) => (inc.status === 'denied' ? 2 : rowsOf(rows, inc).every((x) => x.isDone) ? 1 : 0);
+  const orderIncidents = (list, rows) => [...list].sort((a, b) => rank(a, rows) - rank(b, rows) || (a.last_updated < b.last_updated ? 1 : -1));
   function summary() {
     const mine = myIncidents();
     const active = mine.filter((i) => i.status !== 'denied');
-    let open = 0, total = 0, reopened = 0, unseen = 0;
-    for (const inc of active) for (const x of cardsFor(inc)) { total++; if (!x.isDone) open++; if (x.reopened) reopened++; if (x.unseen) unseen++; }
+    const rows = rowsFor(active);
+    let open = 0, reopened = 0, unseen = 0;
+    for (const x of rows) { if (!x.isDone) open++; if (x.reopened) reopened++; if (x.unseen) unseen++; }
     const newIncidents = lastVisit ? active.filter((i) => i.last_updated > lastVisit) : [];
-    return { mine, active, open, total, reopened, unseen, newIncidents };
+    return { mine, active, rows, open, total: rows.length, reopened, unseen, newIncidents };
   }
 
   // ---------- 共通部品
@@ -177,7 +207,14 @@
     if (x.reopened) return el('span', { class: 'tag recheck' }, '再確認', x.unseen ? el('span', { class: 'dot', 'aria-hidden': 'true' }) : null);
     return el('span', { class: 'tag todo' }, '未対応');
   };
-  const cardTitle = (x) => x.card.title.replace('{service}', shortName(x.inc));
+  // 会社の連名（3社まで「・」でつなぐ。4社以上は「○○など5社」）
+  const joinNames = (incs) => { const n = incs.map(shortName); return n.length <= 3 ? n.join('・') : `${n[0]}など${n.length}社`; };
+  const cardTitle = (x) => x.card.title.replace('{service}', shortName(x.incs[0])).replace('{services}', joinNames(x.incs));
+  // 行の補足に添える出所：会社の丸（3つまで）＋「3社」または会社名
+  const sourcesOf = (x) => {
+    const avs = el('span', { class: 'avs', 'aria-hidden': 'true' }, ...x.incs.slice(0, 3).map((inc) => avatarFor(serviceOf(inc), 'xs')));
+    return el('span', { class: 'src' }, avs, x.incs.length > 1 ? `${x.incs.length}社` : shortName(x.incs[0]));
+  };
   function contactNode(key) {
     const c = cards.official_contacts[key];
     if (!c) return null;
@@ -260,8 +297,8 @@
 
   // ---------- ホーム
   // 関係ある漏洩の1行（段B）：丸＋事案名＋13px補足＋件数。全部済んだ事案は灰の通常ウェイト。チップは出さない（事案別ページとやることに残す）
-  function incidentRow(inc) {
-    const list = cardsFor(inc);
+  function incidentRow(inc, rows) {
+    const list = rowsOf(rows, inc);
     const n = list.filter((x) => x.isDone).length;
     const denied = inc.status === 'denied';
     const allDone = !denied && n === list.length;
@@ -287,7 +324,7 @@
     let mineSec = null;
     if (selected.size && s.mine.length) {
       const ul = el('ul', { class: 'inc-rows' });
-      for (const inc of orderIncidents(s.mine)) ul.append(incidentRow(inc));
+      for (const inc of orderIncidents(s.mine, s.rows)) ul.append(incidentRow(inc, s.rows));
       mineSec = el('section', { 'aria-labelledby': 'mine-h', id: 'mine' }, el('h2', { id: 'mine-h', class: 'sec', tabindex: '-1' }, '関係ある漏洩'), ul);
     }
     const toMine = () => { if (mineSec) { mineSec.scrollIntoView({ block: 'start' }); mineSec.querySelector('h2').focus(); } };
@@ -346,36 +383,39 @@
     wrap.append(h1);
     if (!s.total) wrap.append(el('p', { class: 'caption' }, '選んだサービスについて、公表された漏洩は今のところありません。'));
     const rows = new Map(); // key → { row, panel }
-    const ordered = orderIncidents(s.mine);
-    const sections = ordered.map((inc) => incidentSection(inc, rows));
-    // 目次（段C）：事案が4つ以上のときだけ、文字のリスト
-    if (ordered.length >= 4) {
-      const toc = el('nav', { class: 'toc', 'aria-labelledby': 'toc-h' }, el('h2', { id: 'toc-h', class: 'sec' }, '目次'));
-      const ul = el('ul', null);
-      ordered.forEach((inc, i) => {
-        const list = cardsFor(inc);
-        const n = list.filter((x) => x.isDone).length;
-        const b = el('button', { type: 'button', class: 'linklike' }, `${shortName(inc)}（${inc.status === 'denied' ? '取り下げ' : `${n} / ${list.length}`}）`);
-        b.addEventListener('click', () => { const sec = sections[i]; sec.open = true; sec.scrollIntoView({ block: 'start' }); sec.querySelector('summary').focus(); });
-        ul.append(el('li', null, b));
-      });
-      toc.append(ul);
-      wrap.append(toc);
-    }
     // 次の1件（未対応の先頭）。直下に全体一覧があるので俯瞰は失わない
-    const next = s.active.flatMap(cardsFor).find((x) => !x.isDone);
+    const next = s.rows.find((x) => !x.isDone);
     if (next) {
       const ok = el('button', { type: 'button', class: 'btn' }, icon('check'), '済みにする');
-      ok.addEventListener('click', () => { done[next.key] = today; save(LS.done, done); rerender(); });
+      ok.addEventListener('click', () => { markDone(next); rerender(); });
       const how = el('button', { type: 'button', class: 'btn ghost' }, 'やり方を見る');
       how.addEventListener('click', () => { const r = rows.get(next.key); if (!r) return; r.open(); r.row.scrollIntoView({ block: 'center' }); r.row.focus(); });
+      const where = next.incs.length > 1 ? `${next.incs.length}社に共通` : shortName(next.incs[0]);
       wrap.append(el('section', { class: 'next', 'aria-labelledby': 'next-h' },
         el('div', { class: 'lab' }, el('span', { id: 'next-h' }, '次の 1件'), el('span', null, `${s.total}件中 ${s.total - s.open + 1}件目`)),
         el('div', { class: 'body' }, icon(next.card.icon || (next.infoType && next.infoType.icon) || 'list-check', 'xl'),
-          el('div', null, el('h2', null, cardTitle(next)), el('p', { class: 'meta' }, `${shortName(next.inc)} ・ 約${next.card.minutes}分`))),
+          el('div', null, el('h2', null, cardTitle(next)), el('p', { class: 'meta' }, `${where} ・ 約${next.card.minutes}分`))),
         el('div', { class: 'btn-row' }, ok, how)));
     }
-    for (const sec of sections) wrap.append(sec);
+    // 2つのリスト（docs/ux-dedupe-research.md §4.2）：1回やれば済むこと（once）／会社ごとにやること（service）
+    const onceRows = s.rows.filter((r) => r.card.scope !== 'service');
+    const svcRows = s.rows.filter((r) => r.card.scope === 'service');
+    const nCo = s.active.length;
+    if (onceRows.length) {
+      wrap.append(listSection('once', '1回やれば済むこと', nCo > 1 ? `${nCo}社に共通。1回「済みにする」と全部に反映されます` : null, onceRows, rows, (x) => x.infoType,
+        (t) => el('li', { class: 'type-head' }, icon(t.icon), `${t.label}が漏れたとき`, t.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null)));
+    }
+    if (svcRows.length) {
+      const ordered = orderIncidents(s.active, s.rows);
+      const sorted = [...svcRows].sort((a, b) => ordered.indexOf(a.incs[0]) - ordered.indexOf(b.incs[0]));
+      wrap.append(listSection('service', '会社ごとにやること', 'パスワードと二段階認証は、サービスごとに必要です', sorted, rows, (x) => x.incs[0],
+        (inc) => el('li', { class: 'co-head' }, avatarFor(serviceOf(inc), 'xs'), shortName(inc))));
+    }
+    // 取り下げられた事案（段C）
+    const denied = s.mine.filter((i) => i.status === 'denied');
+    if (denied.length) wrap.append(el('p', { class: 'caption' }, '取り下げ（漏洩なしと公表）：', ...denied.flatMap((inc, i) => [i ? '、' : '', el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, shortName(inc))])));
+    // 会社の公表と窓口（段C）
+    if (s.active.length) wrap.append(el('p', { class: 'caption' }, '会社の公表と窓口：', ...s.active.flatMap((inc, i) => [i ? '、' : '', el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, shortName(inc))])));
     if (!s.open && s.total) wrap.append(banner('success', 'circle-check', el('p', null, el('b', null, '今は対策済みです。'), '続報が出たら、必要なものだけが「再確認」として戻ります。'), el('a', { href: '#/' }, 'ホームへ')));
     // 「先頭へ」：1画面分より下にいるときだけ出す
     const top = el('button', { type: 'button', class: 'totop', hidden: true }, icon('chevron-down'), '先頭へ');
@@ -384,44 +424,32 @@
     wrap.append(top);
     return wrap;
   }
-  // 事案（段B）＝見出し行（下罫線）＋行。未対応があれば開いた状態、全部済んだ・取り下げは閉じた1行（段C）で始める
+  // リスト（段B）＝見出し行（下罫線）＋小見出し＋行。
   // 行の並び：未対応・再確認 → 先頭 VISIBLE 件だけ見せ、残りは「残り N件」に畳む → 対策済みは「対策済み N件」に畳む（段C）
+  // groupOf：行の属する小見出しの鍵（情報種別 or 事案）。headFor：小見出しの li を作る
   const VISIBLE = 3;
-  function incidentSection(inc, rows) {
-    const list = cardsFor(inc);
+  function listSection(id, title, sub, list, rows, groupOf, headFor) {
     const n = list.filter((x) => x.isDone).length;
-    const denied = inc.status === 'denied';
-    const allDone = !denied && n === list.length;
-    const first = inc.announcements[0];
-    const sec = el('details', { class: 'task' + (allDone || denied ? ' is-done' : ''), id: `sec-${inc.id}`, open: !denied && !allDone });
-    const sub = denied ? 'その後「漏洩はなかった」と公表' : allDone ? `対策済み ${n} / ${list.length}` : `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`;
-    sec.append(el('summary', { class: 'inc-head' }, avatarFor(serviceOf(inc), allDone || denied ? 'sm' : null),
-      el('div', { class: 'ttl' }, el('h2', { id: `t-${inc.id}` }, shortName(inc)), el('span', { class: 'sub' }, sub)),
-      denied || allDone ? null : el('span', { class: 'count' }, el('b', null, String(n)), ` / ${list.length}`),
-      icon('chevron-down', 'chev')));
-    const detailLink = el('p', { class: 'task-about caption' }, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '会社の公表と窓口を見る'));
-    if (denied) { sec.append(el('p', { class: 'task-withdrawn' }, 'やることはありません。'), detailLink); return sec; }
-    // 行を「未対応（小見出し・しなくてよい つき）」と「対策済み」に分けて組む
-    const openItems = []; // li の列（type-head / task-item / skip-note）
+    const allDone = n === list.length;
+    const sec = el('section', { class: 'task' + (allDone ? ' is-done' : ''), id: `sec-${id}`, 'aria-labelledby': `t-${id}` });
+    sec.append(el('div', { class: 'inc-head' },
+      el('div', { class: 'ttl' }, el('h2', { id: `t-${id}` }, title), sub ? el('span', { class: 'sub' }, sub) : null),
+      el('span', { class: 'count' + (allDone ? ' ok' : '') }, el('b', null, String(n)), ` / ${list.length}`)));
+    const openItems = []; // li の列（小見出し / 行）
     const doneItems = [];
-    let currentType = null;
+    const skipTypes = new Set();
+    let currentGroup = null;
     let openCount = 0;
     for (const x of list) {
-      if (x.infoType !== currentType) {
-        currentType = x.infoType;
-        if (currentType && list.some((y) => y.infoType === currentType && !y.isDone)) {
-          const cnt = list.filter((y) => y.infoType === currentType && !y.isDone).length;
-          openItems.push({ head: true, li: el('li', { class: 'type-head' }, icon(currentType.icon), `${currentType.label}が漏れたとき（${cnt}件）`, currentType.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null) });
-        }
+      const g = groupOf(x);
+      if (g !== currentGroup) {
+        currentGroup = g;
+        if (g && list.some((y) => groupOf(y) === g && !y.isDone)) openItems.push({ li: headFor(g) });
       }
       if (x.isDone) doneItems.push(taskItem(x, rows));
       else { openItems.push({ li: taskItem(x, rows), item: true }); openCount++; }
-      if (!x.isDone && x.infoType && x.card === x.infoType.cards[x.infoType.cards.length - 1] && x.infoType.skip_if.length) {
-        const li = el('li', { class: 'skip-note' }, el('b', null, 'しなくてよい'));
-        const body = el('span', null);
-        x.infoType.skip_if.forEach((t, i) => { if (i) body.append(el('br')); body.append(t); });
-        li.append(body); openItems.push({ li });
-      }
+      // しなくてよい：情報種別ごとに1回だけ（会社ごとのリストで会社の数だけ繰り返さない）。リストの末尾にまとめる
+      if (!x.isDone && x.infoType && x.infoType.skip_if.length) skipTypes.add(x.infoType);
     }
     const ul = el('ul', { class: 'task-list' });
     let shown = 0, overflow = null;
@@ -432,33 +460,45 @@
           overflow = el('ul', { class: 'task-list' });
           // 直前が小見出しだけで終わっていたら、小見出しごと畳む側へ移す
           const tail = ul.lastElementChild;
-          if (tail && tail.classList.contains('type-head')) overflow.append(tail);
+          if (tail && (tail.classList.contains('type-head') || tail.classList.contains('co-head'))) overflow.append(tail);
         }
         overflow.append(it.li);
       } else ul.append(it.li);
     }
     sec.append(ul);
     if (overflow) sec.append(el('details', { class: 'fold-rows' }, el('summary', null, icon('chevron-down', 'chev'), `残り ${openCount - VISIBLE}件`), overflow));
+    for (const t of skipTypes) {
+      const note = el('div', { class: 'skip-note' }, el('b', null, 'しなくてよい'));
+      const body = el('span', null);
+      t.skip_if.forEach((s, i) => { if (i) body.append(el('br')); body.append(s); });
+      note.append(body); sec.append(note);
+    }
     if (doneItems.length) {
       const dul = el('ul', { class: 'task-list' }, ...doneItems);
-      sec.append(el('details', { class: 'fold-rows done', open: allDone }, el('summary', null, icon('chevron-down', 'chev'), `対策済み ${doneItems.length}件`), dul));
+      sec.append(el('details', { class: 'fold-rows done' }, el('summary', null, icon('chevron-down', 'chev'), `対策済み ${doneItems.length}件`), dul));
     }
-    sec.append(detailLink);
     return sec;
   }
   function taskItem(x, rows) {
-    const inc = x.inc;
     const title = cardTitle(x);
     const panelId = 'p-' + x.key.replace(/[^a-z0-9-]/gi, '_');
-    const meta = x.isDone ? `対策済み ・ ${fmtMd(x.doneOn)}` : x.reopened ? `${fmtMd(x.reopenDate)}の続報があります ・ 約${x.card.minutes}分` : `約${x.card.minutes}分`;
+    // 補足：出所（once で2社以上、または once の1社）＋ 状態 ＋ 所要時間。service は会社の小見出しの下にあるので出所は省く
+    const metaParts = [];
+    const showSrc = x.card.scope !== 'service';
+    const reason = x.isDone ? `対策済み ・ ${fmtMd(x.doneOn)}` : x.reopened ? (x.newIncs.length ? `${joinNames(x.newIncs)}が加わりました` : `${fmtMd(x.reopenDate)}の続報があります`) : null;
+    if (reason) metaParts.push(reason);
+    if (!x.isDone) metaParts.push(`約${x.card.minutes}分`);
+    const meta = el('span', { class: 'row-meta' });
+    if (showSrc) meta.append(sourcesOf(x), ' ・ ');
+    meta.append(metaParts.join(' ・ '));
     const row = el('button', { type: 'button', class: 'task-row' + (x.isDone ? ' is-done' : '') + (x.reopened ? ' is-recheck' : ''), 'aria-expanded': 'false', 'aria-controls': panelId },
       statusShape(x),
-      el('span', { class: 'row-main' }, el('span', { class: 'row-title' }, title), el('span', { class: 'row-meta' }, meta)),
+      el('span', { class: 'row-main' }, el('span', { class: 'row-title' }, title), meta),
       // 未対応は○の形だけ（タグを並べると段Aと競合する）。読み上げには状態語を残す。再確認・対策済みは文字も出す
       el('span', { class: 'row-status' }, x.isDone || x.reopened ? tagFor(x) : el('span', { class: 'sr-only' }, '未対応'), icon('chevron-down', 'chev')));
     const panel = el('div', { class: 'task-panel', id: panelId, hidden: true });
     panel.append(el('p', { class: 'reason' }, x.card.reason));
-    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, `${fmtMd(x.reopenDate)}の続報で対象が広がりました。もう一度確認してください。`)));
+    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, x.newIncs.length ? `${joinNames(x.newIncs)}の漏洩が新しく加わりました。もう一度確認してください。` : `${fmtMd(x.reopenDate)}の続報で対象が広がりました。もう一度確認してください。`)));
     panel.append(howNode(x.card));
     if (x.card.contact) panel.append(contactNode(x.card.contact));
     for (const k of x.card.contact_list || []) panel.append(contactNode(k));
@@ -467,11 +507,11 @@
     const actions = el('div', { class: 'btn-row' });
     if (x.isDone) {
       const undo = el('button', { type: 'button', class: 'btn secondary' }, '対策済みを取り消す');
-      undo.addEventListener('click', () => { delete done[x.key]; save(LS.done, done); rerender(); });
+      undo.addEventListener('click', () => { unmarkDone(x); rerender(); });
       actions.append(undo);
     } else {
       const ok = el('button', { type: 'button', class: 'btn' }, icon('check'), '済みにする');
-      ok.addEventListener('click', () => { done[x.key] = today; save(LS.done, done); rerender(); });
+      ok.addEventListener('click', () => { markDone(x); rerender(); });
       const later = el('button', { type: 'button', class: 'btn text' }, 'あとで');
       later.addEventListener('click', () => { row.setAttribute('aria-expanded', 'false'); panel.hidden = true; });
       actions.append(ok, later);

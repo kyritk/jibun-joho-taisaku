@@ -233,7 +233,7 @@ function incidentPage(inc) {
         currentType = x.infoType;
         if (currentType) b += `<li class="type-head">${icon(currentType.icon)}${esc(currentType.label)}が漏れたとき${currentType.needs_research ? ' <span class="tag neutral">根拠を調査中</span>' : ''}</li>`;
       }
-      const t = x.card.title.replace('{service}', inc.service_name);
+      const t = x.card.title.replace('{service}', short).replace('{services}', short);
       b += `<li class="task-item"><div class="task-row">${icon('ring', 'st')}<div class="row-main"><div class="row-title">${i + 1}. ${esc(t)}</div><div class="row-meta">約${x.card.minutes}分</div></div></div>`;
       b += `<div class="task-panel"><p class="reason">${esc(x.card.reason)}</p>${howHtml(x.card)}`;
       if (x.card.contact) b += contactHtml(x.card.contact, where);

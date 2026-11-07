@@ -1,7 +1,7 @@
 {
   "version": 1,
   "updated": "2026-11-07",
-  "_comment": "やることカードの定義。1カード1行動、専門用語なし、断定しない。根拠（sources）の無い行動は書かない。URL・電話番号は開発者が承認した公式のものだけ。 reason=その行動が必要な理由（1文）、minutes=所要時間の目安、info_types.urgency=並び順（1が最優先）。",
+  "_comment": "やることカードの定義。1カード1行動、専門用語なし、断定しない。根拠（sources）の無い行動は書かない。URL・電話番号は開発者が承認した公式のものだけ。 reason=その行動が必要な理由（1文）、minutes=所要時間の目安、info_types.urgency=並び順（1が最優先）。 scope=once（1回やれば全事案に効く。既定）／service（サービスごとに1行）。renew_on_new_incident=once の行を済みにしたあと、同じ種類の情報を含む新しい事案が加わったら「再確認」に戻すか。title の {service}=そのサービス名、{services}=関係する会社の連名。",
   "sources": {
     "ipa-2026-10-26": {
       "title": "IPA「自分の個人情報等が漏洩した際の『対処』と『日頃の対策』」",
@@ -100,12 +100,14 @@
   },
   "always_first_card": {
     "id": "first-no-links",
-    "title": "{service}を名乗るメール・SMSのリンクは押さない",
+    "title": "{services}を名乗るメール・SMSのリンクは押さない",
     "detail": "漏洩のあとは、その会社を名乗る「おわび」「返金」「ポイント進呈」などのニセメールが出回ります。メールやSMSの中のリンクは押さず、確認したいときはアプリか、自分で検索して開いた公式サイトから行います。",
     "sources": [
       "ipa-2026-10-26"
     ],
     "reopen_on_confirm": false,
+    "scope": "once",
+    "renew_on_new_incident": false,
     "reason": "漏洩のあとは、会社を名乗るニセのメールやSMSが増えます。",
     "minutes": 1,
     "icon": "mail-x",
@@ -127,33 +129,21 @@
         {
           "id": "cred-change-password",
           "title": "{service}のパスワードを変える",
-          "detail": "アプリか、自分で検索して開いた公式サイトから変えます。長くて、他で使っていないものにします。",
+          "detail": "アプリか、自分で検索して開いた公式サイトから変えます。長くて、他で使っていないものにします。同じパスワードを他でも使っていれば、そちらも変えます。",
           "sources": [
             "ipa-2026-10-26"
           ],
           "reopen_on_confirm": false,
+          "scope": "service",
+          "renew_on_new_incident": false,
           "reason": "漏れたパスワードでのログインを防ぎます。",
-          "minutes": 5,
-          "steps": [
-            "アプリか、検索して開いた公式サイトを開く",
-            "長くて、他で使っていないものに変える"
-          ],
-          "dont": "メールの中のリンクから変えない"
-        },
-        {
-          "id": "cred-change-reused",
-          "title": "同じパスワードを使っている他のサービスも変える",
-          "detail": "銀行、通販、メールなど、同じパスワードを使い回しているところがあれば、そちらも変えます。",
-          "sources": [
-            "ipa-2026-10-26"
-          ],
-          "reopen_on_confirm": false,
-          "reason": "同じパスワードの別サービスへのログインを防ぎます。",
           "minutes": 10,
           "steps": [
-            "銀行、通販、メールなど、使い回している先を思い出す",
-            "そちらも1つずつ変える"
-          ]
+            "アプリか、検索して開いた公式サイトを開く",
+            "長くて、他で使っていないものに変える",
+            "同じパスワードを他でも使っていれば、そちらも変える"
+          ],
+          "dont": "メールの中のリンクから変えない"
         },
         {
           "id": "cred-enable-2fa",
@@ -163,6 +153,8 @@
             "ipa-2026-10-26"
           ],
           "reopen_on_confirm": false,
+          "scope": "service",
+          "renew_on_new_incident": false,
           "reason": "パスワードが知られても、確認コードなしでは入れなくなります。",
           "minutes": 5,
           "steps": [
@@ -195,6 +187,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": true,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "番号が使われる前に止めます。",
           "minutes": 10,
           "steps": [
@@ -212,6 +206,8 @@
             "ipa-2026-10-26"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "身に覚えのない支払いに早く気づけます。",
           "minutes": 3,
           "steps": [
@@ -227,6 +223,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "不正利用の途中で届く確認に応じないためです。",
           "minutes": 1,
           "steps": [
@@ -263,6 +261,8 @@
             "ipa-2026-10-26"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "漏れた連絡先に、本物そっくりの詐欺メールが届きます。",
           "minutes": 1,
           "steps": [
@@ -279,6 +279,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "詐欺電話の多くは国際電話です。",
           "minutes": 5,
           "steps": [
@@ -295,6 +297,8 @@
             "ipa-2026-10-26"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "漏れた住所に着払いを送りつける手口があります。",
           "minutes": 1,
           "steps": [
@@ -329,6 +333,8 @@
             "atmarkit-2026-11-02"
           ],
           "reopen_on_confirm": true,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "他人があなたの名前でローンやカードを申し込むのを防ぎます。",
           "minutes": 15,
           "steps": [
@@ -346,6 +352,8 @@
             "atmarkit-2026-11-02"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "勝手に契約された可能性に早く気づけます。",
           "minutes": 5,
           "steps": [
@@ -379,6 +387,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": true,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "口座が不正に使われていないか、銀行に見てもらいます。",
           "minutes": 10,
           "steps": [
@@ -394,6 +404,8 @@
             "atmarkit-2026-11-02"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "ネットバンキングへの不正ログインを防ぎます。",
           "minutes": 5,
           "steps": [
@@ -409,6 +421,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "身に覚えのない出金に早く気づけます。",
           "minutes": 3,
           "steps": [
@@ -440,6 +454,8 @@
             "gov-online-mynumber"
           ],
           "reopen_on_confirm": true,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "対応を公式の窓口に確認します。",
           "minutes": 10,
           "steps": [
@@ -455,6 +471,8 @@
             "gov-online-mynumber"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": true,
           "reason": "不正利用のおそれがあるときだけ、番号を変えられます。",
           "minutes": 10,
           "steps": [
@@ -485,6 +503,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "訪問して様子を探る手口があります。",
           "minutes": 1,
           "steps": [
@@ -500,6 +520,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "警察や役所を名乗るお金の話は詐欺です。",
           "minutes": 1,
           "steps": [
@@ -516,6 +538,8 @@
             "mpd-tomin"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "一人で判断せずに済みます。",
           "minutes": 5,
           "steps": [
@@ -545,6 +569,8 @@
             "ipa-2026-10-26"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "病気を知っている相手を装う連絡があります。",
           "minutes": 1,
           "steps": [
@@ -564,6 +590,8 @@
             "ipa-anshin-madoguchi"
           ],
           "reopen_on_confirm": false,
+          "scope": "once",
+          "renew_on_new_incident": false,
           "reason": "迷ったときの相談先です。",
           "minutes": 5,
           "steps": [
