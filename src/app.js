@@ -87,6 +87,8 @@
   const lastVisit = load(LS.lastVisit, null);
   const today = new Date().toISOString().slice(0, 10);
   let flash = null; // { kind, text } 次の画面で1回だけ出す
+  let totop = null; // やること画面の「先頭へ」ボタン（1画面分より下で表示）
+  window.addEventListener('scroll', () => { if (totop && totop.isConnected) totop.hidden = window.scrollY < window.innerHeight; }, { passive: true });
 
   const STATUS_LABEL = { suspected: '漏洩のおそれ', confirmed: '漏洩を確認', individually_notified: '漏洩を確認', denied: '漏洩なしと公表' };
   const STATUS_SUB = { suspected: '漏洩のおそれがあると公表', confirmed: '漏洩を確認したと公表', individually_notified: '漏洩を確認し、対象の人に会社から連絡しています', denied: 'その後「漏洩はなかった」と公表されました' };
@@ -205,19 +207,60 @@
     return n;
   };
 
-  // ---------- ホーム
-  function flowNode(nSvc, nInc, nTodo) {
-    const step = (n, l) => el('li', null, el('span', { class: 'n' }, String(n)), el('span', { class: 'l' }, l));
-    const arrow = () => el('li', { class: 'arrow', 'aria-hidden': 'true' }, icon('chevron-down'));
-    return el('ol', { class: 'flow', 'aria-label': '選んだサービス、関係ある漏洩、やることの件数' }, step(nSvc, '選んだサービス'), arrow(), step(nInc, '関係ある漏洩'), arrow(), step(nTodo, 'やること'));
+  // ---------- 全体像の部品（docs/ux-overview-research.md §4）
+  // 工程バー：全部で3つ「1 選ぶ／2 確かめる／3 対策する」。現在の工程だけ大きく「いまここ」。矢印は使わない
+  // cur: 1〜3。big: ホーム用（大）、それ以外は1行の小型
+  function journeyNode(cur, s, big) {
+    const steps = [
+      { n: 1, label: '選ぶ', href: '#/services', note: selected.size ? `${selected.size}件` : null },
+      { n: 2, label: '確かめる', href: '#/', note: selected.size ? `${s.active.length}件` : null },
+      { n: 3, label: '対策する', href: '#/todo', note: s.total ? (s.open ? `${s.open}件 残り` : '完了') : null },
+    ];
+    const ol = el('ol', { class: 'journey' + (big ? ' big' : ' compact'), 'aria-label': '全部で3つの工程' });
+    for (const st of steps) {
+      const isCur = st.n === cur;
+      const isDone = st.n < cur || (st.n === 3 && s.total && !s.open) || (st.n === 1 && selected.size > 0 && !isCur);
+      const dot = el('span', { class: 'dot', 'aria-hidden': 'true' }, isDone && !isCur ? icon('check') : String(st.n));
+      const lbl = el('span', { class: 'lbl' }, `${st.n} ${st.label}`, isCur ? el('span', { class: 'here' }, 'いまここ') : st.note ? el('span', { class: 't' }, st.note) : null);
+      ol.append(el('li', { class: isCur ? 'cur' : isDone ? 'done' : '', 'aria-current': isCur ? 'step' : null }, el('a', { href: st.href }, dot, lbl)));
+    }
+    return ol;
   }
+  // 数字4個（画面と1対1。押すとその画面へ）。「やること残り」だけ大きく
+  function numsNode(s, onIncidents) {
+    const tile = (n, label, href, strong) => {
+      const body = [el('span', { class: 'n' }, String(n)), el('span', { class: 'l' }, label)];
+      if (href) return el('a', { class: 'num-tile' + (strong ? ' todo' : ''), href }, ...body);
+      const b = el('button', { type: 'button', class: 'num-tile' }, ...body);
+      b.addEventListener('click', onIncidents);
+      return b;
+    };
+    return el('div', { class: 'nums', role: 'list' },
+      tile(selected.size, '選んだサービス', '#/services'),
+      tile(s.active.length, '関係ある漏洩', null),
+      tile(s.open, 'やること残り', '#/todo', true),
+      tile(s.total - s.open, '対策済み', '#/todo'));
+  }
+  // 次に起きること（終点と時間の流れを言葉で）
+  function nextWhatNode() {
+    const item = (i, t) => el('li', null, el('span', { class: 'num', 'aria-hidden': 'true' }, String(i)), el('span', null, t));
+    return el('section', { class: 'next-what', 'aria-labelledby': 'nw' }, el('h2', { id: 'nw', class: 'sec' }, '次に起きること'),
+      el('ol', null,
+        item(1, 'やることを全部済ませると「今は対策済み」になります。'),
+        item(2, '続報が出たら、必要なものだけが「再確認」で戻ります。'),
+        item(3, 'お知らせは届きません。ときどき開いて確認してください。')));
+  }
+
+  // ---------- ホーム
   function incidentCard(inc) {
     const list = cardsFor(inc);
     const n = list.filter((x) => x.isDone).length;
     const denied = inc.status === 'denied';
     const first = inc.announcements[0];
+    const last = inc.announcements[inc.announcements.length - 1];
+    const latest = inc.announcements.length > 1 ? ` ・ 最新の公表 ${fmtMd(last.date)}（第${inc.announcements.length}報）` : '';
     const head = el('div', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
-      el('div', { class: 'ttl' }, el('h3', null, inc.service_name), el('span', { class: 'sub' }, `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`)));
+      el('div', { class: 'ttl' }, el('h3', null, inc.service_name), el('span', { class: 'sub' }, `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}${latest}`)));
     const card = el('article', { class: 'inc-card' }, head);
     if (denied) { card.append(el('p', { class: 'task-withdrawn' }, 'その後「漏洩はなかった」と公表されました。やることはありません。')); return card; }
     card.append(infoChips(inc));
@@ -237,37 +280,56 @@
       wrap.append(banner('info', 'info-circle', el('p', null, `前回（${fmtMd(lastVisit)}）のあと、${parts.join('、')}になりました。`), el('a', { href: '#/todo' }, 'やることを見る')));
     }
 
+    // 関係ある事案（1事案＝1カード）。数字「関係ある漏洩」を押すとここへ
+    let mineSec = null;
+    if (selected.size && s.mine.length) {
+      mineSec = el('section', { 'aria-labelledby': 'mine', id: 'mine' }, el('h2', { id: 'mine-h', class: 'sec', tabindex: '-1' }, '関係ある漏洩'));
+      for (const inc of orderIncidents(s.mine)) mineSec.append(incidentCard(inc));
+    }
+    const toMine = () => { if (mineSec) { mineSec.scrollIntoView({ block: 'start' }); mineSec.querySelector('h2').focus(); } };
+    const lastCheck = el('p', { class: 'caption hero-meta' }, `最終確認：${fmtDate(today)}`);
+
     let hero;
     if (!selected.size) {
+      // 空状態：工程一覧（3段＋終点）→ できること・できないこと → ボタン。チュートリアル画面は作らない
+      const step = (n, title, note) => el('li', null, el('span', { class: 'num', 'aria-hidden': 'true' }, n), el('span', null, el('b', null, title), el('small', null, note)));
       hero = el('section', { class: 'hero start', 'aria-labelledby': 'h1' },
-        el('div', { class: 'hero-head' }, el('span', { class: 'av big', 'aria-hidden': 'true' }, icon('layout-grid')), el('h1', { id: 'h1' }, '使っているサービスを選ぶと、関係のある漏洩だけが分かります')),
-        el('p', null, '企業が公式に公表した情報漏洩のうち、あなたが使っているサービスのものだけを表示し、やることを1つずつ案内します。'),
-        el('p', { class: 'small muted' }, '選んだ内容はこの端末の中にだけ保存されます。氏名やメールアドレスは入力しません。'),
-        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, icon('layout-grid'), 'サービスを選ぶ')));
+        el('h1', { id: 'h1' }, '使っているサービスの漏洩と、やることだけ'),
+        el('p', { class: 'caption' }, '全部で3つ。終わると「今は対策済み」になります。'),
+        el('ol', { class: 'steps-home' },
+          step('1', 'サービスを選ぶ', '使っているものにチェックを入れる ・ 約2分'),
+          step('2', '漏洩を確かめる', '関係ある会社の公表だけが出る ・ 約1分'),
+          step('3', '対策する', 'やることを1つずつ「済みにする」 ・ 1件 約1〜15分'),
+          el('li', { class: 'goal' }, el('span', { class: 'num', 'aria-hidden': 'true' }, icon('check')), el('span', null, el('b', null, '今は対策済み'), el('small', null, '続報が出たら、必要なものだけがここに戻ります')))),
+        el('div', { class: 'cando' },
+          el('div', null, el('b', null, 'できること'), '会社が公表した漏洩のうち、あなたに関係あるものだけを表示します。'),
+          el('div', null, el('b', null, 'できないこと'), 'あなたの情報が漏れたかは分かりません。会社からの連絡で確認します。')),
+        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg wide', href: '#/services' }, icon('layout-grid'), '1 サービスを選ぶ')),
+        el('p', { class: 'caption' }, '選んだ内容はこの端末の中にだけ保存されます。氏名やメールアドレスは入力しません。'));
+      wrap.append(hero);
     } else if (s.open > 0) {
+      wrap.append(journeyNode(2, s, true));
       hero = el('section', { class: 'hero todo', 'aria-labelledby': 'h1' },
         el('div', { class: 'hero-head' }, el('span', { class: 'av big accent', 'aria-hidden': 'true' }, icon('list-check')), el('h1', { id: 'h1' }, `やることが ${s.open}件 あります`)),
-        flowNode(selected.size, s.active.length, s.open),
-        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/todo' }, 'やることを見る'), el('a', { class: 'btn text', href: '#/services' }, 'サービスを追加する')),
-        el('p', { class: 'caption hero-meta' }, `最終確認：${fmtDate(today)}`));
+        el('p', { class: 'sum' }, `${s.active.length}件の漏洩に対して、やること${s.total}件のうち `, el('b', null, `${s.total - s.open}件`), ' が対策済みです。'),
+        numsNode(s, toMine),
+        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg wide', href: '#/todo' }, `3 対策する（${s.open}件）`)),
+        lastCheck);
+      wrap.append(hero);
     } else {
+      wrap.append(journeyNode(s.total ? 3 : 2, s, true));
       hero = el('section', { class: 'hero ok', 'aria-labelledby': 'h1' },
-        el('div', { class: 'hero-head' }, el('span', { class: 'av big success', 'aria-hidden': 'true' }, icon('circle-check')), el('h1', { id: 'h1' }, 'いまは対策済みです')),
-        flowNode(selected.size, s.active.length, 0),
-        el('p', null, s.active.length
-          ? 'やることはすべて終わっています。続報が出たら、必要なものだけをここに出します。'
-          : '選んだサービスについて、公表された漏洩はいまのところありません。新しい公表があれば、ここに出します。'),
-        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, 'サービスを追加する'), s.active.length ? el('a', { class: 'btn text', href: '#/todo' }, '終わったやることを見る') : null),
-        el('p', { class: 'caption hero-meta' }, `最終確認：${fmtDate(today)}`));
+        el('div', { class: 'hero-head' }, el('span', { class: 'av big success', 'aria-hidden': 'true' }, icon('circle-check')), el('h1', { id: 'h1' }, '今は対策済みです')),
+        el('p', { class: 'sum' }, s.active.length
+          ? `${s.active.length}件の漏洩のやること${s.total}件は、すべて終わっています。`
+          : '選んだサービスについて、公表された漏洩は今のところありません。'),
+        numsNode(s, toMine),
+        el('div', { class: 'btn-row' }, el('a', { class: 'btn secondary', href: '#/services' }, 'サービスを追加する'), s.active.length ? el('a', { class: 'btn text', href: '#/todo' }, '終わったやることを見る') : null),
+        lastCheck);
+      wrap.append(hero);
     }
-    wrap.append(hero);
-
-    // 関係ある事案（1事案＝1カード）
-    if (selected.size && s.mine.length) {
-      const sec = el('section', { 'aria-labelledby': 'mine' }, el('h2', { id: 'mine', class: 'small muted' }, '関係ある漏洩'));
-      for (const inc of orderIncidents(s.mine)) sec.append(incidentCard(inc));
-      wrap.append(sec);
-    }
+    if (mineSec) wrap.append(mineSec);
+    if (selected.size) wrap.append(nextWhatNode());
 
     const recent = [...incidents].sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1)).slice(0, 3);
     const list = el('ul', { class: 'plain-list' });
@@ -288,10 +350,27 @@
       wrap.append(el('h1', null, 'やること'), el('div', { class: 'hero start' }, el('p', null, 'まず、使っているサービスを選んでください。'), el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: '#/services' }, 'サービスを選ぶ'))));
       return wrap;
     }
-    wrap.append(el('h1', null, 'やること'), el('p', { class: 'muted' }, s.total ? `${s.total}件のうち ${s.total - s.open}件 対策済み` : '選んだサービスについて、公表された漏洩はいまのところありません。'));
+    wrap.append(journeyNode(3, s, false));
+    const h1 = el('h1', { tabindex: '-1' }, 'やること');
+    wrap.append(h1, el('p', { class: 'caption' }, s.total ? `${s.total}件のうち ${s.total - s.open}件 対策済み` : '選んだサービスについて、公表された漏洩は今のところありません。'));
     const rows = new Map(); // key → { row, panel }
-    const sections = orderIncidents(s.mine).map((inc) => incidentSection(inc, rows));
-    // つぎの1件（未対応の先頭）。直下に全体一覧があるので俯瞰は失わない
+    const ordered = orderIncidents(s.mine);
+    const sections = ordered.map((inc) => incidentSection(inc, rows));
+    // 目次（事案が2つ以上のとき）：事案ごとの件数つき。押すとその事案へ
+    if (ordered.length > 1) {
+      const toc = el('nav', { class: 'toc', 'aria-labelledby': 'toc-h' }, el('h2', { id: 'toc-h', class: 'sec' }, '目次'));
+      ordered.forEach((inc, i) => {
+        const list = cardsFor(inc);
+        const n = list.filter((x) => x.isDone).length;
+        const denied = inc.status === 'denied';
+        const b = el('button', { type: 'button', class: 'toc-row' }, avatarFor(serviceOf(inc), 'xs'), el('span', { class: 'nm' }, inc.service_name),
+          denied ? el('span', { class: 'cnt ok' }, '取り下げ') : el('span', { class: 'cnt' + (n === list.length ? ' ok' : '') }, el('b', null, String(n)), ` / ${list.length} 対策済み`));
+        b.addEventListener('click', () => { const sec = sections[i]; sec.open = true; sec.scrollIntoView({ block: 'start' }); sec.querySelector('summary').focus(); });
+        toc.append(b);
+      });
+      wrap.append(toc);
+    }
+    // 次の1件（未対応の先頭）。直下に全体一覧があるので俯瞰は失わない
     const next = s.active.flatMap(cardsFor).find((x) => !x.isDone);
     if (next) {
       const ok = el('button', { type: 'button', class: 'btn' }, icon('check'), '済みにする');
@@ -299,33 +378,46 @@
       const how = el('button', { type: 'button', class: 'btn ghost' }, 'やり方を見る');
       how.addEventListener('click', () => { const r = rows.get(next.key); if (!r) return; r.open(); r.row.scrollIntoView({ block: 'center' }); r.row.focus(); });
       wrap.append(el('section', { class: 'next', 'aria-labelledby': 'next-h' },
-        el('div', { class: 'lab' }, el('span', { id: 'next-h' }, 'つぎの 1件'), el('span', null, `${s.total}件中 ${s.total - s.open + 1}件目`)),
+        el('div', { class: 'lab' }, el('span', { id: 'next-h' }, '次の 1件'), el('span', null, `${s.total}件中 ${s.total - s.open + 1}件目`)),
         el('div', { class: 'body' }, icon(next.card.icon || (next.infoType && next.infoType.icon) || 'list-check', 'xl'),
           el('div', null, el('h2', null, cardTitle(next)), el('p', { class: 'meta' }, `${next.inc.service_name} ・ 約${next.card.minutes}分`))),
         el('div', { class: 'btn-row' }, ok, how)));
     }
     for (const sec of sections) wrap.append(sec);
-    if (!s.open && s.total) wrap.append(banner('success', 'circle-check', el('p', null, el('b', null, 'いまは対策済みです。'), '続報が出たら、必要なものだけが「再確認」として戻ります。'), el('a', { href: '#/' }, 'ホームへ')));
+    if (!s.open && s.total) wrap.append(banner('success', 'circle-check', el('p', null, el('b', null, '今は対策済みです。'), '続報が出たら、必要なものだけが「再確認」として戻ります。'), el('a', { href: '#/' }, 'ホームへ')));
+    // 「先頭へ」：1画面分より下にいるときだけ出す
+    const top = el('button', { type: 'button', class: 'totop', hidden: true }, icon('chevron-down'), '先頭へ');
+    top.addEventListener('click', () => { window.scrollTo(0, 0); h1.focus(); });
+    totop = top;
+    wrap.append(top);
     return wrap;
   }
+  // 事案＝折りたたみ（details）。未対応があれば開いた状態、全部済んだ・取り下げは閉じた状態で始める
   function incidentSection(inc, rows) {
     const list = cardsFor(inc);
     const n = list.filter((x) => x.isDone).length;
     const denied = inc.status === 'denied';
+    const allDone = !denied && n === list.length;
     const first = inc.announcements[0];
     const operatorShort = inc.operator.replace(/（.*?）/g, '');
-    const sec = el('section', { class: 'task', 'aria-labelledby': `t-${inc.id}` });
-    sec.append(el('header', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
-      el('div', { class: 'ttl' }, el('h2', { id: `t-${inc.id}` }, inc.service_name),
-        el('span', { class: 'sub' }, `${operatorShort}が${fmtMd(first.date)}に${STATUS_SUB[inc.status]}。`, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '詳しく'))),
-      denied ? el('span', { class: 'tag denied' }, '取り下げ') : el('span', { class: 'count' }, el('b', null, String(n)), ` / ${list.length}`)));
+    const sec = el('details', { class: 'task' + (allDone ? ' is-done' : ''), id: `sec-${inc.id}`, open: !denied && !allDone });
+    const sub = denied ? 'その後「漏洩はなかった」と公表されました' : allDone ? 'この事案の対策は済みました' : `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`;
+    sec.append(el('summary', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
+      el('div', { class: 'ttl' }, el('h2', { id: `t-${inc.id}` }, inc.service_name), el('span', { class: 'sub' }, sub)),
+      denied ? el('span', { class: 'tag denied' }, '取り下げ') : el('span', { class: 'count' + (allDone ? ' ok' : '') }, el('b', null, String(n)), ` / ${list.length}`),
+      icon('chevron-down', 'chev')));
+    const about = el('p', { class: 'task-about caption' }, `${operatorShort}が${fmtMd(first.date)}に${STATUS_SUB[inc.status]}。`, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '詳しく'));
+    sec.append(about);
     if (denied) { sec.append(el('p', { class: 'task-withdrawn' }, 'やることはありません。')); return sec; }
     const ul = el('ul', { class: 'task-list' });
     let currentType = null;
     for (const x of list) {
       if (x.infoType !== currentType) {
         currentType = x.infoType;
-        if (currentType) ul.append(el('li', { class: 'type-head' }, icon(currentType.icon), `${currentType.label}が漏れたとき`, currentType.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null));
+        if (currentType) {
+          const cnt = list.filter((y) => y.infoType === currentType).length;
+          ul.append(el('li', { class: 'type-head' }, icon(currentType.icon), `${currentType.label}が漏れたとき（${cnt}件）`, currentType.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null));
+        }
       }
       ul.append(taskItem(x, rows));
       if (x.infoType && x.card === x.infoType.cards[x.infoType.cards.length - 1] && x.infoType.skip_if.length) {
@@ -335,11 +427,7 @@
         li.append(body); ul.append(li);
       }
     }
-    if (n === list.length) {
-      // 全部済んだ事案は、行を折りたたんで「済んだ」ことを目立たせる
-      sec.append(el('div', { class: 'task-done-panel' }, icon('circle-check'), 'この事案の対策は済みました'));
-      sec.append(el('details', { class: 'fold' }, el('summary', null, icon('chevron-down', 'chev'), `対策済み ${n}件を見る`), ul));
-    } else sec.append(ul);
+    sec.append(ul);
     return sec;
   }
   function taskItem(x, rows) {
@@ -394,7 +482,8 @@
   }
   function viewServices() {
     const wrap = el('div', { class: 'wrap' });
-    wrap.append(el('h1', null, '使っているサービスを選ぶ'), el('p', { class: 'muted' }, '該当するものをすべて選んでください。あとから追加や変更ができます。'));
+    wrap.append(journeyNode(1, summary(), false));
+    wrap.append(el('h1', null, '使っているサービスを選ぶ'), el('p', { class: 'caption' }, '該当するものをすべて選んでください。あとから追加や変更ができます。'));
 
     // 検索
     const input = el('input', { type: 'search', id: 'svc-search', placeholder: '例：セブン、ペイペイ、タイムズ', autocomplete: 'off', 'aria-label': 'サービス名で探す', 'aria-controls': 'svc-suggest', enterkeyhint: 'search' });

@@ -57,7 +57,8 @@ const checkCard = (c, where) => {
   if (c.steps !== undefined && (!Array.isArray(c.steps) || !c.steps.length || c.steps.some((s) => typeof s !== 'string' || !s))) err(`${where}/${c.id}: steps は空でない文字列の配列`);
   if (c.dont !== undefined && (typeof c.dont !== 'string' || !c.dont)) err(`${where}/${c.id}: dont は文字列`);
   if (c.icon !== undefined) checkIcon(c.icon, `${where}/${c.id}`);
-  if (/(ログイン|アカウント|インストール|アップデート|ダークウェブ|ハッカー)/.test(c.title + c.detail + c.reason + (c.steps || []).join('') + (c.dont || ''))) warn(`${where}/${c.id}: 文言ガイドで避ける語を含む（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）`);
+  // 対象は非ITの社会人（CLAUDE.md 文体）：ログイン・アカウント・インストール等は通じるのでそのまま使う。説明なしでは伝わらない語だけ警告する
+  if (/(ダークウェブ|ハッカー|クレデンシャル|フィッシング(?!（))/.test(c.title + c.detail + c.reason + (c.steps || []).join('') + (c.dont || ''))) warn(`${where}/${c.id}: 初出で説明が必要な語を含む（ダークウェブ／ハッカー／クレデンシャル／説明のないフィッシング）`);
 };
 checkCard(cards.always_first_card, 'always_first_card');
 const matchedKeys = new Set();
