@@ -136,18 +136,11 @@ ${SPRITE}
 ${withApp ? '' : `<div class="wrap">${body}</div>`}
 </main>
 ${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info-circle')}<div><p>この画面にはJavaScriptが必要です。JavaScriptを使わずに読める <a href="${rel}incidents/">事案の一覧</a> もあります。</p></div></div></div></noscript>` : ''}
-<nav class="help" aria-label="困ったとき">
-  <div class="wrap">
-    <a href="${rel}#/settings">${icon('home-2')}家族に見せる</a>
-    <a href="${rel}#/help">${icon('phone')}相談窓口</a>
-    <a href="${rel}faq.html">${icon('info-circle')}よくある質問</a>
-  </div>
-</nav>
 <footer>
   <div class="wrap">
+    <nav aria-label="困ったとき・このサイトについて"><a href="${rel}#/settings">家族に見せる</a><a href="${rel}#/help">相談窓口</a><a href="${rel}faq.html">よくある質問</a><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
     <p><b>ご注意</b>：会社が公表した事実と、公的機関が勧める対処をまとめています。あなたが対象かは各社からの連絡でご確認ください。網羅性・即時性は保証しません。</p>
     <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。このサイトからメールやSMSは送りません。</p>
-    <nav aria-label="フッター"><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
     <p class="caption">データ生成日 ${esc(today)}</p>
   </div>
 </footer>
