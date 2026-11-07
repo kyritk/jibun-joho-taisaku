@@ -9,6 +9,17 @@
   const dataEl = document.getElementById('data');
   const app = document.getElementById('app');
   if (!dataEl || !app) return;
+  // 他サイトの iframe に埋め込まれている場合は描画しない（クリックジャッキング・偽サイトの中での表示を防ぐ。T3）
+  let framed = false;
+  try { framed = window.top !== window.self; } catch { framed = true; }
+  if (framed) {
+    while (app.firstChild) app.removeChild(app.firstChild);
+    const p = document.createElement('p');
+    p.className = 'wrap';
+    p.textContent = 'このページは別のサイトの中に埋め込まれています。本物のURL（' + location.origin + location.pathname + '）を直接開いてください。';
+    app.append(p);
+    return;
+  }
   let DATA;
   try { DATA = JSON.parse(dataEl.textContent); } catch { return; }
   const { cards, services, incidents } = DATA;

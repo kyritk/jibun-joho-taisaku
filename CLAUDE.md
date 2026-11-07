@@ -56,6 +56,8 @@
 - 外部リソース（CDN、フォント、解析）を一切読まない。外部リンクは `rel="noopener noreferrer"`、ページは `referrer: no-referrer`。
 - 表示するURLは `data/official-domains.json` の公式ホストだけ。報道（kind: media）はカードの根拠にのみ使い、事案・窓口には使わない。
 - Service Worker は置かない（古い事案データをキャッシュしないため）。manifest のみ。
+- `app.css` / `app.js` には SRI（sha384）を付ける（ビルドが計算、`check-dist.mjs` が照合）。`.well-known/security.txt` をビルドで生成する。iframe 内では描画しない。
+- GitHub 側：Actions は GitHub 製のみ許可、フォーク PR は外部貢献者すべて承認制、CodeQL 既定セットアップ、secret scanning＋push protection、Dependabot アラート。第三者アクションを追加しない。
 - GitHub Actions はコミットSHA固定・最小権限・シークレットなし。`pull_request_target` は使わない。
 - リポジトリ：`https://github.com/kyritk/jibun-joho-taisaku`、公開URL：`https://kyritk.github.io/jibun-joho-taisaku/`。承認者名は `Kyri`。
 

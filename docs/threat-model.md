@@ -111,7 +111,9 @@ GitHub Pages は HTTP ヘッダを設定できないため、CSP は `<meta http
 - サイトの丸ごとコピー（T3）。構造上防げない。
 - ブラウザ拡張による端末内データの読み取り（T4）。
 - GitHub の障害によるサイト停止。代替配信は持たない。
-- クリックジャッキング。操作対象がないため実害がない。
+- クリックジャッキング。GitHub Pages ではレスポンスヘッダ（frame-ancestors / X-Frame-Options）を設定できないため完全には防げない。アプリ側で iframe 内なら描画せず本物のURLを案内する（JS が無効なら静的ページだけが見える）。
+- 事案別ページからの `#s=<id>` 導線は、第三者が細工したリンクでもサービスの選択を追加できる。追加できるのはマスタにある ID だけで、追加した旨を画面で知らせるため受け入れる。
+- CI の egress 制限（Harden-Runner 等）は入れない。第三者アクションを増やさないことを優先し、Actions を GitHub 製に限定する。
 
 ## 4. 対策の実装一覧（チェックリスト）
 
@@ -122,7 +124,14 @@ GitHub Pages は HTTP ヘッダを設定できないため、CSP は `<meta http
 - [x] `referrer: no-referrer`、外部リンクに `rel="noopener noreferrer"`
 - [x] Service Worker なし（manifest のみ）
 - [x] GitHub Actions：SHA固定、最小権限、シークレットなし、PR時は読み取りのみ
+- [x] Subresource Integrity：`app.css` / `app.js` の `integrity`（sha384）をビルドで埋め、`check-dist.mjs` が実ファイルと照合
+- [x] `.well-known/security.txt`（RFC 9116）。報告先は GitHub の非公開脆弱性報告
+- [x] iframe 内では描画しない（クリックジャッキング・偽サイト内表示の緩和）
+- [x] `check-dist.mjs`：meta refresh・srcdoc・data: URL・form・http: リンクの不在を検査
+- [x] GitHub Actions：GitHub 製アクションのみ許可、フォーク PR は外部貢献者すべて承認制、既定トークンは読み取りのみ
+- [x] GitHub：secret scanning＋push protection、Dependabot アラート（actions）、CodeQL 既定セットアップ（javascript / actions）、非公開脆弱性報告、マージ後のブランチ自動削除
 - [ ] GitHub：2要素認証（アカウント設定。手動）
+- [ ] GitHub：署名付きコミットの必須化（ローカルで SSH/GPG 署名を設定してから有効化する。手動）
 - [x] ブランチ保護：main への直接push禁止、force push 禁止、CI必須（`gh api` で設定）
 - [x] SECURITY.md（脆弱性の報告先）とプライバシーポリシー（端末内保存の項目、GitHub のログ）
 - [x] 承認フロー：`drafts/` → 目視 → `approved/`。CI は `approved/` だけをビルド
