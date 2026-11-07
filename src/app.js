@@ -1,4 +1,4 @@
-// じぶんの情報対策 — クライアント側（4画面：ホーム／やること／サービス／設定、＋相談窓口）
+// じぶんの情報対策 — クライアント側（4画面：ホーム／やること／サービス／設定、＋いまの状況（工程2）・相談窓口）
 // 方針（docs/threat-model.md）：文字列をHTMLとして流し込む経路を一切使わず、DOM API だけで描画する。
 // CSP の require-trusted-types-for 'script' と trusted-types 'none' により、万一混入してもブラウザが遮断する。
 // 通信は行わない。保存は localStorage のみ。設計根拠は docs/ux-research.md と docs/ux-visual-research.md。
@@ -254,7 +254,7 @@
   function journeyNode(cur, s, trail) {
     const steps = [
       { n: 1, label: '選ぶ', href: '#/services' },
-      { n: 2, label: '確かめる', href: '#/' },
+      { n: 2, label: '確かめる', href: '#/status' },
       { n: 3, label: '対策する', href: '#/todo' },
     ];
     const ol = el('ol', { class: 'journey', 'aria-label': '全部で3つの工程' });
@@ -271,10 +271,10 @@
   }
   // ホームの状態の箱の下の1行（段C）：内訳の数字。それぞれ押せる
   function metaLine(s, onIncidents) {
-    const svc = el('a', { href: '#/services' }, `選んだサービス ${selected.size}`);
+    const svc = el('a', { href: '#/status?go=sec-svc' }, `選んだサービス ${selected.size}`);
     const inc = el('button', { type: 'button', class: 'linklike' }, `関係ある漏洩 ${s.active.length}`);
     inc.addEventListener('click', onIncidents);
-    const done = el('a', { href: '#/todo' }, `対策済み ${s.total - s.open}`);
+    const done = el('a', { href: '#/status?go=sec-log' }, `対策済み ${s.total - s.open}`);
     return el('p', { class: 'hero-meta' }, svc, ' ・ ', inc, ' ・ ', done, ' ・ ', `最終確認 ${fmtMd(today)}`);
   }
   // 次に起きること（段C）：1行の要約を見出しにした折りたたみ
@@ -370,6 +370,129 @@
     return wrap;
   }
 
+  // ---------- いまの状況（工程2「確かめる」。docs/ux-dashboard-research.md §4）
+  // 何が・どこから・いつ漏れたおそれがあり、何を済ませたかを、数字と行だけで1画面に。グラフ・スコア・％は置かない
+  // 情報の種類ごとの集計：関係ある事案、未対応・再確認の行数
+  function typeSummary(s) {
+    const out = [];
+    for (const t of infoTypesSorted) {
+      const list = s.rows.filter((r) => r.infoType === t);
+      if (!list.length) continue;
+      const incs = [...new Set(list.flatMap((r) => r.incs))];
+      out.push({ t, list, incs, open: list.filter((r) => !r.isDone).length, reopened: list.filter((r) => r.reopened).length, serviceScoped: list.every((r) => r.card.scope === 'service') });
+    }
+    return out;
+  }
+  // 公表と続報の流れ：関係ある事案の公表を新しい順に1行ずつ
+  function announcementEvents(incs) {
+    const ev = [];
+    for (const inc of incs) {
+      inc.announcements.forEach((a, i) => {
+        const what = i === 0 ? '第1報' : a.type === 'final' ? '最終報' : a.type === 'retraction' ? '取り下げ' : `第${i + 1}報`;
+        const ch = [];
+        for (const c of a.changes || []) {
+          if (c.startsWith('info_added:')) ch.push(`${INFO_LABEL[c.slice(11)] || c.slice(11)}を追加`);
+          else if (c.startsWith('info_removed:')) ch.push(`${INFO_LABEL[c.slice(13)] || c.slice(13)}を対象外に`);
+          else if (c.startsWith('status:')) ch.push(STATUS_LABEL[c.split('->')[1]] || '');
+          else if (c === 'count_update') ch.push('件数を訂正');
+        }
+        ev.push({ date: a.date, inc, text: `${shortName(inc)} ${what}${ch.filter(Boolean).length ? '：' + ch.filter(Boolean).join('・') : ''}` });
+      });
+    }
+    return ev.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  }
+  const tlItem = (date, svc, text) => el('li', null, el('span', { class: 'd' }, fmtMd(date)), svc ? avatarFor(svc, 'xxs') : null, el('span', null, text));
+  function viewStatus() {
+    const s = summary();
+    const wrap = el('div', { class: 'wrap' });
+    if (!selected.size) {
+      wrap.append(el('h1', null, 'いまの状況'), el('div', { class: 'hero start' }, el('p', null, 'まず、使っているサービスを選んでください。'), el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: '#/services' }, 'サービスを選ぶ'))));
+      return wrap;
+    }
+    wrap.append(journeyNode(2, s, s.total ? `${s.total}件中 ${s.total - s.open}件 済み` : 'やること 0件'));
+    const types = typeSummary(s);
+    const pubSvc = [...selected].filter((id) => (incidentsByService[id] || []).some((i) => i.status !== 'denied'));
+    const noPub = [...selected].filter((id) => !pubSvc.includes(id)).map((id) => svcById[id]).sort((a, b) => (a.popular_rank || 99) - (b.popular_rank || 99));
+    const goTo = (id) => () => { const t = document.getElementById(id); if (t) { t.scrollIntoView({ block: 'start' }); const h = t.querySelector('h2'); if (h) h.focus(); } };
+    const svcBtn = el('button', { type: 'button', class: 'linklike' }, `選んだ ${selected.size} サービス`);
+    svcBtn.addEventListener('click', goTo('sec-svc'));
+
+    // 段A：状態の箱（1画面に1つ）。公表があれば「漏れたおそれのある情報 N種類」、無ければ肯定文
+    if (types.length) {
+      const pub = el('button', { type: 'button', class: 'linklike' }, `${pubSvc.length}社が公表`);
+      pub.addEventListener('click', goTo('sec-svc'));
+      const meta = el('p', { class: 'hero-meta' }, svcBtn, 'のうち ', pub, ' ・ ', el('a', { href: '#/todo' }, `対策済み ${s.total - s.open} / ${s.total}`), ' ・ ', `最終確認 ${fmtMd(today)}`);
+      const btn = s.open > 0
+        ? el('a', { class: 'btn lg wide', href: '#/todo' }, 'やることへ', el('small', null, `残り ${s.open}件`))
+        : el('a', { class: 'btn secondary', href: '#/todo' }, '終わったやることを見る');
+      wrap.append(el('section', { class: 'hero status', 'aria-labelledby': 'h1' },
+        el('p', { class: 'hero-lab' }, 'いまの状況'),
+        el('h1', { id: 'h1' }, '漏れたおそれのある情報', el('br'), el('span', { class: 'big-n' }, String(types.length)), '種類'),
+        el('div', { class: 'btn-row' }, btn), meta));
+    } else {
+      wrap.append(el('section', { class: 'hero ok', 'aria-labelledby': 'h1' },
+        el('p', { class: 'hero-lab' }, 'いまの状況'),
+        el('div', { class: 'hero-head' }, el('span', { class: 'av big success', 'aria-hidden': 'true' }, icon('circle-check')), el('h1', { id: 'h1', class: 'long' }, `選んだ${selected.size}サービスに、公表された漏洩はありません`)),
+        el('div', { class: 'btn-row' }, el('a', { class: 'btn secondary', href: '#/services' }, 'サービスを追加する')),
+        el('p', { class: 'hero-meta' }, svcBtn, ' ・ ', `最終確認 ${fmtMd(today)}`, ' ・ 新しい公表があれば、ここに出ます')));
+    }
+
+    // 段B：漏れたおそれのある情報（種類ごとに1行。緊急度順。会社の丸＋公表日、右端に未対応の数）
+    if (types.length) {
+      const ul = el('ul', { class: 'inc-rows' });
+      for (const ts of types) {
+        const latest = ts.incs.map((i) => i.first_published).reduce((a, b) => (a > b ? a : b));
+        const avs = el('span', { class: 'avs', 'aria-hidden': 'true' }, ...ts.incs.slice(0, 3).map((inc) => avatarFor(serviceOf(inc), 'xs')));
+        const sub = el('small', null, avs, ' ', ts.incs.length > 1 ? `${ts.incs.length}社` : shortName(ts.incs[0]), ` ・ ${fmtMd(latest)} 公表`);
+        const cnt = ts.open ? el('span', { class: 'cnt' + (ts.reopened ? ' re' : '') }, ts.reopened ? '再確認 ' : '未対応 ', el('b', null, String(ts.open))) : el('span', { class: 'cnt ok' }, '対策済み');
+        const go = ts.serviceScoped ? 'sec-service' : ts.open ? `th-${ts.t.key}` : 'sec-once';
+        ul.append(el('li', { class: ts.open ? '' : 'is-done' }, el('a', { href: `#/todo?go=${go}` },
+          icon(ts.t.icon, 'ti' + (ts.t.urgency === 1 ? ' red' : '')), el('span', { class: 'nm' }, ts.t.label, sub), cnt, icon('chevron-down', 'chev'))));
+      }
+      wrap.append(el('section', { id: 'sec-types', 'aria-labelledby': 'types-h' },
+        el('div', { class: 'inc-head' }, el('div', { class: 'ttl' }, el('h2', { id: 'types-h', tabindex: '-1' }, '漏れたおそれのある情報'), el('span', { class: 'sub' }, '緊急度の高い順。会社の公表に基づく。対象かは会社からの連絡で確認'))),
+        ul));
+      // 段C：漏れていないと公表されたもの（肯定文）
+      const notLeaked = s.active.filter((i) => i.card_not_leaked_stated === true);
+      if (notLeaked.length) wrap.append(el('p', { class: 'caption' }, '漏れていないと公表：クレジットカード情報（', notLeaked.map(shortName).join('、'), '）'));
+    }
+
+    // 段B：選んだサービス（公表ありは件数つきの行。公表なしは畳む）
+    const svcSec = el('section', { id: 'sec-svc', 'aria-labelledby': 'svc-h' });
+    const svcSub = s.mine.length ? (noPub.length ? `公表があったのは ${pubSvc.length}。残りの ${noPub.length} は公表なし` : `すべてに公表あり`) : 'すべて公表なし';
+    svcSec.append(el('div', { class: 'inc-head' }, el('div', { class: 'ttl' }, el('h2', { id: 'svc-h', tabindex: '-1' }, '選んだサービス'), el('span', { class: 'sub' }, svcSub)), el('span', { class: 'count' }, el('b', null, String(selected.size)))));
+    if (s.mine.length) {
+      const ul = el('ul', { class: 'inc-rows' });
+      for (const inc of orderIncidents(s.mine, s.rows)) ul.append(incidentRow(inc, s.rows));
+      svcSec.append(ul);
+      if (noPub.length) svcSec.append(el('details', { class: 'fold-c' }, el('summary', null, icon('chevron-down', 'chev'), `公表なし ${noPub.length}件`), el('p', null, noPub.map((x) => x.name).join('、'), '　', el('a', { href: '#/services' }, 'サービスを変える'))));
+    } else {
+      const row = (svc) => el('li', { class: 'is-done' }, el('a', { href: '#/services' }, avatarFor(svc, 'sm'), el('span', { class: 'nm' }, svc.name, el('small', null, '公表なし')), icon('chevron-down', 'chev')));
+      const SHOW = 4;
+      svcSec.append(el('ul', { class: 'inc-rows' }, ...noPub.slice(0, SHOW).map(row)));
+      if (noPub.length > SHOW) svcSec.append(el('details', { class: 'fold-c' }, el('summary', null, icon('chevron-down', 'chev'), `残り ${noPub.length - SHOW}件`), el('ul', { class: 'inc-rows' }, ...noPub.slice(SHOW).map(row))));
+    }
+    wrap.append(svcSec);
+
+    if (s.mine.length) {
+      // 段C：公表と続報の流れ（新しい順）
+      const ev = announcementEvents(s.mine);
+      wrap.append(el('details', { class: 'fold-c' }, el('summary', null, icon('chevron-down', 'chev'), `公表と続報の流れ ${ev.length}件`),
+        el('ul', { class: 'tl' }, ...ev.map((e) => tlItem(e.date, serviceOf(e.inc), e.text)))));
+      // 段C：対策の記録（済みにした日の新しい順）
+      const log = s.rows.filter((r) => r.doneOn).sort((a, b) => (a.doneOn < b.doneOn ? 1 : a.doneOn > b.doneOn ? -1 : 0));
+      wrap.append(el('details', { class: 'fold-c', id: 'sec-log' }, el('summary', null, icon('chevron-down', 'chev'), `対策の記録 ${log.length}件`),
+        log.length ? el('ul', { class: 'tl' }, ...log.map((r) => tlItem(r.doneOn, null, cardTitle(r) + (r.reopened ? '（再確認）' : '')))) : el('p', null, '「済みにする」を押した行動が、日付つきでここに並びます。')));
+    } else {
+      // 段C：何を見た結果かを書く（空状態）
+      const last = incidents.map((i) => i.last_updated).reduce((a, b) => (a > b ? a : b), '');
+      wrap.append(el('p', { class: 'caption' }, el('b', null, 'このサイトが見ているもの：'), `会社が公式に公表した事案 ${incidents.length}件${last ? `（最終更新 ${fmtMd(last)}）` : ''}。会社が公表していない漏洩は分かりません。`));
+      wrap.append(el('p', { class: 'caption' }, el('b', null, '次に起きること：'), '選んだサービスの公表があると、ホームとここに出ます。通知は送りません。ときどき開いて確かめてください。'));
+      wrap.append(recentNode(false));
+    }
+    return wrap;
+  }
+
   // ---------- やること
   function viewTodo() {
     const s = summary();
@@ -403,7 +526,7 @@
     const nCo = s.active.length;
     if (onceRows.length) {
       wrap.append(listSection('once', '1回やれば済むこと', nCo > 1 ? `${nCo}社に共通。1回「済みにする」と全部に反映されます` : null, onceRows, rows, (x) => x.infoType,
-        (t) => el('li', { class: 'type-head' }, icon(t.icon), `${t.label}が漏れたとき`, t.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null)));
+        (t) => el('li', { class: 'type-head', id: `th-${t.key}` }, icon(t.icon), `${t.label}が漏れたとき`, t.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null)));
     }
     if (svcRows.length) {
       const ordered = orderIncidents(s.active, s.rows);
@@ -680,8 +803,8 @@
   }
 
   // ---------- ルーティング
-  const VIEWS = { '': viewHome, todo: viewTodo, services: viewServices, settings: viewSettings, help: viewHelp };
-  const TITLES = { '': 'じぶんの情報対策', todo: 'やること｜じぶんの情報対策', services: 'サービスを選ぶ｜じぶんの情報対策', settings: '設定｜じぶんの情報対策', help: '相談窓口｜じぶんの情報対策' };
+  const VIEWS = { '': viewHome, status: viewStatus, todo: viewTodo, services: viewServices, settings: viewSettings, help: viewHelp };
+  const TITLES = { '': 'じぶんの情報対策', status: 'いまの状況｜じぶんの情報対策', todo: 'やること｜じぶんの情報対策', services: 'サービスを選ぶ｜じぶんの情報対策', settings: '設定｜じぶんの情報対策', help: '相談窓口｜じぶんの情報対策' };
   function route() {
     const h = location.hash.replace(/^#\/?/, '');
     // 旧形式 #s=id1,id2（事案別ページの「登録する」導線）
@@ -705,6 +828,13 @@
     for (const a of document.querySelectorAll('nav.primary a')) {
       const target = (a.getAttribute('href').split('#')[1] || '').replace(/^\//, '');
       if (target === current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    }
+    // #/画面?go=<要素id>：その要素まで送る（折りたたみの中なら開く）。いまの状況 → やることの種別、ホーム → いまの状況の区画
+    const go = (location.hash.split('?')[1] || '').match(/(?:^|&)go=([a-z0-9_-]+)/i);
+    const t = go && document.getElementById(go[1]);
+    if (t) {
+      for (let d = t.closest('details'); d; d = d.parentElement && d.parentElement.closest('details')) d.open = true;
+      requestAnimationFrame(() => t.scrollIntoView({ block: 'start' }));
     }
   }
   window.addEventListener('hashchange', () => { rerender(); window.scrollTo(0, 0); });

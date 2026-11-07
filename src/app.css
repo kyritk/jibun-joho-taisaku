@@ -181,6 +181,22 @@ details.fold-c a { color: var(--text-2); }
 .recent .d { flex: none; width: 4em; }
 main > .wrap > details.fold-c + details.fold-c { margin-top: var(--s-2); }
 
+/* ---------- いまの状況（工程2。段A＝箱1つ、段B＝種類の行・サービスの行、段C＝折りたたみの時系列） */
+.hero .hero-lab { margin: 0 0 var(--s-1); font-size: var(--fs-4); font-weight: 700; color: var(--accent); }
+.hero.ok .hero-lab { color: var(--success); }
+.hero h1.long { font-size: var(--fs-2); line-height: 1.4; }
+.btn small { font-weight: 400; font-size: .875rem; margin-left: .25em; }
+.inc-rows .ti { width: 28px; height: 28px; flex: none; color: var(--text); }
+.inc-rows .ti.red { color: var(--danger); }
+.inc-rows li.is-done .ti { color: var(--text-2); }
+.inc-rows .cnt.re { color: var(--warning); }
+.av.xxs { width: 14px; height: 14px; } .av.xxs svg.icon { display: none; }
+.tl { list-style: none !important; padding-left: 0 !important; margin: 0 0 var(--s-2); }
+.tl li { display: flex; gap: var(--s-2); align-items: flex-start; padding: 3px 0; }
+.tl .d { flex: none; width: 4.6em; font-variant-numeric: tabular-nums; }
+.tl .av { margin-top: .3em; }
+main > .wrap > section + details.fold-c { margin-top: var(--s-3); }
+
 /* ---------- バナー（1ページ1つ、h1 の直前） */
 .banner { display: flex; gap: var(--s-3); align-items: flex-start; border-radius: var(--r-md); padding: var(--s-3) var(--s-4); border: 1px solid; }
 .banner > svg.icon { width: 1.5rem; height: 1.5rem; margin-top: .15em; }
