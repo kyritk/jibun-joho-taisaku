@@ -21,6 +21,8 @@
 | `docs/threat-model.md` | 脅威モデルと対策の一覧 |
 | `data/official-domains.json` | 表示してよいURLのホスト許可リスト |
 | `src/app.js`, `src/app.css` | クライアント側のコードとスタイル（innerHTML 不使用、依存ゼロ） |
+| `assets/icons/` | アイコン素材（Tabler filled＝MIT、自作）。ビルドが `<path>` だけを取り出し HTML 内スプライトにする。ライセンスは `THIRD_PARTY_NOTICES.md` |
+| `docs/ux-research.md`, `docs/ux-visual-research.md` | 画面設計の調査報告（文字の設計／絵と形の設計） |
 | `scripts/validate.mjs` | データ検証（スキーマ、参照整合性、URL許可リスト） |
 | `scripts/build.mjs` | 静的サイト生成 → `dist/`（Node 標準ライブラリのみ） |
 | `scripts/check-dist.mjs` | 出力の自己検査（CSP、外部リソースなし、inline script なし） |

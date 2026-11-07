@@ -1,7 +1,8 @@
 // じぶんの情報対策 — クライアント側（4画面：ホーム／やること／サービス／設定、＋相談窓口）
 // 方針（docs/threat-model.md）：文字列をHTMLとして流し込む経路を一切使わず、DOM API だけで描画する。
 // CSP の require-trusted-types-for 'script' と trusted-types 'none' により、万一混入してもブラウザが遮断する。
-// 通信は行わない。保存は localStorage のみ。設計根拠は docs/ux-research.md。
+// 通信は行わない。保存は localStorage のみ。設計根拠は docs/ux-research.md と docs/ux-visual-research.md。
+// アイコンは HTML 内のスプライト（<symbol id="i-…">）を <use> で参照する。外部ファイルは読まない。
 (function () {
   'use strict';
 
@@ -33,22 +34,21 @@
     return n;
   };
   const SVG_NS = 'http://www.w3.org/2000/svg';
-  const ICONS = {
-    check: ['M20 6 9 17l-5-5'],
-    'check-circle': ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'm8 12 3 3 5-6'],
-    circle: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],
-    alert: ['M12 3 2 20h20L12 3z', 'M12 10v4', 'M12 17h.01'],
-    info: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 11v6', 'M12 8h.01'],
-    minus: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M8 12h8'],
-    search: ['M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z', 'm21 21-4.3-4.3'],
-    chevron: ['m6 9 6 6 6-6'],
-  };
+  const XLINK_NS = 'http://www.w3.org/1999/xlink';
+  const ICON_ID = /^[a-z0-9-]+$/;
+  // スプライト内の <symbol id="i-名前"> を参照する。名前は英小文字・数字・ハイフンのみ
   const icon = (name, cls) => {
     const s = document.createElementNS(SVG_NS, 'svg');
     s.setAttribute('class', 'icon' + (cls ? ' ' + cls : ''));
     s.setAttribute('viewBox', '0 0 24 24');
     s.setAttribute('aria-hidden', 'true');
-    for (const d of ICONS[name] || []) { const p = document.createElementNS(SVG_NS, 'path'); p.setAttribute('d', d); s.append(p); }
+    s.setAttribute('focusable', 'false');
+    if (ICON_ID.test(name)) {
+      const u = document.createElementNS(SVG_NS, 'use');
+      u.setAttribute('href', '#i-' + name);
+      u.setAttributeNS(XLINK_NS, 'xlink:href', '#i-' + name);
+      s.append(u);
+    }
     return s;
   };
   const extLink = (url, label) => {
@@ -69,6 +69,7 @@
   const isObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
 
   const svcById = Object.fromEntries(services.services.map((s) => [s.id, s]));
+  const catByKey = Object.fromEntries(services.categories.map((c) => [c.key, c]));
   let selected = new Set((load(LS.services, []) || []).filter((id) => svcById[id]));
   let done = load(LS.done, {}); if (!isObj(done)) done = {};
   let seen = load(LS.seen, {}); if (!isObj(seen)) seen = {};
@@ -87,6 +88,29 @@
   const incidentsByService = {};
   for (const inc of incidents) for (const sid of inc.service_ids) (incidentsByService[sid] ||= []).push(inc);
   const infoTypesSorted = [...cards.info_types].sort((a, b) => (a.urgency || 9) - (b.urgency || 9));
+
+  // ---------- 視覚部品：会社の丸（カテゴリ固定色＋カテゴリの絵）、情報の種類チップ、状態の形
+  const avatarFor = (svc, size) => {
+    const cat = svc && catByKey[svc.category];
+    return el('span', { class: `av${size ? ' ' + size : ''}${cat ? ' c-' + cat.key : ''}`, 'aria-hidden': 'true' }, icon(cat ? cat.icon : 'layout-grid'));
+  };
+  const serviceOf = (inc) => svcById[inc.service_ids[0]];
+  // 事案の「漏れた情報」を、カード群（情報の種類）単位のチップにまとめる。カード群に無いキーは文字だけのチップ
+  function infoChips(inc) {
+    const limited = inc.limited_info_types || {};
+    const leaked = inc.leaked_info_types.filter((k) => !(k in limited));
+    const ul = el('ul', { class: 'chips', 'aria-label': '漏れたとされる情報' });
+    const covered = new Set();
+    for (const t of infoTypesSorted) {
+      const hit = t.matches.filter((k) => leaked.includes(k));
+      if (!hit.length) continue;
+      hit.forEach((k) => covered.add(k));
+      ul.append(el('li', { class: 'chip' + (t.urgency === 1 ? ' strong' : '') }, icon(t.icon), t.chip_label || t.label));
+    }
+    for (const k of leaked) if (!covered.has(k)) ul.append(el('li', { class: 'chip plain' }, INFO_LABEL[k] || k));
+    return ul;
+  }
+  const statusShape = (x) => icon(x.isDone ? 'circle-check' : x.reopened ? 'alert-triangle' : 'ring', 'st');
 
   // ---------- カードの計算（並び：先頭カード → 緊急度順）
   function reopenDate(inc, card, infoType) {
@@ -107,7 +131,7 @@
       const doneOn = typeof done[key] === 'string' ? done[key] : null;
       const isDone = !!doneOn && doneOn >= rd;
       const reopened = !!doneOn && !isDone;
-      out.push({ card, infoType, key, isDone, reopened, reopenDate: rd, unseen: reopened && seen[key] !== rd });
+      out.push({ inc, card, infoType, key, isDone, reopened, doneOn, reopenDate: rd, unseen: reopened && seen[key] !== rd });
     };
     push(cards.always_first_card, null);
     const limited = inc.limited_info_types || {};
@@ -119,6 +143,7 @@
     return out;
   }
   const myIncidents = () => incidents.filter((i) => i.service_ids.some((sid) => selected.has(sid)));
+  const orderIncidents = (list) => [...list].sort((a, b) => (a.status === 'denied') - (b.status === 'denied') || (a.last_updated < b.last_updated ? 1 : -1));
   function summary() {
     const mine = myIncidents();
     const active = mine.filter((i) => i.status !== 'denied');
@@ -131,64 +156,113 @@
   // ---------- 共通部品
   const banner = (kind, name, ...content) => el('div', { class: `banner ${kind}`, role: 'status' }, icon(name), el('div', null, ...content));
   const tagFor = (x) => {
-    if (x.isDone) return el('span', { class: 'tag done' }, icon('check'), '対策済み');
-    if (x.reopened) return el('span', { class: 'tag recheck' }, icon('alert'), '再確認', x.unseen ? el('span', { class: 'dot', 'aria-hidden': 'true' }) : null);
+    if (x.isDone) return el('span', { class: 'tag done' }, '対策済み');
+    if (x.reopened) return el('span', { class: 'tag recheck' }, '再確認', x.unseen ? el('span', { class: 'dot', 'aria-hidden': 'true' }) : null);
     return el('span', { class: 'tag todo' }, '未対応');
   };
+  const cardTitle = (x) => x.card.title.replace('{service}', x.inc.service_name);
   function contactNode(key) {
     const c = cards.official_contacts[key];
     if (!c) return null;
-    const n = el('div', { class: 'contact' }, `${c.label}：`);
-    if (c.phone) n.append(el('b', null, c.phone));
-    if (c.url) { if (c.phone) n.append('　'); n.append(extLink(c.url, c.url)); }
-    if (c.hours) n.append(el('span', { class: 'caption' }, `（${c.hours}）`));
-    return n;
+    const body = el('div', null, el('span', { class: 'lab' }, c.label + (c.hours ? `（${c.hours}）` : '')));
+    if (c.phone) body.append(el('span', { class: 'num' }, c.phone));
+    if (c.url) body.append(el('span', { class: 'small' }, extLink(c.url, '公式ページを開く')));
+    return el('div', { class: 'contact' }, icon(c.phone ? 'phone' : 'file-text'), body);
   }
   function sourcesNode(keys) {
     const list = el('ul', null);
     for (const k of keys) { const s = cards.sources[k]; if (s) list.append(el('li', null, s.url ? extLink(s.url, s.title) : s.title)); }
-    return el('details', null, el('summary', null, '根拠を見る（公的機関の資料）'), list);
+    return el('details', null, el('summary', null, icon('file-text'), '根拠を見る（公的機関の資料）'), list);
   }
+  // やり方：番号つき手順（steps）が無ければ文章（detail）
+  function howNode(card) {
+    const frag = document.createDocumentFragment();
+    frag.append(el('h4', null, 'やり方'));
+    if (Array.isArray(card.steps) && card.steps.length) {
+      const ol = el('ol', { class: 'steps' });
+      card.steps.forEach((t, i) => ol.append(el('li', null, el('span', { class: 'num', 'aria-hidden': 'true' }, String(i + 1)), el('span', null, t))));
+      frag.append(ol);
+    } else frag.append(el('p', { class: 'how' }, card.detail));
+    if (card.dont) frag.append(el('div', { class: 'dont' }, icon('forbid-2'), el('span', null, card.dont)));
+    return frag;
+  }
+  const skipNode = (t) => {
+    const n = el('div', { class: 'skip' }, el('b', null, 'しなくてよい'));
+    const body = el('span', null);
+    t.skip_if.forEach((s, i) => { if (i) body.append(el('br')); body.append(s); });
+    n.append(body);
+    return n;
+  };
 
   // ---------- ホーム
+  function flowNode(nSvc, nInc, nTodo) {
+    const step = (n, l) => el('li', null, el('span', { class: 'n' }, String(n)), el('span', { class: 'l' }, l));
+    const arrow = () => el('li', { class: 'arrow', 'aria-hidden': 'true' }, icon('chevron-down'));
+    return el('ol', { class: 'flow', 'aria-label': '選んだサービス、関係ある漏えい、やることの件数' }, step(nSvc, '選んだサービス'), arrow(), step(nInc, '関係ある漏えい'), arrow(), step(nTodo, 'やること'));
+  }
+  function incidentCard(inc) {
+    const list = cardsFor(inc);
+    const n = list.filter((x) => x.isDone).length;
+    const denied = inc.status === 'denied';
+    const first = inc.announcements[0];
+    const head = el('div', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
+      el('div', { class: 'ttl' }, el('h3', null, inc.service_name), el('span', { class: 'sub' }, `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`)));
+    const card = el('article', { class: 'inc-card' }, head);
+    if (denied) { card.append(el('p', { class: 'task-withdrawn' }, 'その後「漏えいはなかった」と公表されました。やることはありません。')); return card; }
+    card.append(infoChips(inc));
+    card.append(el('a', { class: 'inc-foot', href: '#/todo' },
+      el('span', { class: 'count' }, el('b', null, String(n)), ` / ${list.length} 対策済み`),
+      el('span', { class: 'go' }, n === list.length ? '見る' : 'やることを見る', icon('chevron-down'))));
+    return card;
+  }
   function viewHome() {
     const s = summary();
     const wrap = el('div', { class: 'wrap' });
-    if (flash) { wrap.append(banner(flash.kind, flash.kind === 'success' ? 'check-circle' : 'info', el('p', null, flash.text))); flash = null; }
+    if (flash) { wrap.append(banner(flash.kind, flash.kind === 'success' ? 'circle-check' : 'info-circle', el('p', null, flash.text))); flash = null; }
     else if (selected.size && (s.newIncidents.length || s.unseen)) {
       const parts = [];
       if (s.newIncidents.length) parts.push(`${s.newIncidents.length}件の事案に新しい公表`);
       if (s.unseen) parts.push(`${s.unseen}件のやることが「再確認」`);
-      wrap.append(banner('info', 'info', el('p', null, `前回（${fmtMd(lastVisit)}）のあと、${parts.join('、')}になりました。`), el('a', { href: '#/todo' }, 'やることを見る')));
+      wrap.append(banner('info', 'info-circle', el('p', null, `前回（${fmtMd(lastVisit)}）のあと、${parts.join('、')}になりました。`), el('a', { href: '#/todo' }, 'やることを見る')));
     }
 
     let hero;
     if (!selected.size) {
       hero = el('section', { class: 'hero start', 'aria-labelledby': 'h1' },
-        el('div', { class: 'hero-head' }, icon('info', 'lg'), el('h1', { id: 'h1' }, '使っているサービスを選ぶと、関係のある漏えいだけが分かります')),
+        el('div', { class: 'hero-head' }, el('span', { class: 'av big', 'aria-hidden': 'true' }, icon('layout-grid')), el('h1', { id: 'h1' }, '使っているサービスを選ぶと、関係のある漏えいだけが分かります')),
         el('p', null, '企業が公式に公表した情報漏えいのうち、あなたが使っているサービスのものだけを表示し、やることを1つずつ案内します。'),
         el('p', { class: 'small muted' }, '選んだ内容はこの端末の中にだけ保存されます。氏名やメールアドレスは入力しません。'),
-        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, 'サービスを選ぶ')));
+        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, icon('layout-grid'), 'サービスを選ぶ')));
     } else if (s.open > 0) {
       hero = el('section', { class: 'hero todo', 'aria-labelledby': 'h1' },
-        el('div', { class: 'hero-head' }, icon('alert', 'lg'), el('h1', { id: 'h1' }, `やることが ${s.open}件 あります`)),
-        el('p', null, `選んだ ${selected.size}件のサービスのうち ${s.active.length}件で、漏えいが公表されています。上から順に進めれば大丈夫です。`),
+        el('div', { class: 'hero-head' }, el('span', { class: 'av big accent', 'aria-hidden': 'true' }, icon('list-check')), el('h1', { id: 'h1' }, `やることが ${s.open}件 あります`)),
+        flowNode(selected.size, s.active.length, s.open),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/todo' }, 'やることを見る'), el('a', { class: 'btn text', href: '#/services' }, 'サービスを追加する')),
         el('p', { class: 'caption hero-meta' }, `最終確認：${fmtDate(today)}`));
     } else {
       hero = el('section', { class: 'hero ok', 'aria-labelledby': 'h1' },
-        el('div', { class: 'hero-head' }, icon('check-circle', 'lg'), el('h1', { id: 'h1' }, 'いまは対策済みです')),
+        el('div', { class: 'hero-head' }, el('span', { class: 'av big success', 'aria-hidden': 'true' }, icon('circle-check')), el('h1', { id: 'h1' }, 'いまは対策済みです')),
+        flowNode(selected.size, s.active.length, 0),
         el('p', null, s.active.length
-          ? `選んだ ${selected.size}件のサービスの漏えい ${s.active.length}件について、やることはすべて終わっています。続報が出たら、必要なものだけをここに出します。`
-          : `選んだ ${selected.size}件のサービスについて、公表された漏えいはいまのところありません。新しい公表があれば、ここに出します。`),
+          ? 'やることはすべて終わっています。続報が出たら、必要なものだけをここに出します。'
+          : '選んだサービスについて、公表された漏えいはいまのところありません。新しい公表があれば、ここに出します。'),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, 'サービスを追加する'), s.active.length ? el('a', { class: 'btn text', href: '#/todo' }, '終わったやることを見る') : null),
         el('p', { class: 'caption hero-meta' }, `最終確認：${fmtDate(today)}`));
     }
     wrap.append(hero);
 
+    // 関係ある事案（1事案＝1カード）
+    if (selected.size && s.mine.length) {
+      const sec = el('section', { 'aria-labelledby': 'mine' }, el('h2', { id: 'mine', class: 'small muted' }, '関係ある漏えい'));
+      for (const inc of orderIncidents(s.mine)) sec.append(incidentCard(inc));
+      wrap.append(sec);
+    }
+
     const recent = [...incidents].sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1)).slice(0, 3);
     const list = el('ul', { class: 'plain-list' });
-    for (const inc of recent) list.append(el('li', null, el('span', { class: 'date' }, fmtMd(inc.last_updated)), el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, inc.service_name), el('span', { class: `tag ${inc.status}` }, STATUS_LABEL[inc.status])));
+    for (const inc of recent) list.append(el('li', null, avatarFor(serviceOf(inc), 'sm'),
+      el('span', { class: 'ttl' }, el('span', { class: 'date' }, fmtMd(inc.last_updated)), el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, inc.service_name), ' ',
+        el('span', { class: `tag ${inc.status}` }, STATUS_LABEL[inc.status]))));
     wrap.append(el('section', { class: 'card-surface', 'aria-labelledby': 'recent' },
       el('h2', { id: 'recent', class: 'small muted' }, '最近の公表（選んだサービス以外も含む）'), list,
       el('p', { class: 'small' }, el('a', { href: './incidents/' }, 'すべての事案を見る'))));
@@ -203,56 +277,77 @@
       wrap.append(el('h1', null, 'やること'), el('div', { class: 'hero start' }, el('p', null, 'まず、使っているサービスを選んでください。'), el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: '#/services' }, 'サービスを選ぶ'))));
       return wrap;
     }
-    wrap.append(el('h1', null, 'やること'), el('p', { class: 'muted' }, s.total ? `${s.total}件のうち ${s.total - s.open}件 対策済み。行を押すと、やり方と理由が開きます。` : '選んだサービスについて、公表された漏えいはいまのところありません。'));
-    const ordered = [...s.mine].sort((a, b) => (a.status === 'denied') - (b.status === 'denied') || (a.last_updated < b.last_updated ? 1 : -1));
-    for (const inc of ordered) wrap.append(incidentSection(inc));
-    if (!s.open && s.total) wrap.append(banner('success', 'check-circle', el('p', null, el('b', null, 'いまは対策済みです。'), '続報が出たら、必要なものだけが「再確認」として戻ります。'), el('a', { href: '#/' }, 'ホームへ')));
+    wrap.append(el('h1', null, 'やること'), el('p', { class: 'muted' }, s.total ? `${s.total}件のうち ${s.total - s.open}件 対策済み` : '選んだサービスについて、公表された漏えいはいまのところありません。'));
+    const rows = new Map(); // key → { row, panel }
+    const sections = orderIncidents(s.mine).map((inc) => incidentSection(inc, rows));
+    // つぎの1件（未対応の先頭）。直下に全体一覧があるので俯瞰は失わない
+    const next = s.active.flatMap(cardsFor).find((x) => !x.isDone);
+    if (next) {
+      const ok = el('button', { type: 'button', class: 'btn' }, icon('check'), '済みにする');
+      ok.addEventListener('click', () => { done[next.key] = today; save(LS.done, done); rerender(); });
+      const how = el('button', { type: 'button', class: 'btn ghost' }, 'やり方を見る');
+      how.addEventListener('click', () => { const r = rows.get(next.key); if (!r) return; r.open(); r.row.scrollIntoView({ block: 'center' }); r.row.focus(); });
+      wrap.append(el('section', { class: 'next', 'aria-labelledby': 'next-h' },
+        el('div', { class: 'lab' }, el('span', { id: 'next-h' }, 'つぎの 1件'), el('span', null, `${s.total}件中 ${s.total - s.open + 1}件目`)),
+        el('div', { class: 'body' }, icon(next.card.icon || (next.infoType && next.infoType.icon) || 'list-check', 'xl'),
+          el('div', null, el('h2', null, cardTitle(next)), el('p', { class: 'meta' }, `${next.inc.service_name} ・ 約${next.card.minutes}分`))),
+        el('div', { class: 'btn-row' }, ok, how)));
+    }
+    for (const sec of sections) wrap.append(sec);
+    if (!s.open && s.total) wrap.append(banner('success', 'circle-check', el('p', null, el('b', null, 'いまは対策済みです。'), '続報が出たら、必要なものだけが「再確認」として戻ります。'), el('a', { href: '#/' }, 'ホームへ')));
     return wrap;
   }
-  function incidentSection(inc) {
+  function incidentSection(inc, rows) {
     const list = cardsFor(inc);
     const n = list.filter((x) => x.isDone).length;
     const denied = inc.status === 'denied';
     const first = inc.announcements[0];
     const operatorShort = inc.operator.replace(/（.*?）/g, '');
     const sec = el('section', { class: 'task', 'aria-labelledby': `t-${inc.id}` });
-    sec.append(el('header', { class: 'task-head' },
-      el('h2', { id: `t-${inc.id}` }, inc.service_name),
-      denied ? el('span', { class: 'tag denied' }, '取り下げ') : el('span', { class: 'count' }, `${n} / ${list.length} 対策済み`),
-      el('span', { class: 'sub' }, `${operatorShort}が${fmtMd(first.date)}に${STATUS_SUB[inc.status]}。`, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '詳しく'))));
+    sec.append(el('header', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
+      el('div', { class: 'ttl' }, el('h2', { id: `t-${inc.id}` }, inc.service_name),
+        el('span', { class: 'sub' }, `${operatorShort}が${fmtMd(first.date)}に${STATUS_SUB[inc.status]}。`, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '詳しく'))),
+      denied ? el('span', { class: 'tag denied' }, '取り下げ') : el('span', { class: 'count' }, el('b', null, String(n)), ` / ${list.length}`)));
     if (denied) { sec.append(el('p', { class: 'task-withdrawn' }, 'やることはありません。')); return sec; }
     const ul = el('ul', { class: 'task-list' });
     let currentType = null;
     for (const x of list) {
       if (x.infoType !== currentType) {
         currentType = x.infoType;
-        if (currentType) ul.append(el('li', { class: 'type-head' }, el('b', null, currentType.label), 'が漏れたとき', currentType.needs_research ? [' ', el('span', { class: 'tag neutral' }, '根拠を調査中')] : null));
+        if (currentType) ul.append(el('li', { class: 'type-head' }, icon(currentType.icon), `${currentType.label}が漏れたとき`, currentType.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null));
       }
-      ul.append(taskItem(inc, x));
+      ul.append(taskItem(x, rows));
       if (x.infoType && x.card === x.infoType.cards[x.infoType.cards.length - 1] && x.infoType.skip_if.length) {
-        const note = el('li', { class: 'skip-note' }, 'やらなくていいこと：');
-        x.infoType.skip_if.forEach((t, i) => { if (i) note.append(el('br')); note.append(t); });
-        ul.append(note);
+        const li = el('li', { class: 'skip-note' }, el('b', null, 'しなくてよい'));
+        const body = el('span', null);
+        x.infoType.skip_if.forEach((t, i) => { if (i) body.append(el('br')); body.append(t); });
+        li.append(body); ul.append(li);
       }
     }
-    sec.append(ul);
-    if (n === list.length) sec.append(el('div', { class: 'task-done-panel' }, icon('check-circle'), 'この事案の対策は済みました'));
+    if (n === list.length) {
+      // 全部済んだ事案は、行を折りたたんで「済んだ」ことを目立たせる
+      sec.append(el('div', { class: 'task-done-panel' }, icon('circle-check'), 'この事案の対策は済みました'));
+      sec.append(el('details', { class: 'fold' }, el('summary', null, icon('chevron-down', 'chev'), `対策済み ${n}件を見る`), ul));
+    } else sec.append(ul);
     return sec;
   }
-  function taskItem(inc, x) {
-    const title = x.card.title.replace('{service}', inc.service_name);
+  function taskItem(x, rows) {
+    const inc = x.inc;
+    const title = cardTitle(x);
     const panelId = 'p-' + x.key.replace(/[^a-z0-9-]/gi, '_');
+    const meta = x.isDone ? `対策済み ・ ${fmtMd(x.doneOn)}` : x.reopened ? `${fmtMd(x.reopenDate)}の続報があります ・ 約${x.card.minutes}分` : `約${x.card.minutes}分`;
     const row = el('button', { type: 'button', class: 'task-row' + (x.isDone ? ' is-done' : '') + (x.reopened ? ' is-recheck' : ''), 'aria-expanded': 'false', 'aria-controls': panelId },
-      icon(x.isDone ? 'check-circle' : x.reopened ? 'alert' : 'circle', 'row-icon'),
-      el('span', { class: 'row-main' }, el('span', { class: 'row-title' }, title), el('span', { class: 'row-meta' }, `約${x.card.minutes}分`)),
-      el('span', { class: 'row-status' }, tagFor(x), icon('chevron', 'chev')));
+      statusShape(x),
+      el('span', { class: 'row-main' }, el('span', { class: 'row-title' }, title), el('span', { class: 'row-meta' }, meta)),
+      el('span', { class: 'row-status' }, tagFor(x), icon('chevron-down', 'chev')));
     const panel = el('div', { class: 'task-panel', id: panelId, hidden: true });
     panel.append(el('p', { class: 'reason' }, x.card.reason));
-    if (x.reopened) panel.append(banner('warning', 'alert', el('p', null, `${fmtMd(x.reopenDate)}の続報で、対象の情報が増えたか、漏えいが確定しました。もう一度確認してください。`)));
-    panel.append(el('p', { class: 'how' }, x.card.detail));
+    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, `${fmtMd(x.reopenDate)}の続報で、対象の情報が増えたか、漏えいが確定しました。もう一度確認してください。`)));
+    panel.append(howNode(x.card));
     if (x.card.contact) panel.append(contactNode(x.card.contact));
     for (const k of x.card.contact_list || []) panel.append(contactNode(k));
     panel.append(sourcesNode(x.card.sources));
+    panel.append(el('p', { class: 'caption note' }, '※画面や手順は、機種やアプリの版によって異なります。'));
     const actions = el('div', { class: 'btn-row' });
     if (x.isDone) {
       const undo = el('button', { type: 'button', class: 'btn secondary' }, '対策済みを取り消す');
@@ -266,12 +361,14 @@
       actions.append(ok, later);
     }
     panel.append(actions);
+    const open = () => {
+      row.setAttribute('aria-expanded', 'true'); panel.hidden = false;
+      if (x.unseen) { seen[x.key] = x.reopenDate; save(LS.seen, seen); x.unseen = false; const d = row.querySelector('.dot'); if (d) d.remove(); }
+    };
     row.addEventListener('click', () => {
-      const open = row.getAttribute('aria-expanded') === 'true';
-      row.setAttribute('aria-expanded', open ? 'false' : 'true');
-      panel.hidden = open;
-      if (!open && x.unseen) { seen[x.key] = x.reopenDate; save(LS.seen, seen); x.unseen = false; const d = row.querySelector('.dot'); if (d) d.remove(); }
+      if (row.getAttribute('aria-expanded') === 'true') { row.setAttribute('aria-expanded', 'false'); panel.hidden = true; } else open();
     });
+    if (rows) rows.set(x.key, { row, panel, open });
     return el('li', { class: 'task-item' }, row, panel);
   }
 
@@ -282,7 +379,7 @@
   function pickNode(s, onChange) {
     const input = el('input', { type: 'checkbox', value: s.id, checked: selected.has(s.id) });
     input.addEventListener('change', () => { if (input.checked) selected.add(s.id); else selected.delete(s.id); save(LS.services, [...selected]); onChange(); });
-    return el('label', { class: 'pick' }, input, el('span', { class: 'name' }, s.name, el('span', { class: 'op' }, s.operator)), hasIncident(s.id) ? el('span', { class: 'hit' }, '漏えいの公表あり') : null);
+    return el('label', { class: 'pick' }, avatarFor(s), el('span', { class: 'name' }, s.name, el('span', { class: 'op' }, s.operator), hasIncident(s.id) ? el('span', { class: 'hit' }, '漏えいの公表あり') : null), input);
   }
   function viewServices() {
     const wrap = el('div', { class: 'wrap' });
@@ -310,27 +407,29 @@
     for (const s of popular) grid.append(pickNode(s, sync));
     wrap.append(el('section', { 'aria-labelledby': 'pop' }, el('h2', { id: 'pop', class: 'small muted' }, 'よく使われているサービス'), grid));
 
-    // 最近漏えいが公表されたサービス
+    // 最近漏えいが公表されたサービス ＋ カテゴリ
     const recentIds = [...new Set(incidents.filter((i) => i.status !== 'denied').sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1)).flatMap((i) => i.service_ids))].filter((id) => svcById[id]);
     const cats = el('div', null);
-    cats.append(catDetails('最近、漏えいが公表されたサービス', recentIds.map((id) => svcById[id]), sync));
+    cats.append(catDetails('最近、漏えいが公表された', el('span', { class: 'av c-recent', 'aria-hidden': 'true' }, icon('alert-circle')), recentIds.map((id) => svcById[id]), sync));
     for (const cat of services.categories) {
       const list = services.services.filter((s) => s.category === cat.key);
-      if (list.length) cats.append(catDetails(`${cat.icon} ${cat.label}`, list, sync));
+      if (list.length) cats.append(catDetails(cat.label, el('span', { class: `av c-${cat.key}`, 'aria-hidden': 'true' }, icon(cat.icon)), list, sync));
     }
     wrap.append(el('section', { 'aria-labelledby': 'cats' }, el('h2', { id: 'cats', class: 'small muted' }, '種類から探す'), cats));
     wrap.append(el('p', { class: 'small muted' }, 'この中に使っているものがなければ、', el('a', { href: '#/' }, 'あとで追加する'), 'こともできます。'));
 
     // 画面下の固定バー（選択中をトークンで表示。件数だけにしない）
     const tokens = el('div', { class: 'tokens' });
+    const label = el('span', { class: 'label' });
     const decide = el('a', { class: 'btn', href: '#/' }, '決定');
     decide.addEventListener('click', () => { flash = { kind: 'success', text: `${selected.size}件のサービスを選びました。関係のある漏えいだけを表示します。` }; });
-    const bar = el('div', { class: 'sticky-bar' }, el('div', { class: 'inner' }, el('span', { class: 'label' }, '選択中'), tokens, decide));
+    const bar = el('div', { class: 'sticky-bar' }, el('div', { class: 'inner' }, label, tokens, decide));
     function refreshTokens() {
       clear(tokens);
+      label.textContent = selected.size ? `選択中 ${selected.size}件` : '選択中';
       if (!selected.size) { tokens.append(el('span', { class: 'muted small' }, 'まだ選んでいません')); return; }
       for (const id of selected) {
-        const t = el('button', { type: 'button', class: 'token', 'aria-label': `${svcById[id].name} を外す` }, svcById[id].name, el('span', { class: 'x', 'aria-hidden': 'true' }, '×'));
+        const t = el('button', { type: 'button', class: 'token', 'aria-label': `${svcById[id].name} を外す` }, avatarFor(svcById[id], 'xs'), svcById[id].name, el('span', { class: 'x', 'aria-hidden': 'true' }, icon('x')));
         t.addEventListener('click', () => { selected.delete(id); save(LS.services, [...selected]); sync(); });
         tokens.append(t);
       }
@@ -339,11 +438,11 @@
     wrap.append(bar);
     return wrap;
   }
-  function catDetails(label, list, onChange) {
+  function catDetails(label, av, list, onChange) {
     const LIMIT = 10;
     const body = el('div', { class: 'pick-list' });
     const show = (n) => { clear(body); for (const s of list.slice(0, n)) body.append(pickNode(s, onChange)); };
-    const d = el('details', { class: 'cat' }, el('summary', null, label, el('span', { class: 'cnt' }, `（${list.length}）`), icon('chevron', 'chev')), el('div', { class: 'body' }, body));
+    const d = el('details', { class: 'cat' }, el('summary', null, av, label, el('span', { class: 'cnt' }, `${list.length}件`), icon('chevron-down', 'chev')), el('div', { class: 'body' }, body));
     // 1件だけ隠さない（Baymard）
     if (list.length > LIMIT + 1) {
       show(LIMIT);
@@ -371,7 +470,7 @@
         else shareMsg.textContent = url;
       } catch { shareMsg.textContent = url; }
     });
-    ul.append(el('li', null, el('h3', null, '家族に見せる'), el('p', { class: 'small' }, 'このサイトのURLを家族に送れます。家族の端末で同じサービスを選べば、同じ「やること」が見られます。あなたの選択や完了状態は送られません。'), share, shareMsg));
+    ul.append(el('li', null, el('h3', null, icon('home-2'), '家族に見せる'), el('p', { class: 'small' }, 'このサイトのURLを家族に送れます。家族の端末で同じサービスを選べば、同じ「やること」が見られます。あなたの選択や完了状態は送られません。'), share, shareMsg));
 
     // 引き継ぎ
     const code = el('textarea', { class: 'code', 'aria-label': '引き継ぎコード', placeholder: 'ここにコードが表示されます／貼り付けます', spellcheck: 'false' });
@@ -392,7 +491,7 @@
         msg.textContent = `読み込みました（サービス ${selected.size}件）。`;
       } catch { msg.textContent = 'コードを読み込めませんでした。'; }
     });
-    ul.append(el('li', null, el('h3', null, '引き継ぎ（機種変更のとき）'), el('p', { class: 'small' }, '選んだサービスと完了状態を短いコードにして、新しい端末で読み込めます。'), el('div', { class: 'btn-row' }, exp, imp), code, msg));
+    ul.append(el('li', null, el('h3', null, icon('device-mobile'), '引き継ぎ（機種変更のとき）'), el('p', { class: 'small' }, '選んだサービスと完了状態を短いコードにして、新しい端末で読み込めます。'), el('div', { class: 'btn-row' }, exp, imp), code, msg));
 
     // 端末の記録を消す
     const resetMsg = el('p', { class: 'small', 'aria-live': 'polite' });
@@ -402,10 +501,10 @@
       remove(LS.services); remove(LS.done); remove(LS.lastVisit); remove(LS.seen);
       selected = new Set(); done = {}; seen = {}; resetMsg.textContent = '消しました。';
     });
-    ul.append(el('li', null, el('h3', null, 'この端末の記録'), el('p', { class: 'small' }, '保存されているのは、選んだサービス・やることの完了日・最終確認日の3つだけです。'), reset, resetMsg));
+    ul.append(el('li', null, el('h3', null, icon('settings'), 'この端末の記録'), el('p', { class: 'small' }, '保存されているのは、選んだサービス・やることの完了日・最終確認日の3つだけです。'), reset, resetMsg));
 
-    ul.append(el('li', null, el('h3', null, 'ホーム画面に追加'), el('p', { class: 'small' }, '通知は送りません。ホーム画面に追加しておくと、次に確認しやすくなります。iPhone は共有ボタン→「ホーム画面に追加」、Android はブラウザのメニュー→「ホーム画面に追加」です。')));
-    ul.append(el('li', null, el('h3', null, 'このサイトについて'), el('p', { class: 'small' }, el('a', { href: './about.html' }, '目的と、やらないこと'), '　', el('a', { href: './privacy.html' }, 'プライバシー'), '　', el('a', { href: './faq.html' }, 'よくある質問'), '　', el('a', { href: './incidents/' }, 'すべての事案'))));
+    ul.append(el('li', null, el('h3', null, icon('home'), 'ホーム画面に追加'), el('p', { class: 'small' }, '通知は送りません。ホーム画面に追加しておくと、次に確認しやすくなります。iPhone は共有ボタン→「ホーム画面に追加」、Android はブラウザのメニュー→「ホーム画面に追加」です。')));
+    ul.append(el('li', null, el('h3', null, icon('info-circle'), 'このサイトについて'), el('p', { class: 'small' }, el('a', { href: './about.html' }, '目的と、やらないこと'), '　', el('a', { href: './privacy.html' }, 'プライバシー'), '　', el('a', { href: './faq.html' }, 'よくある質問'), '　', el('a', { href: './incidents/' }, 'すべての事案'))));
     wrap.append(ul);
     return wrap;
   }
@@ -416,12 +515,8 @@
     wrap.append(el('h1', null, '相談窓口'), el('p', { class: 'muted' }, 'どこに相談すればよいか迷ったときの、公的な窓口です。電話番号は公式ページで確認したものだけを載せています。'));
     const ul = el('ul', { class: 'plain-list contact-list' });
     for (const key of ['consumer-hotline', 'police-consult', 'ipa-anshin', 'intl-call-stop', 'mynumber-call']) {
-      const c = cards.official_contacts[key]; if (!c) continue;
-      const li = el('li', null, el('h3', null, c.label));
-      if (c.phone) li.append(el('p', null, el('b', null, c.phone)));
-      if (c.hours) li.append(el('p', { class: 'caption' }, c.hours));
-      if (c.url) li.append(el('p', { class: 'small' }, extLink(c.url, '公式ページ')));
-      ul.append(li);
+      if (!cards.official_contacts[key]) continue;
+      ul.append(el('li', null, contactNode(key)));
     }
     wrap.append(ul, el('p', { class: 'small muted' }, 'お金をだまし取られそうなとき、すでに被害に遭ったときは、最寄りの警察署か 110 に連絡してください。'));
     return wrap;

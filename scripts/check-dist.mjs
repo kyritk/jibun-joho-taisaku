@@ -39,6 +39,14 @@ for (const f of htmlFiles) {
     if (!/rel="noopener noreferrer"/.test(m[0])) errors.push(`${rel}: 外部リンクに rel が無い ${m[0].slice(0, 80)}`);
   }
   if (/javascript:/i.test(html)) errors.push(`${rel}: javascript: URL がある`);
+  // アイコンは同一文書のスプライトだけを参照する（外部SVGは CSP とブラウザ差で遮断されうる）
+  for (const m of html.matchAll(/<use\b[^>]*>/g)) {
+    if (!/\bhref="#i-[a-z0-9-]+"/.test(m[0])) errors.push(`${rel}: <use> が同一文書の #i-… 以外を参照 ${m[0].slice(0, 80)}`);
+  }
+  if (/<svg\b/.test(html) && !/<svg class="sprite"/.test(html)) errors.push(`${rel}: アイコンのスプライトが無い`);
+  // 絵文字をアイコン代わりに使わない（OS で見え方が変わり、読み上げが二重になる）
+  // （★☆などの記号は商品名に使われるため対象外。絵文字ブロックと記号絵文字だけを見る）
+  if (/[\u{1F000}-\u{1FAFF}\u{2700}-\u{27BF}\u{2614}\u{2615}\u{26A0}-\u{26FF}]/u.test(html)) errors.push(`${rel}: 絵文字が含まれる`);
 }
 // JS に危険なシンクが無い
 for (const f of files.filter((x) => x.endsWith('.js'))) {

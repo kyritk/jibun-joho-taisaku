@@ -32,6 +32,10 @@ const checkUrl = (u, where, { allowMedia = false } = {}) => {
   if (entry.kind === 'media' && !allowMedia) err(`${where}: 報道のURLは事案・窓口には使えない "${u}"`);
 };
 
+// ---- assets/icons（アイコンID。絵文字や外部画像は使わない。docs/ux-visual-research.md 6章）
+const iconIds = new Set(fs.readdirSync(path.join(root, 'assets', 'icons')).filter((f) => f.endsWith('.svg')).map((f) => f.slice(0, -4)));
+const checkIcon = (id, where) => { if (typeof id !== 'string' || !/^[a-z0-9-]+$/.test(id)) err(`${where}: icon はアイコンID（英小文字・数字・ハイフン）"${id}"`); else if (!iconIds.has(id)) err(`${where}: assets/icons/${id}.svg が無い`); };
+
 // ---- cards.json
 const cards = read('data/cards.json');
 for (const [k, s] of Object.entries(cards.sources)) checkUrl(s.url, `sources/${k}`, { allowMedia: true });
@@ -50,7 +54,10 @@ const checkCard = (c, where) => {
   if (typeof c.reopen_on_confirm !== 'boolean') err(`${where}/${c.id}: reopen_on_confirm は boolean`);
   if (!c.reason || typeof c.reason !== 'string') err(`${where}/${c.id}: reason（理由1文）が必要`);
   if (!Number.isInteger(c.minutes) || c.minutes < 1) err(`${where}/${c.id}: minutes（所要時間の目安、分）が必要`);
-  if (/(ログイン|アカウント|インストール|アップデート|ダークウェブ|ハッカー)/.test(c.title + c.detail + c.reason)) warn(`${where}/${c.id}: 文言ガイドで避ける語を含む（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）`);
+  if (c.steps !== undefined && (!Array.isArray(c.steps) || !c.steps.length || c.steps.some((s) => typeof s !== 'string' || !s))) err(`${where}/${c.id}: steps は空でない文字列の配列`);
+  if (c.dont !== undefined && (typeof c.dont !== 'string' || !c.dont)) err(`${where}/${c.id}: dont は文字列`);
+  if (c.icon !== undefined) checkIcon(c.icon, `${where}/${c.id}`);
+  if (/(ログイン|アカウント|インストール|アップデート|ダークウェブ|ハッカー)/.test(c.title + c.detail + c.reason + (c.steps || []).join('') + (c.dont || ''))) warn(`${where}/${c.id}: 文言ガイドで避ける語を含む（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）`);
 };
 checkCard(cards.always_first_card, 'always_first_card');
 const matchedKeys = new Set();
@@ -63,6 +70,7 @@ for (const t of cards.info_types) {
   }
   if (!Array.isArray(t.cards) || t.cards.length === 0) err(`info_types/${t.key}: cards が空`);
   if (!Number.isInteger(t.urgency) || t.urgency < 1) err(`info_types/${t.key}: urgency（1が最優先）が必要`);
+  checkIcon(t.icon, `info_types/${t.key}`);
   for (const c of t.cards || []) checkCard(c, `info_types/${t.key}`);
 }
 for (const [k, s] of Object.entries(cards.sources)) if (!s.verified_on) warn(`source "${k}" は未確認（verified_on が null）。公開前に原文を確認`);
@@ -71,6 +79,7 @@ for (const k of contactKeys) if (!cards.official_contacts[k].verified_on) warn(`
 // ---- services.json
 const services = read('data/services.json');
 const catKeys = new Set(services.categories.map((c) => c.key));
+for (const c of services.categories) { if (!/^[a-z]+$/.test(c.key || '')) err(`categories: key が不正 "${c.key}"`); checkIcon(c.icon, `categories/${c.key}`); }
 const serviceIds = new Set();
 for (const s of services.services) {
   checkUrl(s.password_change_url, `services/${s.id}: password_change_url`);

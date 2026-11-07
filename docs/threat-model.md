@@ -126,6 +126,7 @@ GitHub Pages は HTTP ヘッダを設定できないため、CSP は `<meta http
 - [x] ブランチ保護：main への直接push禁止、force push 禁止、CI必須（`gh api` で設定）
 - [x] SECURITY.md（脆弱性の報告先）とプライバシーポリシー（端末内保存の項目、GitHub のログ）
 - [x] 承認フロー：`drafts/` → 目視 → `approved/`。CI は `approved/` だけをビルド
+- [x] アイコン：`assets/icons/*.svg` を信頼できない入力として扱い、ビルドで `<path>` の `d`・`fill-rule` だけを取り出して HTML 内スプライトにする（外部SVG・data: URI・絵文字は不使用。`check-dist.mjs` が `<use href="#i-…">` 以外と絵文字を検出）
 
 ## 5. 見直しのタイミング
 

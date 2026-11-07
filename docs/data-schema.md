@@ -83,8 +83,9 @@
 - `always_first_card`：どの事案でも先頭に出すカード。`{service}` がサービス名に置換される。
 - `info_types[]`：漏れた情報の種類ごとのカード群。
   - `matches`：上の表のキー。事案の `leaked_info_types` に1つでも含まれれば表示。
-  - `urgency`：やることの並び順（1が最優先。カード・口座・本人確認書類・マイナンバー=1、パスワード=2、連絡先=3、その他=4）。
-  - `cards[]`：1カード1行動。`title`（行動）、`reason`（その行動が必要な理由、1文）、`detail`（やり方）、`minutes`（所要時間の目安）、`contact` / `contact_list`（`official_contacts` のキー）、`sources`（`sources` のキー）、`reopen_on_confirm`。
+  - `urgency`：やることの並び順（1が最優先。カード・口座・本人確認書類・マイナンバー=1、パスワード=2、連絡先=3、その他=4）。緊急度1のチップは強調表示になる。
+  - `icon`：この種類を表す絵（`assets/icons/<id>.svg` のファイル名）。必ず文字ラベルと一緒に表示する。`chip_label`：チップ用の短い名前（省略時は `label`）。
+  - `cards[]`：1カード1行動。`title`（行動）、`reason`（その行動が必要な理由、1文）、`detail`（やり方の文章）、`steps[]`（番号つきの手順。あれば `detail` の代わりに表示）、`dont`（してはいけないこと1行。赤い○斜線つきで表示。根拠にある内容だけ）、`icon`（任意。先頭カードなど）、`minutes`（所要時間の目安）、`contact` / `contact_list`（`official_contacts` のキー）、`sources`（`sources` のキー）、`reopen_on_confirm`。
   - 文言：外来語（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）は避ける。検証で警告になる。
   - `skip_if[]`：やらなくていいこと。
   - `needs_research`：公的根拠が足りない種別。モックでは「調査中」と明示する。
@@ -98,7 +99,7 @@
   "id": "timescar",
   "name": "タイムズカー",                 // 通称（利用者が認識している呼び名）
   "operator": "タイムズモビリティ株式会社",
-  "category": "mobility",               // categories[] の key
+  "category": "mobility",               // categories[] の key。categories[].icon はアイコンID（assets/icons/）。絵文字は使わない。色は app.css の .av.c-<key>
   "aliases": ["タイムズカーシェア", "Times Car", "たいむず"], // 検索の別名。ひらがな・略称を含める
   "popular_rank": 3,                    // 「よく使われているサービス」の固定順（任意。10件まで）
   "password_change_url": null,          // 公式のパスワード変更ページ。開発者が確認したものだけ

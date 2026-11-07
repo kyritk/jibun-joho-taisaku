@@ -107,7 +107,13 @@
     ],
     "reopen_on_confirm": false,
     "reason": "漏えいのあとは、その会社を名乗るニセのメールやSMSが増えるためです。",
-    "minutes": 1
+    "minutes": 1,
+    "icon": "mail-x",
+    "steps": [
+      "メールやSMSの中のリンクは押さない",
+      "確認したいときは、アプリか、自分で検索して開いた公式サイトから行う"
+    ],
+    "dont": "「おわび」「返金」「ポイント進呈」のメールのリンクは押さない"
   },
   "info_types": [
     {
@@ -127,7 +133,12 @@
           ],
           "reopen_on_confirm": false,
           "reason": "漏れたパスワードでサービスに入られるのを防ぐためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "アプリか、自分で検索して開いた公式サイトを開く",
+            "パスワードを、長くて他で使っていないものに変える"
+          ],
+          "dont": "メールの中のリンクから変えない"
         },
         {
           "id": "cred-change-reused",
@@ -138,7 +149,11 @@
           ],
           "reopen_on_confirm": false,
           "reason": "同じパスワードを使っている別のサービスに入られるのを防ぐためです。",
-          "minutes": 10
+          "minutes": 10,
+          "steps": [
+            "銀行、通販、メールなど、同じパスワードを使い回しているところを思い出す",
+            "そちらも1つずつ変える"
+          ]
         },
         {
           "id": "cred-enable-2fa",
@@ -149,14 +164,20 @@
           ],
           "reopen_on_confirm": false,
           "reason": "パスワードが知られても、確認コードがなければ入れなくするためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "サービスの設定で「二段階認証」や「パスキー」を探す",
+            "スマホに届く確認コードを使う設定にする"
+          ]
         }
       ],
       "skip_if": [
         "会社がすでにパスワードを無効化（強制リセット）している場合は、次にログインするときに新しいパスワードを設定すれば足ります。別途変える必要はありません。"
       ],
       "needs_research": false,
-      "urgency": 2
+      "urgency": 2,
+      "icon": "key",
+      "chip_label": "ID・パスワード"
     },
     {
       "key": "credit_card",
@@ -175,7 +196,13 @@
           ],
           "reopen_on_confirm": true,
           "reason": "カード番号が使われる前に止めるためです。",
-          "minutes": 10
+          "minutes": 10,
+          "steps": [
+            "自分のカードの裏面に書いてある電話番号にかける",
+            "漏えいの対象かもしれないと伝え、停止・再発行を相談する",
+            "身に覚えのない利用がないかも確認してもらう"
+          ],
+          "dont": "メールに書かれた電話番号にはかけない"
         },
         {
           "id": "card-check-statement",
@@ -186,7 +213,11 @@
           ],
           "reopen_on_confirm": false,
           "reason": "身に覚えのない支払いに早く気づくためです。",
-          "minutes": 3
+          "minutes": 3,
+          "steps": [
+            "数か月のあいだ、利用明細を見る",
+            "身に覚えのない支払いがあれば、カード会社に連絡する"
+          ]
         },
         {
           "id": "card-ignore-auth",
@@ -197,14 +228,21 @@
           ],
           "reopen_on_confirm": false,
           "reason": "不正利用の途中で送られてくる確認に応じてしまうのを防ぐためです。",
-          "minutes": 1
+          "minutes": 1,
+          "steps": [
+            "買い物をしていないのに認証コードや本人確認の連絡が来たら、応じない",
+            "カード会社に連絡する"
+          ],
+          "dont": "認証コードを相手に教えない"
         }
       ],
       "skip_if": [
         "会社がすでにカードの差し替え（再発行）を案内している場合は、その案内に従えば足ります。自分からも重ねて手続きする必要はありません。"
       ],
       "needs_research": false,
-      "urgency": 1
+      "urgency": 1,
+      "icon": "credit-card",
+      "chip_label": "クレジットカード"
     },
     {
       "key": "contact",
@@ -226,7 +264,11 @@
           ],
           "reopen_on_confirm": false,
           "reason": "漏れた連絡先に、本物そっくりの詐欺メールが届くためです。",
-          "minutes": 1
+          "minutes": 1,
+          "steps": [
+            "開かずに削除する"
+          ],
+          "dont": "リンクを押さない、返信しない、書いてある番号にかけない（画像になっているリンクも同じ）"
         },
         {
           "id": "contact-stop-intl-calls",
@@ -238,7 +280,12 @@
           ],
           "reopen_on_confirm": false,
           "reason": "詐欺電話の多くが国際電話からかかってくるためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "下の窓口に、国際電話の発着信の停止を申し込む（無料）",
+            "NTTの回線を使っている人は、NTTでも受け付けている"
+          ],
+          "dont": "「+」で始まる知らない番号には出ない"
         },
         {
           "id": "contact-refuse-parcels",
@@ -249,12 +296,17 @@
           ],
           "reopen_on_confirm": false,
           "reason": "漏れた住所に、頼んでいない着払いが送りつけられることがあるためです。",
-          "minutes": 1
+          "minutes": 1,
+          "steps": [
+            "頼んでいない着払いは、その場で受け取りを断る"
+          ]
         }
       ],
       "skip_if": [],
       "needs_research": false,
-      "urgency": 3
+      "urgency": 3,
+      "icon": "mail",
+      "chip_label": "氏名・住所・連絡先"
     },
     {
       "key": "id_document",
@@ -278,7 +330,11 @@
           ],
           "reopen_on_confirm": true,
           "reason": "他人があなたの名前でローンやカードを申し込むのを防ぐ助けになるためです。",
-          "minutes": 15
+          "minutes": 15,
+          "steps": [
+            "下の3つの信用情報機関から、申告する機関を選ぶ",
+            "「本人確認書類が漏れたおそれがある」と本人申告を登録する"
+          ]
         },
         {
           "id": "iddoc-unknown-contract",
@@ -291,14 +347,21 @@
           ],
           "reopen_on_confirm": false,
           "reason": "自分名義で勝手に契約された可能性に早く気づくためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "届いた書類は捨てずに取っておく",
+            "送ってきた会社に「申し込んでいない」と伝える",
+            "警察相談専用電話に相談する"
+          ]
         }
       ],
       "skip_if": [
         "すでに信用情報機関に本人申告をした人は、出し直す必要はありません。"
       ],
       "needs_research": false,
-      "urgency": 1
+      "urgency": 1,
+      "icon": "id",
+      "chip_label": "本人確認書類の画像"
     },
     {
       "key": "bank_account",
@@ -317,7 +380,11 @@
           ],
           "reopen_on_confirm": true,
           "reason": "口座が不正に使われていないか、銀行に見てもらうためです。",
-          "minutes": 10
+          "minutes": 10,
+          "steps": [
+            "通帳やキャッシュカードに書いてある銀行の番号にかける",
+            "口座番号が漏れたおそれがあると伝え、どうすればよいか相談する"
+          ]
         },
         {
           "id": "bank-change-password",
@@ -328,7 +395,10 @@
           ],
           "reopen_on_confirm": false,
           "reason": "ネットバンキングに入られるのを防ぐためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "アプリか、自分で検索して開いた公式サイトから変える"
+          ]
         },
         {
           "id": "bank-check-history",
@@ -340,12 +410,18 @@
           ],
           "reopen_on_confirm": false,
           "reason": "身に覚えのない出金に早く気づくためです。",
-          "minutes": 3
+          "minutes": 3,
+          "steps": [
+            "入出金の履歴を見る",
+            "身に覚えのない出金があれば、すぐ銀行に連絡する"
+          ]
         }
       ],
       "skip_if": [],
       "needs_research": false,
-      "urgency": 1
+      "urgency": 1,
+      "icon": "bank",
+      "chip_label": "銀行口座"
     },
     {
       "key": "my_number",
@@ -365,7 +441,10 @@
           ],
           "reopen_on_confirm": true,
           "reason": "どうすればよいかを、公式の窓口に確認するためです。",
-          "minutes": 10
+          "minutes": 10,
+          "steps": [
+            "市区町村の窓口か、下のフリーダイヤルに相談する"
+          ]
         },
         {
           "id": "mynumber-change",
@@ -377,12 +456,18 @@
           ],
           "reopen_on_confirm": false,
           "reason": "不正に使われるおそれがあるときだけ、番号を変えられるためです。",
-          "minutes": 10
+          "minutes": 10,
+          "steps": [
+            "窓口で、不正に使われるおそれがあるかを相談する",
+            "必要なら、番号の変更を申し込む"
+          ]
         }
       ],
       "skip_if": [],
       "needs_research": false,
-      "urgency": 1
+      "urgency": 1,
+      "icon": "mynumber",
+      "chip_label": "マイナンバー"
     },
     {
       "key": "assets_family",
@@ -401,7 +486,11 @@
           ],
           "reopen_on_confirm": false,
           "reason": "資産や家族構成が漏れると、訪問して様子を探る手口があるためです。",
-          "minutes": 1
+          "minutes": 1,
+          "steps": [
+            "インターホン越しに話す",
+            "「点検」「買い取り」「役所から」と言われても、ドアは開けない"
+          ]
         },
         {
           "id": "assets-money-talk",
@@ -412,7 +501,11 @@
           ],
           "reopen_on_confirm": false,
           "reason": "警察や役所を名乗ってお金の話をする電話は詐欺だからです。",
-          "minutes": 1
+          "minutes": 1,
+          "steps": [
+            "お金・カード・暗証番号の話が出たら、いったん電話を切る",
+            "家族に相談する"
+          ]
         },
         {
           "id": "assets-police",
@@ -424,12 +517,18 @@
           ],
           "reopen_on_confirm": false,
           "reason": "不安なときは、一人で判断せず相談できるためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "警察相談専用電話にかける（緊急でなくてもよい）",
+            "最寄りの警察署でも直接相談できる"
+          ]
         }
       ],
       "skip_if": [],
       "needs_research": false,
-      "urgency": 3
+      "urgency": 3,
+      "icon": "home-2",
+      "chip_label": "資産・家族構成"
     },
     {
       "key": "medical",
@@ -447,7 +546,11 @@
           ],
           "reopen_on_confirm": false,
           "reason": "病気のことを知っている相手を装う連絡があるためです。",
-          "minutes": 1
+          "minutes": 1,
+          "steps": [
+            "いったん切る",
+            "自分で調べた番号にかけ直して確認する"
+          ]
         },
         {
           "id": "medical-consult",
@@ -462,13 +565,18 @@
           ],
           "reopen_on_confirm": false,
           "reason": "何をすればよいか迷ったときに相談できるためです。",
-          "minutes": 5
+          "minutes": 5,
+          "steps": [
+            "IPAの相談窓口か、消費者ホットラインに相談する"
+          ]
         }
       ],
       "skip_if": [],
       "needs_research": true,
       "research_note": "病歴・診療情報が漏れた場合の公的な推奨行動が見つかっていない。IPA資料にも記載なし（2026-11-07確認）。見つかるまでは「疑う」と「相談窓口」にとどめる。",
-      "urgency": 4
+      "urgency": 4,
+      "icon": "medical-cross",
+      "chip_label": "病歴・診療"
     }
   ]
 }
