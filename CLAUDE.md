@@ -58,6 +58,7 @@
 - Service Worker は置かない（古い事案データをキャッシュしないため）。manifest のみ。
 - `app.css` / `app.js` には SRI（sha384）を付ける（ビルドが計算、`check-dist.mjs` が照合）。`.well-known/security.txt` をビルドで生成する。iframe 内では描画しない。
 - GitHub 側：Actions は GitHub 製のみ許可、フォーク PR は外部貢献者すべて承認制、CodeQL 既定セットアップ、secret scanning＋push protection、Dependabot アラート。第三者アクションを追加しない。
+- **公開しないもの**：秘密情報、開発者の端末・個人の情報（ユーザー名、パス、メール）、未修正の脆弱性、まだ行っていない対策の一覧。公開文書（SECURITY.md、docs/threat-model.md、CLAUDE.md）には完了したことだけを書き、未完了の項目は git 管理外の `private/` に置く。`scripts/check-repo.mjs` がコミット前（`.githooks/pre-commit`）と CI で検査する。脆弱性の修正は非公開フォークで行い、マージと同時に公開する。
 - GitHub Actions はコミットSHA固定・最小権限・シークレットなし。`pull_request_target` は使わない。
 - リポジトリ：`https://github.com/kyritk/jibun-joho-taisaku`、公開URL：`https://kyritk.github.io/jibun-joho-taisaku/`。承認者名は `Kyri`。
 
