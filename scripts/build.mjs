@@ -51,14 +51,44 @@ const INFO_LABEL = {
   bank_account: '銀行口座', my_number: 'マイナンバー', financial_assets: '資産の情報', family_composition: '家族構成', medical: '病歴・診療の情報',
   purchase_history: '購入・利用履歴', other: 'その他',
 };
-const ICONS = {
-  check: ['M20 6 9 17l-5-5'],
-  'check-circle': ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'm8 12 3 3 5-6'],
-  circle: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],
-  alert: ['M12 3 2 20h20L12 3z', 'M12 10v4', 'M12 17h.01'],
-  info: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 11v6', 'M12 8h.01'],
+// ---------- アイコン（assets/icons/*.svg → HTML内スプライト）。docs/ux-visual-research.md 6章
+// 素材ファイルは「信頼できない入力」として扱い、<path> の d と fill-rule だけを取り出す。それ以外の要素・属性・スクリプトは捨てる。
+// 同一文書の <use href="#i-…"> はネットワーク取得が無いので、CSP default-src 'none' のままで動く。
+const ICON_ID = /^[a-z0-9-]+$/;
+const PATH_D = /^[MmLlHhVvCcSsQqTtAaZz0-9 .,\-]+$/;
+function loadIcons() {
+  const dir = path.join(root, 'assets', 'icons');
+  const out = new Map();
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.svg')).sort()) {
+    const id = f.slice(0, -4);
+    if (!ICON_ID.test(id)) throw new Error(`assets/icons/${f}: ファイル名は英小文字・数字・ハイフンのみ`);
+    const src = fs.readFileSync(path.join(dir, f), 'utf8');
+    const vb = src.match(/viewBox="([^"]+)"/);
+    if (!vb || vb[1].trim() !== '0 0 24 24') throw new Error(`assets/icons/${f}: viewBox は 0 0 24 24 に揃える`);
+    const paths = [];
+    for (const m of src.matchAll(/<path\b([^>]*?)\/?>/g)) {
+      const d = m[1].match(/\bd="([^"]*)"/);
+      if (!d || !PATH_D.test(d[1])) throw new Error(`assets/icons/${f}: path の d に想定外の文字`);
+      const fr = m[1].match(/\bfill-rule="(evenodd|nonzero)"/);
+      paths.push(`<path${fr ? ` fill-rule="${fr[1]}"` : ''} d="${d[1].trim()}"></path>`);
+    }
+    if (!paths.length) throw new Error(`assets/icons/${f}: <path> が無い（path 以外の図形は使わない）`);
+    out.set(id, paths.join(''));
+  }
+  return out;
+}
+const ICONS = loadIcons();
+const SPRITE = `<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">${[...ICONS].map(([id, p]) => `<symbol id="i-${id}" viewBox="0 0 24 24">${p}</symbol>`).join('')}</svg>`;
+const icon = (name, cls = '') => {
+  if (!ICONS.has(name)) throw new Error(`unknown icon "${name}"（assets/icons/${name}.svg が無い）`);
+  return `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#i-${name}"></use></svg>`;
 };
-const icon = (name, cls = '') => `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name].map((d) => `<path d="${d}"></path>`).join('')}</svg>`;
+const catByKey = Object.fromEntries(services.categories.map((c) => [c.key, c]));
+const svcById = Object.fromEntries(services.services.map((s) => [s.id, s]));
+const avatarHtml = (svc, size = '') => {
+  const cat = svc && catByKey[svc.category];
+  return `<span class="av${size ? ' ' + size : ''}${cat ? ' c-' + esc(cat.key) : ''}" aria-hidden="true">${icon(cat ? cat.icon : 'layout-grid')}</span>`;
+};
 
 // ---------- ページの共通枠
 const CSP = [
@@ -68,8 +98,8 @@ const CSP = [
 
 function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '' }) {
   const fullTitle = title ? `${title}｜${SITE_NAME}` : SITE_NAME;
-  const nav = [['', 'ホーム'], ['todo', 'やること'], ['services', 'サービス'], ['settings', '設定']]
-    .map(([k, label]) => `<a href="${rel}#/${k}"${current === k && withApp ? ' aria-current="page"' : ''}>${label}</a>`).join('');
+  const nav = [['', 'ホーム', 'home'], ['todo', 'やること', 'list-check'], ['services', 'サービス', 'layout-grid'], ['settings', '設定', 'settings']]
+    .map(([k, label, ic]) => `<a href="${rel}#/${k}"${current === k && withApp ? ' aria-current="page"' : ''}>${icon(ic)}${label}</a>`).join('');
   return `<!doctype html>
 <html lang="ja">
 <head>
@@ -78,7 +108,7 @@ function page({ rel, title, description, body, canonical, withApp = false, dataJ
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#0017c1">
+<meta name="theme-color" content="#0066cc">
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
 ${canonical !== undefined ? `<link rel="canonical" href="${esc(SITE_URL + canonical)}">` : ''}
@@ -88,6 +118,7 @@ ${canonical !== undefined ? `<link rel="canonical" href="${esc(SITE_URL + canoni
 <link rel="manifest" href="${rel}manifest.webmanifest">
 </head>
 <body>
+${SPRITE}
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="${rel}#/">${esc(SITE_NAME)}</a>
@@ -97,12 +128,12 @@ ${canonical !== undefined ? `<link rel="canonical" href="${esc(SITE_URL + canoni
 <main${withApp ? ' id="app"' : ' class="static"'}>
 ${withApp ? '' : `<div class="wrap">${body}</div>`}
 </main>
-${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info')}<div><p>この画面にはJavaScriptが必要です。JavaScriptを使わずに読める <a href="${rel}incidents/">事案の一覧</a> もあります。</p></div></div></div></noscript>` : ''}
+${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info-circle')}<div><p>この画面にはJavaScriptが必要です。JavaScriptを使わずに読める <a href="${rel}incidents/">事案の一覧</a> もあります。</p></div></div></div></noscript>` : ''}
 <nav class="help" aria-label="困ったとき">
   <div class="wrap">
-    <a href="${rel}#/settings">家族に見せる</a>
-    <a href="${rel}#/help">相談窓口</a>
-    <a href="${rel}faq.html">よくある質問</a>
+    <a href="${rel}#/settings">${icon('home-2')}家族に見せる</a>
+    <a href="${rel}#/help">${icon('phone')}相談窓口</a>
+    <a href="${rel}faq.html">${icon('info-circle')}よくある質問</a>
   </div>
 </nav>
 <footer>
@@ -135,14 +166,36 @@ function cardsFor(inc) {
 function contactHtml(key, where) {
   const c = cards.official_contacts[key];
   if (!c) return '';
-  let s = `<div class="contact">${esc(c.label)}：`;
-  if (c.phone) s += `<b>${esc(c.phone)}</b>`;
-  if (c.url) s += (c.phone ? '　' : '') + ext(c.url, c.url, where);
-  if (c.hours) s += `<span class="caption">（${esc(c.hours)}）</span>`;
-  return s + '</div>';
+  let s = `<div class="contact">${icon(c.phone ? 'phone' : 'file-text')}<div><span class="lab">${esc(c.label)}${c.hours ? `（${esc(c.hours)}）` : ''}</span>`;
+  if (c.phone) s += `<span class="num">${esc(c.phone)}</span>`;
+  if (c.url) s += `<span class="small">${ext(c.url, '公式ページを開く', where)}</span>`;
+  return s + '</div></div>';
 }
 function sourcesHtml(keys, where) {
-  return '<details><summary>根拠を見る（公的機関の資料）</summary><ul>' + keys.map((k) => { const s = cards.sources[k]; return `<li>${s.url ? ext(s.url, s.title, where) : esc(s.title)}</li>`; }).join('') + '</ul></details>';
+  return `<details><summary>${icon('file-text')}根拠を見る（公的機関の資料）</summary><ul>` + keys.map((k) => { const s = cards.sources[k]; return `<li>${s.url ? ext(s.url, s.title, where) : esc(s.title)}</li>`; }).join('') + '</ul></details>';
+}
+// やり方：番号つき手順（steps）が無ければ文章（detail）。禁止は赤い○斜線つきの1行
+function howHtml(card) {
+  let s = '<h4>やり方</h4>';
+  if (Array.isArray(card.steps) && card.steps.length) s += `<ol class="steps">${card.steps.map((t, i) => `<li><span class="num" aria-hidden="true">${i + 1}</span><span>${esc(t)}</span></li>`).join('')}</ol>`;
+  else s += `<p class="how">${esc(card.detail)}</p>`;
+  if (card.dont) s += `<div class="dont">${icon('forbid-2')}<span>${esc(card.dont)}</span></div>`;
+  return s;
+}
+// 漏れた情報の種類チップ（カード群単位。アイコン＋文字、緊急度1は強調）
+function chipsHtml(inc) {
+  const lim = inc.limited_info_types || {};
+  const leaked = inc.leaked_info_types.filter((k) => !(k in lim));
+  const covered = new Set();
+  let s = '<ul class="chips" aria-label="漏れたとされる情報">';
+  for (const t of infoTypesSorted) {
+    const hit = t.matches.filter((k) => leaked.includes(k));
+    if (!hit.length) continue;
+    hit.forEach((k) => covered.add(k));
+    s += `<li class="chip${t.urgency === 1 ? ' strong' : ''}">${icon(t.icon)}${esc(t.chip_label || t.label)}</li>`;
+  }
+  for (const k of leaked) if (!covered.has(k)) s += `<li class="chip plain">${esc(INFO_LABEL[k] || k)}</li>`;
+  return s + '</ul>';
 }
 
 // ---------- 事案別ページ（静的。検索流入の受け口。docs/ux-research.md 5.4）
@@ -158,17 +211,17 @@ function incidentPage(inc) {
   const title = `${inc.service_name}の情報漏えい`;
   const description = `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏えい${inc.status === 'suspected' ? 'のおそれ' : ''}について、漏れたとされる情報と、利用者がやることを公的機関の根拠つきでまとめています。`;
 
-  let b = `<h1>${esc(title)}</h1>
-<p><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> <span class="caption">公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}</span>${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</p>
+  let b = `<div class="inc-head">${avatarHtml(svcById[inc.service_ids[0]])}<div class="ttl"><h1>${esc(title)}</h1><span class="sub"><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> 公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</span></div></div>
 <p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : `<b>あなたが対象かどうかは、${esc(operatorShort)}からの連絡でご確認ください。</b>`}</p>
 <p class="small muted">公表された件数：${esc(inc.counts.wording)}</p>`;
   if (!denied) {
-    b += `<p>漏れたとされる情報：${mainTypes.map((k) => `<b>${esc(INFO_LABEL[k] || k)}</b>`).join('、')}</p>`;
+    b += `<h2 class="small muted">漏れたとされる情報</h2>${chipsHtml(inc)}`;
+    if (mainTypes.length) b += `<p class="caption">${mainTypes.map((k) => esc(INFO_LABEL[k] || k)).join('、')}</p>`;
     if (inc.other_info_detail) b += `<details class="small"><summary class="muted">くわしい内訳</summary><p class="muted">${esc(inc.other_info_detail)}</p></details>`;
     if (Object.keys(lim).length) b += `<p class="small">ごく一部の方だけが対象の情報：${Object.entries(lim).map(([k, note]) => `<b>${esc(INFO_LABEL[k] || k)}</b>（${esc(note)}）`).join('、')}。該当する方には会社から個別に連絡があります。</p>`;
     if (inc.card_not_leaked_stated === true) b += '<p class="small muted">クレジットカード情報は漏えいしていない、と会社が公表しています。</p>';
   }
-  b += `<div class="banner info">${icon('info')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
+  b += `<div class="banner info">${icon('info-circle')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
 
   if (!denied) {
     b += '<h2>やること</h2><ol class="task-list">';
@@ -176,16 +229,16 @@ function incidentPage(inc) {
     list.forEach((x, i) => {
       if (x.infoType !== currentType) {
         currentType = x.infoType;
-        if (currentType) b += `<li class="type-head"><b>${esc(currentType.label)}</b>が漏れたとき${currentType.needs_research ? ' <span class="tag neutral">根拠を調査中</span>' : ''}</li>`;
+        if (currentType) b += `<li class="type-head">${icon(currentType.icon)}${esc(currentType.label)}が漏れたとき${currentType.needs_research ? ' <span class="tag neutral">根拠を調査中</span>' : ''}</li>`;
       }
       const t = x.card.title.replace('{service}', inc.service_name);
-      b += `<li class="task-item"><div class="task-row">${icon('circle', 'row-icon')}<div class="row-main"><div class="row-title">${i + 1}. ${esc(t)}</div><div class="row-meta">約${x.card.minutes}分</div></div></div>`;
-      b += `<div class="task-panel"><p class="reason">${esc(x.card.reason)}</p><p class="how">${esc(x.card.detail)}</p>`;
+      b += `<li class="task-item"><div class="task-row">${icon('ring', 'st')}<div class="row-main"><div class="row-title">${i + 1}. ${esc(t)}</div><div class="row-meta">約${x.card.minutes}分</div></div></div>`;
+      b += `<div class="task-panel"><p class="reason">${esc(x.card.reason)}</p>${howHtml(x.card)}`;
       if (x.card.contact) b += contactHtml(x.card.contact, where);
       for (const k of x.card.contact_list || []) b += contactHtml(k, where);
-      b += sourcesHtml(x.card.sources, where) + '</div></li>';
+      b += sourcesHtml(x.card.sources, where) + '<p class="caption note">※画面や手順は、機種やアプリの版によって異なります。</p></div></li>';
       if (x.infoType && x.card === x.infoType.cards[x.infoType.cards.length - 1] && x.infoType.skip_if.length) {
-        b += `<li class="skip-note">やらなくていいこと：${x.infoType.skip_if.map(esc).join('<br>')}</li>`;
+        b += `<li class="skip-note"><b>しなくてよい</b><span>${x.infoType.skip_if.map(esc).join('<br>')}</span></li>`;
       }
     });
     b += '</ol>';
@@ -214,7 +267,7 @@ function incidentIndexPage() {
   const rel = '../';
   let b = '<h1>公表された情報漏えいの一覧</h1><p class="muted">企業が公式に公表した消費者向けサービスの事案のうち、開発者が公式発表と照合したものだけを載せています。全事案の網羅はしていません。</p><ul class="plain-list incident-list">';
   for (const inc of incidents) {
-    b += `<li><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏えい</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">${esc(inc.operator)}・公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></li>`;
+    b += `<li>${avatarHtml(svcById[inc.service_ids[0]], 'sm')}<span class="ttl"><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏えい</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">${esc(inc.operator)}・公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></span></li>`;
   }
   b += '</ul>';
   return page({ rel, title: '事案の一覧', description: '企業が公式に公表した消費者向けサービスの情報漏えい事案の一覧。', body: b, canonical: 'incidents/' });
@@ -309,7 +362,7 @@ function notFoundPage() {
 }
 
 // ---------- アイコン（SVG と PNG）。PNG は zlib だけで生成する
-const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#0017c1"/><path d="M18 34l10 10 20-22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#0066cc"/><path d="M18 34l10 10 20-22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
 `;
 function crc32(buf) {
   let c, crc = 0xffffffff;
@@ -341,7 +394,7 @@ function makeIconPng(size) {
       const d = Math.min(...segs.map((sg) => distSeg(ux, uy, sg)));
       const white = d < 3.5;
       const o = y * (size * 4 + 1) + 1 + x * 4;
-      raw[o] = white ? 255 : 0x00; raw[o + 1] = white ? 255 : 0x17; raw[o + 2] = white ? 255 : 0xc1; raw[o + 3] = 255;
+      raw[o] = white ? 255 : 0x00; raw[o + 1] = white ? 255 : 0x66; raw[o + 2] = white ? 255 : 0xcc; raw[o + 3] = 255;
     }
   }
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4); ihdr[8] = 8; ihdr[9] = 6; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
@@ -370,7 +423,7 @@ write('icon-180.png', makeIconPng(180));
 write('icon-512.png', makeIconPng(512));
 write('manifest.webmanifest', JSON.stringify({
   name: SITE_NAME, short_name: SITE_NAME, description: TAGLINE, lang: 'ja', start_url: './', scope: './', display: 'standalone',
-  background_color: '#ffffff', theme_color: '#0017c1',
+  background_color: '#ffffff', theme_color: '#0066cc',
   icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: 'icon-180.png', sizes: '180x180', type: 'image/png' }, { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
 }, null, 2));
 write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}sitemap.xml\n`);

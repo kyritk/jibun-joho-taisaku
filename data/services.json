@@ -6,67 +6,67 @@
     {
       "key": "convenience",
       "label": "コンビニ",
-      "icon": "🏪"
+      "icon": "store"
     },
     {
       "key": "shopping",
       "label": "通販・ネットショップ",
-      "icon": "🛒"
+      "icon": "shopping-cart"
     },
     {
       "key": "retail",
       "label": "お店・家電・本",
-      "icon": "🏬"
+      "icon": "basket"
     },
     {
       "key": "food",
       "label": "飲食店のアプリ",
-      "icon": "🍽️"
+      "icon": "tools-kitchen-2"
     },
     {
       "key": "travel",
       "label": "旅行・宿・航空券",
-      "icon": "✈️"
+      "icon": "plane"
     },
     {
       "key": "mobility",
       "label": "カーシェア・タクシー",
-      "icon": "🚗"
+      "icon": "car"
     },
     {
       "key": "telecom",
       "label": "携帯・ネット回線",
-      "icon": "📱"
+      "icon": "device-mobile"
     },
     {
       "key": "payment",
       "label": "決済・ポイント",
-      "icon": "💳"
+      "icon": "coin-yen"
     },
     {
       "key": "finance",
       "label": "銀行・カード",
-      "icon": "🏦"
+      "icon": "bank"
     },
     {
       "key": "entertainment",
       "label": "カラオケ・ゲーム・動画",
-      "icon": "🎤"
+      "icon": "microphone"
     },
     {
       "key": "delivery",
       "label": "宅配・郵便",
-      "icon": "📦"
+      "icon": "truck"
     },
     {
       "key": "software",
       "label": "ソフト・アプリ",
-      "icon": "💻"
+      "icon": "device-desktop"
     },
     {
       "key": "fashion",
       "label": "衣料・美容",
-      "icon": "👕"
+      "icon": "shirt"
     }
   ],
   "services": [
