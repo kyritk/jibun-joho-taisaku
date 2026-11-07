@@ -130,7 +130,7 @@ GitHub Pages は HTTP ヘッダを設定できないため、CSP は `<meta http
 - [x] `check-dist.mjs`：meta refresh・srcdoc・data: URL・form・http: リンクの不在を検査
 - [x] GitHub Actions：GitHub 製アクションのみ許可、フォーク PR は外部貢献者すべて承認制、既定トークンは読み取りのみ
 - [x] GitHub：secret scanning＋push protection、Dependabot アラート（actions）、CodeQL 既定セットアップ（javascript / actions）、非公開脆弱性報告、マージ後のブランチ自動削除
-- [ ] GitHub：2要素認証（アカウント設定。手動）
+- [x] GitHub：2要素認証（アカウント設定）
 - [x] GitHub：署名付きコミットの必須化（開発者端末の SSH 署名鍵で全コミットに署名。公開鍵は GitHub の Signing Key に登録。ブランチ保護で署名必須）
 - [x] ブランチ保護：main への直接push禁止、force push 禁止、CI必須（`gh api` で設定）
 - [x] SECURITY.md（脆弱性の報告先）とプライバシーポリシー（端末内保存の項目、GitHub のログ）
