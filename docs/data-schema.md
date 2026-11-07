@@ -80,13 +80,17 @@
 
 ## 3. やることカード（data/cards.json）
 
-- `always_first_card`：どの事案でも先頭に出すカード。`{service}` がサービス名に置換される。
+- `always_first_card`：どの事案でも先頭に出すカード。`scope: "once"` で、`{services}` が関係する会社の連名に置換される。
+- **カードの範囲（docs/ux-dedupe-research.md）**：
+  - `scope`：`"once"`＝1回やれば選んだ全事案に効く行動。事案が何件あっても**1行だけ**表示し、済みにすると全事案に反映する（完了キーは `*:<カードID>`）。`"service"`＝サービスごとに必要な行動（パスワード変更、二段階認証）。事案ごとに1行（完了キーは `<事案ID>:<カードID>`）。
+  - `renew_on_new_incident`：`once` の行を済みにしたあと、同じ種類の情報を含む**新しい事案**が加わったら「再確認」に戻すか。カード・口座・マイナンバーは true、ニセメール・連絡先・本人申告（5年有効）は false。`service` では使わない。
+  - `title` の置換：`{service}`＝そのサービス名（`service` 用）、`{services}`＝関係する会社の連名（`once` 用。4社を超えると「○○など5社」）。
 - `info_types[]`：漏れた情報の種類ごとのカード群。
   - `matches`：上の表のキー。事案の `leaked_info_types` に1つでも含まれれば表示。
   - `urgency`：やることの並び順（1が最優先。カード・口座・本人確認書類・マイナンバー=1、パスワード=2、連絡先=3、その他=4）。緊急度1のチップは強調表示になる。
   - `icon`：この種類を表す絵（`assets/icons/<id>.svg` のファイル名）。必ず文字ラベルと一緒に表示する。`chip_label`：チップ用の短い名前（省略時は `label`）。
-  - `cards[]`：1カード1行動。`title`（行動）、`reason`（その行動が必要な理由、1文）、`detail`（やり方の文章）、`steps[]`（番号つきの手順。あれば `detail` の代わりに表示）、`dont`（してはいけないこと1行。赤い○斜線つきで表示。根拠にある内容だけ）、`icon`（任意。先頭カードなど）、`minutes`（所要時間の目安）、`contact` / `contact_list`（`official_contacts` のキー）、`sources`（`sources` のキー）、`reopen_on_confirm`。
-  - 文言：外来語（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）は避ける。検証で警告になる。
+  - `cards[]`：1カード1行動。`title`（行動）、`reason`（その行動が必要な理由、1文）、`detail`（やり方の文章）、`steps[]`（番号つきの手順。あれば `detail` の代わりに表示）、`dont`（してはいけないこと1行。赤い○斜線つきで表示。根拠にある内容だけ）、`icon`（任意。先頭カードなど）、`minutes`（所要時間の目安）、`contact` / `contact_list`（`official_contacts` のキー）、`sources`（`sources` のキー）、`reopen_on_confirm`、`scope`、`renew_on_new_incident`。
+  - 文言：対象は非ITの社会人。ログイン・パスワード・ID などはそのまま使う。説明なしでは伝わらない語（ダークウェブ／ハッカー／クレデンシャル／説明のないフィッシング）は検証で警告になる。
   - `skip_if[]`：やらなくていいこと。
   - `needs_research`：公的根拠が足りない種別。モックでは「調査中」と明示する。
 - `official_contacts`：表示してよい電話番号・URL。`verified_on` が null のものは公開前に要確認。

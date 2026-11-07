@@ -256,6 +256,14 @@ details.fold-rows.done .task-list { border-top: 1px solid var(--divider); }
 .task-item + .task-item { border-top: 1px solid var(--divider); }
 .type-head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) 0 var(--s-1); font-size: var(--fs-4); font-weight: 700; color: var(--text-2); }
 .type-head svg.icon { width: 1.25rem; height: 1.25rem; }
+/* 会社の小見出し（「会社ごとにやること」の中。段C） */
+.co-head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) 0 var(--s-1); font-size: var(--fs-4); font-weight: 700; color: var(--text-2); }
+/* 行の出所：会社の丸を重ねて並べる（3つまで）＋「3社」 */
+.row-meta .src { display: inline-flex; align-items: center; gap: .3em; vertical-align: middle; }
+.avs { display: inline-flex; align-items: center; }
+.avs .av { width: 20px; height: 20px; margin-left: -6px; border: 2px solid var(--surface); box-sizing: content-box; }
+.avs .av:first-child { margin-left: 0; }
+.avs .av svg.icon { width: 11px; height: 11px; }
 .type-head .tag { margin-left: var(--s-1); }
 .task-row { display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: 52px; padding: var(--s-2) 0; background: transparent; border: 0; text-align: left; cursor: pointer; color: var(--text); }
 .task-row:hover { background: var(--sunken); }
