@@ -145,8 +145,8 @@ ${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info-c
 </nav>
 <footer>
   <div class="wrap">
-    <p><b>ご注意</b>：このサイトは「○○社が漏洩（のおそれ）を公表した」という事実と、公的機関が勧める対処をまとめたものです。あなたの情報が漏れたかどうかは、各社からの連絡でご確認ください。掲載の網羅性・即時性は保証しません。</p>
-    <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。このサイトからメールやSMSを送ることはありません。</p>
+    <p><b>ご注意</b>：会社が公表した事実と、公的機関が勧める対処をまとめています。あなたが対象かは各社からの連絡でご確認ください。網羅性・即時性は保証しません。</p>
+    <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。このサイトからメールやSMSは送りません。</p>
     <nav aria-label="フッター"><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
     <p class="caption">データ生成日 ${esc(today)}</p>
   </div>
@@ -215,11 +215,12 @@ function incidentPage(inc) {
   const lim = inc.limited_info_types || {};
   const mainTypes = inc.leaked_info_types.filter((k) => !(k in lim));
   const list = cardsFor(inc);
-  const title = `${inc.service_name}の情報漏洩`;
+  const short = inc.service_name.replace(/（.*?）/g, '').trim() || inc.service_name;
+  const title = `${short}の情報漏洩`;
   const description = `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏洩${inc.status === 'suspected' ? 'のおそれ' : ''}について、漏れたとされる情報と、利用者がやることを公的機関の根拠つきでまとめています。`;
 
   let b = `<div class="inc-head">${avatarHtml(svcById[inc.service_ids[0]])}<div class="ttl"><h1>${esc(title)}</h1><span class="sub"><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> 公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</span></div></div>
-<p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : `<b>あなたが対象かどうかは、${esc(operatorShort)}からの連絡でご確認ください。</b>`}</p>
+<p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : '<b>あなたが対象かは、会社からの連絡でご確認ください。</b>'}</p>
 <p class="caption">公表された件数：${esc(inc.counts.wording)}</p>
 <nav class="toc" aria-label="目次"><h2 class="sec">目次</h2><ul class="toc-list">${[['facts', '漏れたとされる情報'], ['todo', 'やること'], ['contact', '会社の公式窓口'], ['timeline', '会社の公表（公式ページ）']].filter(([k]) => !(denied && (k === 'facts' || k === 'todo')) && !(k === 'contact' && !((inc.official_contact || {}).phone || (inc.official_contact || {}).url))).map(([k, l]) => `<li><a href="#${k}">${l}</a></li>`).join('')}</ul></nav>`;
   if (!denied) {
@@ -229,7 +230,7 @@ function incidentPage(inc) {
     if (Object.keys(lim).length) b += `<p class="small">ごく一部の方だけが対象の情報：${Object.entries(lim).map(([k, note]) => `<b>${esc(INFO_LABEL[k] || k)}</b>（${esc(note)}）`).join('、')}。該当する方には会社から個別に連絡があります。</p>`;
     if (inc.card_not_leaked_stated === true) b += '<p class="small muted">クレジットカード情報は漏洩していない、と会社が公表しています。</p>';
   }
-  b += `<div class="banner info">${icon('info-circle')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録すると：ホームにこの事案が出て、やることを1つずつ「済みにする」で進められます。続報があれば、必要なやることだけが「再確認」で戻ります。登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
+  b += `<div class="banner info">${icon('info-circle')}<div><p><b>登録すると、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">ホームにこの事案が出ます。保存先は端末内だけです。</p></div></div>`;
 
   if (!denied) {
     b += '<h2 id="todo" tabindex="-1">やること</h2><ol class="task-list">';
@@ -267,15 +268,16 @@ function incidentPage(inc) {
     b += `<details><summary>事実のメモ</summary><div class="facts">${esc(a.facts)}</div></details></li>`;
   }
   b += '</ul>';
-  b += `<p class="small muted">このページは企業の公式発表を元に、事実項目だけを整理したものです。文章の転載はしていません。誤りがあれば <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正の依頼</a> からお知らせください。</p>`;
+  b += `<p class="caption">企業の公式発表から事実項目だけを整理しています。誤りは <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正の依頼</a> からお知らせください。</p>`;
   return page({ rel, title, description, body: b, canonical: `incidents/${inc.id}/` });
 }
 
 function incidentIndexPage() {
   const rel = '../';
-  let b = '<h1>公表された情報漏洩の一覧</h1><p class="muted">企業が公式に公表した消費者向けサービスの事案のうち、開発者が公式発表と照合したものだけを載せています。全事案の網羅はしていません。</p><ul class="plain-list incident-list">';
+  let b = '<h1>公表された情報漏洩の一覧</h1><p class="caption">企業の公式発表と照合した事案だけです。全事案は網羅していません。</p><ul class="plain-list incident-list">';
   for (const inc of incidents) {
-    b += `<li>${avatarHtml(svcById[inc.service_ids[0]], 'sm')}<span class="ttl"><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏洩</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">${esc(inc.operator)}・公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></span></li>`;
+    const short = inc.service_name.replace(/（.*?）/g, '').trim() || inc.service_name;
+    b += `<li>${avatarHtml(svcById[inc.service_ids[0]], 'sm')}<span class="ttl"><a href="./${esc(inc.id)}/">${esc(short)}の情報漏洩</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></span></li>`;
   }
   b += '</ul>';
   return page({ rel, title: '事案の一覧', description: '企業が公式に公表した消費者向けサービスの情報漏洩事案の一覧。', body: b, canonical: 'incidents/' });

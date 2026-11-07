@@ -108,6 +108,8 @@
     return el('span', { class: `av${size ? ' ' + size : ''}${cat ? ' c-' + cat.key : ''}`, 'aria-hidden': 'true' }, icon(cat ? cat.icon : 'layout-grid'));
   };
   const serviceOf = (inc) => svcById[inc.service_ids[0]];
+  // 見出し・カード題名用の短い名前（「ブックオフ（オンラインストア・公式アプリ・Web会員）」→「ブックオフ」）。正式名は事案別ページに
+  const shortName = (inc) => inc.service_name.replace(/（.*?）/g, '').trim() || inc.service_name;
   // 事案の「漏れた情報」を、カード群（情報の種類）単位のチップにまとめる。カード群に無いキーは文字だけのチップ
   function infoChips(inc) {
     const limited = inc.limited_info_types || {};
@@ -173,7 +175,7 @@
     if (x.reopened) return el('span', { class: 'tag recheck' }, '再確認', x.unseen ? el('span', { class: 'dot', 'aria-hidden': 'true' }) : null);
     return el('span', { class: 'tag todo' }, '未対応');
   };
-  const cardTitle = (x) => x.card.title.replace('{service}', x.inc.service_name);
+  const cardTitle = (x) => x.card.title.replace('{service}', shortName(x.inc));
   function contactNode(key) {
     const c = cards.official_contacts[key];
     if (!c) return null;
@@ -185,7 +187,7 @@
   function sourcesNode(keys) {
     const list = el('ul', null);
     for (const k of keys) { const s = cards.sources[k]; if (s) list.append(el('li', null, s.url ? extLink(s.url, s.title) : s.title)); }
-    return el('details', null, el('summary', null, icon('file-text'), '根拠を見る（公的機関の資料）'), list);
+    return el('details', null, el('summary', null, icon('file-text'), '根拠（公的機関の資料）'), list);
   }
   // やり方：番号つき手順（steps）が無ければ文章（detail）
   function howNode(card) {
@@ -246,9 +248,9 @@
     const item = (i, t) => el('li', null, el('span', { class: 'num', 'aria-hidden': 'true' }, String(i)), el('span', null, t));
     return el('section', { class: 'next-what', 'aria-labelledby': 'nw' }, el('h2', { id: 'nw', class: 'sec' }, '次に起きること'),
       el('ol', null,
-        item(1, 'やることを全部済ませると「今は対策済み」になります。'),
-        item(2, '続報が出たら、必要なものだけが「再確認」で戻ります。'),
-        item(3, 'お知らせは届きません。ときどき開いて確認してください。')));
+        item(1, '全部済ませると「今は対策済み」になります'),
+        item(2, '続報が出ると、必要な分だけ「再確認」で戻ります'),
+        item(3, 'お知らせは届きません。ときどき開いてください')));
   }
 
   // ---------- ホーム
@@ -258,9 +260,9 @@
     const denied = inc.status === 'denied';
     const first = inc.announcements[0];
     const last = inc.announcements[inc.announcements.length - 1];
-    const latest = inc.announcements.length > 1 ? ` ・ 最新の公表 ${fmtMd(last.date)}（第${inc.announcements.length}報）` : '';
+    const latest = inc.announcements.length > 1 ? ` ・ 第${inc.announcements.length}報 ${fmtMd(last.date)}` : '';
     const head = el('div', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
-      el('div', { class: 'ttl' }, el('h3', null, inc.service_name), el('span', { class: 'sub' }, `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}${latest}`)));
+      el('div', { class: 'ttl' }, el('h3', null, shortName(inc)), el('span', { class: 'sub' }, `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}${latest}`)));
     const card = el('article', { class: 'inc-card' }, head);
     if (denied) { card.append(el('p', { class: 'task-withdrawn' }, 'その後「漏洩はなかった」と公表されました。やることはありません。')); return card; }
     card.append(infoChips(inc));
@@ -275,9 +277,9 @@
     if (flash) { wrap.append(banner(flash.kind, flash.kind === 'success' ? 'circle-check' : 'info-circle', el('p', null, flash.text))); flash = null; }
     else if (selected.size && (s.newIncidents.length || s.unseen)) {
       const parts = [];
-      if (s.newIncidents.length) parts.push(`${s.newIncidents.length}件の事案に新しい公表`);
-      if (s.unseen) parts.push(`${s.unseen}件のやることが「再確認」`);
-      wrap.append(banner('info', 'info-circle', el('p', null, `前回（${fmtMd(lastVisit)}）のあと、${parts.join('、')}になりました。`), el('a', { href: '#/todo' }, 'やることを見る')));
+      if (s.newIncidents.length) parts.push(`新しい公表 ${s.newIncidents.length}件`);
+      if (s.unseen) parts.push(`再確認 ${s.unseen}件`);
+      wrap.append(banner('info', 'info-circle', el('p', null, `前回（${fmtMd(lastVisit)}）から：${parts.join('、')}`), el('a', { href: '#/todo' }, 'やることを見る')));
     }
 
     // 関係ある事案（1事案＝1カード）。数字「関係ある漏洩」を押すとここへ
@@ -295,23 +297,22 @@
       const step = (n, title, note) => el('li', null, el('span', { class: 'num', 'aria-hidden': 'true' }, n), el('span', null, el('b', null, title), el('small', null, note)));
       hero = el('section', { class: 'hero start', 'aria-labelledby': 'h1' },
         el('h1', { id: 'h1' }, '使っているサービスの漏洩と、やることだけ'),
-        el('p', { class: 'caption' }, '全部で3つ。終わると「今は対策済み」になります。'),
+        el('p', { class: 'caption' }, '全部で3つ。'),
         el('ol', { class: 'steps-home' },
-          step('1', 'サービスを選ぶ', '使っているものにチェックを入れる ・ 約2分'),
-          step('2', '漏洩を確かめる', '関係ある会社の公表だけが出る ・ 約1分'),
-          step('3', '対策する', 'やることを1つずつ「済みにする」 ・ 1件 約1〜15分'),
-          el('li', { class: 'goal' }, el('span', { class: 'num', 'aria-hidden': 'true' }, icon('check')), el('span', null, el('b', null, '今は対策済み'), el('small', null, '続報が出たら、必要なものだけがここに戻ります')))),
+          step('1', 'サービスを選ぶ', 'チェックを入れるだけ ・ 約2分'),
+          step('2', '漏洩を確かめる', '関係ある公表だけが出ます ・ 約1分'),
+          step('3', '対策する', '1つずつ「済みにする」 ・ 1件 約1〜15分'),
+          el('li', { class: 'goal' }, el('span', { class: 'num', 'aria-hidden': 'true' }, icon('check')), el('span', null, el('b', null, '今は対策済み'), el('small', null, '続報が出たら、必要な分だけ戻ります')))),
         el('div', { class: 'cando' },
-          el('div', null, el('b', null, 'できること'), '会社が公表した漏洩のうち、あなたに関係あるものだけを表示します。'),
-          el('div', null, el('b', null, 'できないこと'), 'あなたの情報が漏れたかは分かりません。会社からの連絡で確認します。')),
+          el('div', null, el('b', null, 'できること'), '会社が公表した漏洩のうち、関係あるものだけを表示'),
+          el('div', null, el('b', null, 'できないこと'), 'あなたが対象かの判定。会社からの連絡で確認を')),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn lg wide', href: '#/services' }, icon('layout-grid'), '1 サービスを選ぶ')),
-        el('p', { class: 'caption' }, '選んだ内容はこの端末の中にだけ保存されます。氏名やメールアドレスは入力しません。'));
+        el('p', { class: 'caption' }, '選んだ内容は端末内にだけ保存。氏名やメールの入力はありません。'));
       wrap.append(hero);
     } else if (s.open > 0) {
       wrap.append(journeyNode(2, s, true));
       hero = el('section', { class: 'hero todo', 'aria-labelledby': 'h1' },
         el('div', { class: 'hero-head' }, el('span', { class: 'av big accent', 'aria-hidden': 'true' }, icon('list-check')), el('h1', { id: 'h1' }, `やることが ${s.open}件 あります`)),
-        el('p', { class: 'sum' }, `${s.active.length}件の漏洩に対して、やること${s.total}件のうち `, el('b', null, `${s.total - s.open}件`), ' が対策済みです。'),
         numsNode(s, toMine),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn lg wide', href: '#/todo' }, `3 対策する（${s.open}件）`)),
         lastCheck);
@@ -320,9 +321,7 @@
       wrap.append(journeyNode(s.total ? 3 : 2, s, true));
       hero = el('section', { class: 'hero ok', 'aria-labelledby': 'h1' },
         el('div', { class: 'hero-head' }, el('span', { class: 'av big success', 'aria-hidden': 'true' }, icon('circle-check')), el('h1', { id: 'h1' }, '今は対策済みです')),
-        el('p', { class: 'sum' }, s.active.length
-          ? `${s.active.length}件の漏洩のやること${s.total}件は、すべて終わっています。`
-          : '選んだサービスについて、公表された漏洩は今のところありません。'),
+        el('p', { class: 'sum' }, s.active.length ? `やること${s.total}件はすべて終わっています。` : '選んだサービスに、公表された漏洩はありません。'),
         numsNode(s, toMine),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn secondary', href: '#/services' }, 'サービスを追加する'), s.active.length ? el('a', { class: 'btn text', href: '#/todo' }, '終わったやることを見る') : null),
         lastCheck);
@@ -334,7 +333,7 @@
     const recent = [...incidents].sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1)).slice(0, 3);
     const list = el('ul', { class: 'plain-list' });
     for (const inc of recent) list.append(el('li', null, avatarFor(serviceOf(inc), 'sm'),
-      el('span', { class: 'ttl' }, el('span', { class: 'date' }, fmtMd(inc.last_updated)), el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, inc.service_name), ' ',
+      el('span', { class: 'ttl' }, el('span', { class: 'date' }, fmtMd(inc.last_updated)), el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, shortName(inc)), ' ',
         el('span', { class: `tag ${inc.status}` }, STATUS_LABEL[inc.status]))));
     wrap.append(el('section', { class: 'card-surface', 'aria-labelledby': 'recent' },
       el('h2', { id: 'recent', class: 'small muted' }, '最近の公表（選んだサービス以外も含む）'), list,
@@ -363,8 +362,8 @@
         const list = cardsFor(inc);
         const n = list.filter((x) => x.isDone).length;
         const denied = inc.status === 'denied';
-        const b = el('button', { type: 'button', class: 'toc-row' }, avatarFor(serviceOf(inc), 'xs'), el('span', { class: 'nm' }, inc.service_name),
-          denied ? el('span', { class: 'cnt ok' }, '取り下げ') : el('span', { class: 'cnt' + (n === list.length ? ' ok' : '') }, el('b', null, String(n)), ` / ${list.length} 対策済み`));
+        const b = el('button', { type: 'button', class: 'toc-row' }, avatarFor(serviceOf(inc), 'xs'), el('span', { class: 'nm' }, shortName(inc)),
+          denied ? el('span', { class: 'cnt ok' }, '取り下げ') : el('span', { class: 'cnt' + (n === list.length ? ' ok' : '') }, el('b', null, String(n)), ` / ${list.length} 済み`));
         b.addEventListener('click', () => { const sec = sections[i]; sec.open = true; sec.scrollIntoView({ block: 'start' }); sec.querySelector('summary').focus(); });
         toc.append(b);
       });
@@ -380,7 +379,7 @@
       wrap.append(el('section', { class: 'next', 'aria-labelledby': 'next-h' },
         el('div', { class: 'lab' }, el('span', { id: 'next-h' }, '次の 1件'), el('span', null, `${s.total}件中 ${s.total - s.open + 1}件目`)),
         el('div', { class: 'body' }, icon(next.card.icon || (next.infoType && next.infoType.icon) || 'list-check', 'xl'),
-          el('div', null, el('h2', null, cardTitle(next)), el('p', { class: 'meta' }, `${next.inc.service_name} ・ 約${next.card.minutes}分`))),
+          el('div', null, el('h2', null, cardTitle(next)), el('p', { class: 'meta' }, `${shortName(next.inc)} ・ 約${next.card.minutes}分`))),
         el('div', { class: 'btn-row' }, ok, how)));
     }
     for (const sec of sections) wrap.append(sec);
@@ -399,16 +398,14 @@
     const denied = inc.status === 'denied';
     const allDone = !denied && n === list.length;
     const first = inc.announcements[0];
-    const operatorShort = inc.operator.replace(/（.*?）/g, '');
     const sec = el('details', { class: 'task' + (allDone ? ' is-done' : ''), id: `sec-${inc.id}`, open: !denied && !allDone });
-    const sub = denied ? 'その後「漏洩はなかった」と公表されました' : allDone ? 'この事案の対策は済みました' : `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`;
+    const sub = denied ? 'その後「漏洩はなかった」と公表' : allDone ? '対策は済みました' : `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`;
     sec.append(el('summary', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
-      el('div', { class: 'ttl' }, el('h2', { id: `t-${inc.id}` }, inc.service_name), el('span', { class: 'sub' }, sub)),
+      el('div', { class: 'ttl' }, el('h2', { id: `t-${inc.id}` }, shortName(inc)), el('span', { class: 'sub' }, sub)),
       denied ? el('span', { class: 'tag denied' }, '取り下げ') : el('span', { class: 'count' + (allDone ? ' ok' : '') }, el('b', null, String(n)), ` / ${list.length}`),
       icon('chevron-down', 'chev')));
-    const about = el('p', { class: 'task-about caption' }, `${operatorShort}が${fmtMd(first.date)}に${STATUS_SUB[inc.status]}。`, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '詳しく'));
-    sec.append(about);
-    if (denied) { sec.append(el('p', { class: 'task-withdrawn' }, 'やることはありません。')); return sec; }
+    const detailLink = el('p', { class: 'task-about caption' }, el('a', { href: `./incidents/${encodeURIComponent(inc.id)}/` }, '会社の公表と窓口を見る'));
+    if (denied) { sec.append(el('p', { class: 'task-withdrawn' }, 'やることはありません。'), detailLink); return sec; }
     const ul = el('ul', { class: 'task-list' });
     let currentType = null;
     for (const x of list) {
@@ -427,7 +424,7 @@
         li.append(body); ul.append(li);
       }
     }
-    sec.append(ul);
+    sec.append(ul, detailLink);
     return sec;
   }
   function taskItem(x, rows) {
@@ -441,12 +438,12 @@
       el('span', { class: 'row-status' }, tagFor(x), icon('chevron-down', 'chev')));
     const panel = el('div', { class: 'task-panel', id: panelId, hidden: true });
     panel.append(el('p', { class: 'reason' }, x.card.reason));
-    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, `${fmtMd(x.reopenDate)}の続報で、対象の情報が増えたか、漏洩が確定しました。もう一度確認してください。`)));
+    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, `${fmtMd(x.reopenDate)}の続報で対象が広がりました。もう一度確認してください。`)));
     panel.append(howNode(x.card));
     if (x.card.contact) panel.append(contactNode(x.card.contact));
     for (const k of x.card.contact_list || []) panel.append(contactNode(k));
     panel.append(sourcesNode(x.card.sources));
-    panel.append(el('p', { class: 'caption note' }, '※画面や手順は、機種やアプリの版によって異なります。'));
+    panel.append(el('p', { class: 'caption note' }, '※画面や手順は機種により異なります'));
     const actions = el('div', { class: 'btn-row' });
     if (x.isDone) {
       const undo = el('button', { type: 'button', class: 'btn secondary' }, '対策済みを取り消す');
@@ -483,7 +480,7 @@
   function viewServices() {
     const wrap = el('div', { class: 'wrap' });
     wrap.append(journeyNode(1, summary(), false));
-    wrap.append(el('h1', null, '使っているサービスを選ぶ'), el('p', { class: 'caption' }, '該当するものをすべて選んでください。あとから追加や変更ができます。'));
+    wrap.append(el('h1', null, '使っているサービスを選ぶ'), el('p', { class: 'caption' }, '使っているものをすべて選んでください。あとから変えられます。'));
 
     // 検索
     const input = el('input', { type: 'search', id: 'svc-search', placeholder: '例：セブン、ペイペイ、タイムズ', autocomplete: 'off', 'aria-label': 'サービス名で探す', 'aria-controls': 'svc-suggest', enterkeyhint: 'search' });
@@ -494,7 +491,7 @@
       clear(suggest);
       if (!q) { suggest.hidden = true; return; }
       const hits = searchIndex.filter((e) => e.keys.some((k) => k.includes(q))).slice(0, 8);
-      if (!hits.length) suggest.append(el('li', { class: 'empty' }, '見つかりませんでした。別の呼び名で探すか、', el('a', { href: `${DATA.repo_url}/issues/new/choose`, target: '_blank', rel: 'noopener noreferrer' }, '追加の依頼'), 'からお知らせください。'));
+      if (!hits.length) suggest.append(el('li', { class: 'empty' }, '見つかりません。別の呼び名で探すか、', el('a', { href: `${DATA.repo_url}/issues/new/choose`, target: '_blank', rel: 'noopener noreferrer' }, '追加を依頼'), 'してください。'));
       for (const e of hits) suggest.append(el('li', null, pickNode(e.s, sync)));
       suggest.hidden = false;
     };
@@ -516,13 +513,13 @@
       if (list.length) cats.append(catDetails(cat.label, el('span', { class: `av c-${cat.key}`, 'aria-hidden': 'true' }, icon(cat.icon)), list, sync));
     }
     wrap.append(el('section', { 'aria-labelledby': 'cats' }, el('h2', { id: 'cats', class: 'small muted' }, '種類から探す'), cats));
-    wrap.append(el('p', { class: 'small muted' }, 'この中に使っているものがなければ、', el('a', { href: '#/' }, 'あとで追加する'), 'こともできます。'));
+    wrap.append(el('p', { class: 'caption' }, '見つからないものは、あとで追加できます。'));
 
     // 画面下の固定バー（選択中をトークンで表示。件数だけにしない）
     const tokens = el('div', { class: 'tokens' });
     const label = el('span', { class: 'label' });
     const decide = el('a', { class: 'btn', href: '#/' }, '決定');
-    decide.addEventListener('click', () => { flash = { kind: 'success', text: `${selected.size}件のサービスを選びました。関係のある漏洩だけを表示します。` }; });
+    decide.addEventListener('click', () => { flash = { kind: 'success', text: `${selected.size}件を選びました。` }; });
     const bar = el('div', { class: 'sticky-bar' }, el('div', { class: 'inner' }, label, tokens, decide));
     function refreshTokens() {
       clear(tokens);
@@ -570,7 +567,7 @@
         else shareMsg.textContent = url;
       } catch { shareMsg.textContent = url; }
     });
-    ul.append(el('li', null, el('h3', null, icon('home-2'), '家族に見せる'), el('p', { class: 'small' }, 'このサイトのURLを家族に送れます。家族の端末で同じサービスを選べば、同じ「やること」が見られます。あなたの選択や完了状態は送られません。'), share, shareMsg));
+    ul.append(el('li', null, el('h3', null, icon('home-2'), '家族に見せる'), el('p', { class: 'small' }, 'URLを家族に送ります。家族の端末で同じサービスを選ぶと、同じやることが見られます。あなたの記録は送られません。'), share, shareMsg));
 
     // 引き継ぎ
     const code = el('textarea', { class: 'code', 'aria-label': '引き継ぎコード', placeholder: 'ここにコードが表示されます／貼り付けます', spellcheck: 'false' });
@@ -578,7 +575,7 @@
     const b64e = (s) => btoa(Array.from(new TextEncoder().encode(s), (b) => String.fromCharCode(b)).join(''));
     const b64d = (s) => new TextDecoder().decode(Uint8Array.from(atob(s), (c) => c.charCodeAt(0)));
     const exp = el('button', { type: 'button', class: 'btn secondary' }, 'コードを書き出す');
-    exp.addEventListener('click', () => { code.value = 'JIBUN1.' + b64e(JSON.stringify({ s: [...selected], d: done })); msg.textContent = 'コードを書き出しました。選んだサービスと完了状態が入っています。他の人には見せないでください。'; });
+    exp.addEventListener('click', () => { code.value = 'JIBUN1.' + b64e(JSON.stringify({ s: [...selected], d: done })); msg.textContent = '書き出しました。他の人には見せないでください。'; });
     const imp = el('button', { type: 'button', class: 'btn secondary' }, 'コードを読み込む');
     imp.addEventListener('click', () => {
       const v = code.value.trim();
@@ -591,7 +588,7 @@
         msg.textContent = `読み込みました（サービス ${selected.size}件）。`;
       } catch { msg.textContent = 'コードを読み込めませんでした。'; }
     });
-    ul.append(el('li', null, el('h3', null, icon('device-mobile'), '引き継ぎ（機種変更のとき）'), el('p', { class: 'small' }, '選んだサービスと完了状態を短いコードにして、新しい端末で読み込めます。'), el('div', { class: 'btn-row' }, exp, imp), code, msg));
+    ul.append(el('li', null, el('h3', null, icon('device-mobile'), '引き継ぎ（機種変更のとき）'), el('p', { class: 'small' }, '選んだサービスと完了状態をコードにして、新しい端末で読み込めます。'), el('div', { class: 'btn-row' }, exp, imp), code, msg));
 
     // 端末の記録を消す
     const resetMsg = el('p', { class: 'small', 'aria-live': 'polite' });
@@ -601,9 +598,9 @@
       remove(LS.services); remove(LS.done); remove(LS.lastVisit); remove(LS.seen);
       selected = new Set(); done = {}; seen = {}; resetMsg.textContent = '消しました。';
     });
-    ul.append(el('li', null, el('h3', null, icon('settings'), 'この端末の記録'), el('p', { class: 'small' }, '保存されているのは、選んだサービス・やることの完了日・最終確認日の3つだけです。'), reset, resetMsg));
+    ul.append(el('li', null, el('h3', null, icon('settings'), 'この端末の記録'), el('p', { class: 'small' }, '保存しているのは、選んだサービス・完了日・最終確認日の3つだけです。'), reset, resetMsg));
 
-    ul.append(el('li', null, el('h3', null, icon('home'), 'ホーム画面に追加'), el('p', { class: 'small' }, '通知は送りません。ホーム画面に追加しておくと、次に確認しやすくなります。iPhone は共有ボタン→「ホーム画面に追加」、Android はブラウザのメニュー→「ホーム画面に追加」です。')));
+    ul.append(el('li', null, el('h3', null, icon('home'), 'ホーム画面に追加'), el('p', { class: 'small' }, '次に開きやすくなります。iPhone：共有ボタン→「ホーム画面に追加」。Android：メニュー→「ホーム画面に追加」。')));
     ul.append(el('li', null, el('h3', null, icon('info-circle'), 'このサイトについて'), el('p', { class: 'small' }, el('a', { href: './about.html' }, '目的と、やらないこと'), '　', el('a', { href: './privacy.html' }, 'プライバシー'), '　', el('a', { href: './faq.html' }, 'よくある質問'), '　', el('a', { href: './incidents/' }, 'すべての事案'))));
     wrap.append(ul);
     return wrap;
@@ -612,13 +609,13 @@
   // ---------- 相談窓口
   function viewHelp() {
     const wrap = el('div', { class: 'wrap' });
-    wrap.append(el('h1', null, '相談窓口'), el('p', { class: 'muted' }, 'どこに相談すればよいか迷ったときの、公的な窓口です。電話番号は公式ページで確認したものだけを載せています。'));
+    wrap.append(el('h1', null, '相談窓口'), el('p', { class: 'caption' }, '迷ったときの公的な窓口です。番号は公式ページで確認済みです。'));
     const ul = el('ul', { class: 'plain-list contact-list' });
     for (const key of ['consumer-hotline', 'police-consult', 'ipa-anshin', 'intl-call-stop', 'mynumber-call']) {
       if (!cards.official_contacts[key]) continue;
       ul.append(el('li', null, contactNode(key)));
     }
-    wrap.append(ul, el('p', { class: 'small muted' }, 'お金をだまし取られそうなとき、すでに被害に遭ったときは、最寄りの警察署か 110 に連絡してください。'));
+    wrap.append(ul, el('p', { class: 'small muted' }, '被害に遭ったとき、遭いそうなときは、警察署か 110 へ。'));
     return wrap;
   }
 
@@ -632,7 +629,7 @@
     if (m) {
       const added = [];
       for (const raw of m[1].split(',')) { const id = raw.trim(); if (svcById[id] && !selected.has(id)) { selected.add(id); added.push(svcById[id].name); } }
-      if (added.length) { save(LS.services, [...selected]); flash = { kind: 'success', text: `「${added.join('、')}」を選択に追加しました。使っていない場合は「サービス」から外せます。` }; }
+      if (added.length) { save(LS.services, [...selected]); flash = { kind: 'success', text: `「${added.join('、')}」を追加しました。「サービス」から外せます。` }; }
       history.replaceState(null, '', location.pathname + '#/');
       return '';
     }
