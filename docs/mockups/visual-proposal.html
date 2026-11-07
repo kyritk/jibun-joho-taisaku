@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>視覚案モック</title>
+<style>
+:root{--bg:#fff;--sunken:#f2f2f2;--text:#1a1a1a;--text2:#4d4d4d;--border:#767676;--div:#cccccc;
+--accent:#0066cc;--accent-tint:#e8f1fe;--warn:#ac3e00;--warn-tint:#ffeee2;--warn-fill:#e69f00;--danger:#ce0000;--danger-tint:#fdeeee;--ok:#1a1a1a;
+--c-mob:#0b6e4f;--c-air:#1d5fa3;--c-shop:#8a4b08;--c-pay:#5b3fa0;--c-tel:#2a6f97;--c-conv:#b3541e;--c-bank:#1b4965;--c-food:#9a3b3b;--c-kara:#6a4c93;--c-post:#4f6d2f;}
+*{box-sizing:border-box}
+body{margin:0;background:#dcdcdc;font-family:"Yu Gothic UI","Meiryo","Hiragino Sans","Noto Sans JP",sans-serif;font-size:18px;line-height:1.75;color:var(--text);letter-spacing:.02em}
+.row3{display:flex;gap:24px;padding:24px;align-items:flex-start}
+.phone{width:420px;background:#fff;border:1px solid #999;border-radius:16px;overflow:hidden;flex:none}
+.screen{padding:0 16px 16px}
+h1,h2,h3{margin:0;font-weight:700}
+h1{font-size:28px;line-height:1.4}
+h2{font-size:22px;line-height:1.5}
+.cap{font-size:15px;line-height:1.5;color:var(--text2)}
+.sm{font-size:16px;line-height:1.5}
+svg{display:inline-block;vertical-align:middle;flex:none}
+/* header */
+.hd{padding:12px 16px 0;border-bottom:1px solid var(--div);margin-bottom:16px}
+.brand{font-weight:700;font-size:18px}
+.nav{display:flex;justify-content:space-around;margin-top:6px}
+.nav a{display:flex;flex-direction:column;align-items:center;gap:0;padding:6px 10px 8px;min-width:72px;text-decoration:none;color:var(--text2);font-size:14px;border-bottom:4px solid transparent}
+.nav a.cur{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+.nav svg{width:28px;height:28px;fill:currentColor}
+/* hero */
+.hero{border:2px solid var(--accent);background:var(--accent-tint);border-radius:12px;padding:20px 16px 16px;margin-bottom:16px}
+.hero .top{display:flex;gap:14px;align-items:center}
+.bigicon{width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+.bigicon svg{width:40px;height:40px;fill:#fff}
+.flow{display:flex;align-items:center;gap:6px;margin:16px 0 14px}
+.flow .step{flex:1;background:#fff;border:1px solid var(--div);border-radius:8px;padding:8px 6px;text-align:center;line-height:1.3}
+.flow .step .n{font-size:28px;font-weight:700;display:block}
+.flow .step .l{font-size:13px;color:var(--text2);display:block}
+.flow .arrow{color:var(--text2);font-size:18px}
+.btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;min-height:48px;padding:8px 20px;border-radius:8px;font-weight:700;font-size:18px;border:2px solid var(--accent);background:var(--accent);color:#fff;text-decoration:none}
+.btn.sec{background:#fff;color:var(--accent)}
+.btn.ghost{background:transparent;border-color:var(--border);color:var(--text)}
+.btn svg{width:22px;height:22px;fill:currentColor}
+/* incident card */
+.card{border:1px solid var(--div);border-radius:12px;padding:0;margin-bottom:16px;overflow:hidden}
+.card .ch{display:flex;gap:12px;align-items:center;padding:14px 16px 10px}
+.avatar{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;color:#fff}
+.avatar svg{width:28px;height:28px;fill:#fff}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 16px 12px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--sunken);border-radius:999px;padding:4px 12px 4px 8px;font-size:15px;line-height:1.4}
+.chip svg{width:22px;height:22px;fill:var(--text)}
+.chip.strong{background:var(--danger-tint)}
+.chip.strong svg{fill:var(--danger)}
+.cf{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--div);background:#fafafa}
+.cf .cnt{font-weight:700}
+.cnt b{font-size:24px}
+/* task rows */
+.sub{display:flex;align-items:center;gap:8px;padding:12px 16px 4px;font-size:15px;color:var(--text2);font-weight:700}
+.sub svg{width:22px;height:22px;fill:var(--text2)}
+.task{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;border-top:1px solid var(--div);min-height:64px}
+.task .st{width:36px;height:36px;flex:none}
+.task .tt{flex:1;line-height:1.45}
+.task .tt small{display:block;font-size:14px;color:var(--text2);margin-top:2px}
+.task .chev{width:24px;height:24px;fill:none;stroke:var(--text2);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:700;padding:2px 10px;border-radius:999px;line-height:1.4;white-space:nowrap}
+.tag.todo{background:var(--accent-tint);color:var(--accent)}
+.tag.done{color:var(--ok)}
+.tag.re{background:var(--warn-tint);color:var(--warn)}
+.task.done .tt{color:var(--text)}
+.donefold{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--div);color:var(--text2);font-size:16px}
+.donefold svg{width:24px;height:24px}
+/* next card */
+.next{border:2px solid var(--accent);border-radius:12px;padding:14px 16px 16px;margin-bottom:20px}
+.next .lab{font-size:14px;font-weight:700;color:var(--accent);display:flex;justify-content:space-between}
+.next .body{display:flex;gap:14px;align-items:flex-start;margin:8px 0 12px}
+.next .body svg{width:56px;height:56px;flex:none}
+.next .body h2{font-size:21px;line-height:1.45}
+.next .acts{display:flex;gap:10px}
+/* panel */
+.panel{background:var(--sunken);padding:12px 16px 14px;border-top:1px solid var(--div)}
+.panel ol{margin:6px 0 10px;padding:0;list-style:none}
+.panel ol li{display:flex;gap:10px;align-items:flex-start;margin:6px 0;line-height:1.5;font-size:17px}
+.num{width:30px;height:30px;border-radius:50%;background:var(--text);color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:4px}
+.dont{display:flex;gap:10px;align-items:flex-start;background:var(--danger-tint);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:17px;line-height:1.5}
+.dont svg{width:28px;height:28px;flex:none;fill:var(--danger)}
+.skip{display:flex;gap:10px;align-items:flex-start;border:1px dashed var(--border);border-radius:8px;padding:8px 12px;margin:8px 0;font-size:16px;line-height:1.5;color:var(--text2)}
+.phone-no{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--div);border-radius:8px;padding:8px 12px;margin:8px 0}
+.phone-no svg{width:28px;height:28px;fill:var(--text)}
+.phone-no b{font-size:24px;letter-spacing:.04em}
+/* services */
+.search{display:flex;align-items:center;gap:10px;border:2px solid var(--border);border-radius:8px;padding:8px 12px;margin:12px 0 18px;color:var(--text2)}
+.search svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0 18px}
+.pick{display:flex;align-items:center;gap:10px;border:2px solid var(--div);border-radius:12px;padding:10px 10px;min-height:64px;line-height:1.3}
+.pick .avatar{width:40px;height:40px}.pick .avatar svg{width:24px;height:24px}
+.pick .nm{flex:1;font-weight:700;font-size:16px}
+.pick .nm small{display:block;font-weight:400;font-size:12px;color:var(--text2)}
+.pick .box{width:28px;height:28px;border:2px solid var(--border);border-radius:6px;flex:none}
+.pick.on{border-color:var(--accent);background:var(--accent-tint)}
+.pick.on .box{background:var(--accent);border-color:var(--accent);display:flex;align-items:center;justify-content:center}
+.pick.on .box svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.cat{display:flex;align-items:center;gap:12px;border:1px solid var(--div);border-radius:12px;padding:10px 14px;margin-bottom:8px;min-height:60px}
+.cat .avatar{width:40px;height:40px}.cat .avatar svg{width:24px;height:24px}
+.cat .nm{flex:1;font-weight:700}
+.cat .nm span{font-weight:400;color:var(--text2);font-size:15px}
+.cat .chev{width:24px;height:24px;fill:none;stroke:var(--text2);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.sticky{border-top:2px solid var(--accent);background:#fff;padding:10px 0 4px;margin-top:8px}
+.tok{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--accent);border-radius:999px;padding:4px 8px 4px 6px;font-size:15px;color:var(--accent);margin:2px 6px 2px 0}
+.tok .avatar{width:26px;height:26px}.tok .avatar svg{width:16px;height:16px}
+.sticky .acts{display:flex;justify-content:flex-end;margin-top:8px}
+.recent{border:1px solid var(--div);border-radius:12px;padding:12px 16px}
+.recent .r{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--div);font-size:16px;line-height:1.4}
+.recent .r:first-of-type{border-top:0}
+.recent .avatar{width:36px;height:36px}.recent .avatar svg{width:20px;height:20px}
+.recent .r .d{color:var(--text2);font-size:14px;display:block}
+.label{font-size:13px;color:#555;margin:0 0 6px 24px;font-family:monospace}
+</style></head><body>
+<svg hidden xmlns="http://www.w3.org/2000/svg">
+<symbol id="car" viewBox="0 0 24 24"><path d="M5 11l1.5-4.5A2 2 0 0 1 8.4 5h7.2a2 2 0 0 1 1.9 1.5L19 11h1a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-1v1a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-1H9v1a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-1H4a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1h1zm2.1 0h9.8l-1-3H8.1l-1 3zM7 15a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm10 0a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/></symbol>
+<symbol id="plane" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></symbol>
+<symbol id="store" viewBox="0 0 24 24"><path d="M3 4h18l1 5a3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1-3 3 3 3 0 0 1-3-3l1-5zm1 9.8A4 4 0 0 0 6 14a4 4 0 0 0 3-1.3 4 4 0 0 0 6 0A4 4 0 0 0 18 14a4 4 0 0 0 2-.2V20a1 1 0 0 1-1 1h-4v-5H9v5H5a1 1 0 0 1-1-1v-6.2z"/></symbol>
+<symbol id="cart" viewBox="0 0 24 24"><path d="M3 3h2.5l.6 3H21l-2 8H7.3l-.3 1.5h12.5v2H4.5l1.1-5.4L3.9 5H3V3zm6 15a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm8 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z"/></symbol>
+<symbol id="phone" viewBox="0 0 24 24"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 3v13h10V5H7zm3.5 15.2h3v-1.4h-3v1.4z"/></symbol>
+<symbol id="credit" viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v2H2V6a1 1 0 0 1 1-1zm-1 6h20v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7zm3 3v2h6v-2H5z"/></symbol>
+<symbol id="key" viewBox="0 0 24 24"><path d="M15 2a7 7 0 0 0-6.6 9.3L2 17.7V22h4.3v-2.6h2.6v-2.6h2.6l1.2-1.2A7 7 0 1 0 15 2zm1.5 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></symbol>
+<symbol id="idcard" viewBox="0 0 24 24"><path d="M3 4h18a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm5.5 4a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4 17h9c0-2-2-3.5-4.5-3.5S4 15 4 17zm10-8h6v2h-6V9zm0 4h6v2h-6v-2z"/></symbol>
+<symbol id="mail" viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm1 2.4V17h16V7.4l-8 5.6-8-5.6zM5.2 7l6.8 4.7L18.8 7H5.2z"/></symbol>
+<symbol id="bank" viewBox="0 0 24 24"><path d="M12 2l10 5v2H2V7l10-5zM4 10h3v7H4v-7zm6.5 0h3v7h-3v-7zM17 10h3v7h-3v-7zM2 18h20v3H2v-3z"/></symbol>
+<symbol id="mynum" viewBox="0 0 24 24"><path d="M3 4h18a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm2 4v2h3V8H5zm5 0v2h3V8h-3zm5 0v2h4V8h-4zM5 13v4h14v-4H5z"/></symbol>
+<symbol id="food" viewBox="0 0 24 24"><path d="M7 2h2v6a2 2 0 0 1-1 1.7V22H6V9.7A2 2 0 0 1 5 8V2h2v5h.5V2zM4 2h1v5H4V2zm12 0c2.2 0 4 2.7 4 6 0 2.2-.8 3.6-2 4.3V22h-2V12.3c-1.2-.7-2-2.1-2-4.3 0-3.3 1.8-6 4-6z"/></symbol>
+<symbol id="home" viewBox="0 0 24 24"><path d="M12 3l9 8h-2.5v9h-5v-6h-3v6h-5v-9H3l9-8z"/></symbol>
+<symbol id="list" viewBox="0 0 24 24"><path d="M4 5h3v3H4V5zm5 .5h11v2H9v-2zM4 10.5h3v3H4v-3zm5 .5h11v2H9v-2zM4 16h3v3H4v-3zm5 .5h11v2H9v-2z"/></symbol>
+<symbol id="grid" viewBox="0 0 24 24"><path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z"/></symbol>
+<symbol id="gear" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm-1.6-6h3.2l.5 2.6 1.6.9 2.5-.9 1.6 2.8-2 1.7v1.8l2 1.7-1.6 2.8-2.5-.9-1.6.9-.5 2.6h-3.2l-.5-2.6-1.6-.9-2.5.9L3.6 15l2-1.7v-1.8l-2-1.7 1.6-2.8 2.5.9 1.6-.9.5-2.6z"/></symbol>
+<symbol id="tel" viewBox="0 0 24 24"><path d="M6.6 3h3l1.6 4-2 1.5a12 12 0 0 0 6.3 6.3l1.5-2 4 1.6v3a2 2 0 0 1-2 2C10.4 19.4 4.6 13.6 4.6 5a2 2 0 0 1 2-2z"/></symbol>
+<symbol id="ban" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm0 2.5a7.5 7.5 0 0 0-6 12l10.5-10.5a7.5 7.5 0 0 0-4.5-1.5zm6 3L7.5 18a7.5 7.5 0 0 0 10.5-10.5z"/></symbol>
+<symbol id="mailx" viewBox="0 0 24 24"><path d="M3 5h18a1 1 0 0 1 1 1v6.3a6 6 0 0 0-2-1.1V7.4l-8 5.6-8-5.6V17h8.1a6 6 0 0 0 .6 2H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm2.2 2L12 11.7 18.8 7H5.2zM18 13a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm-2.1 3.5l1.4 1.5-1.4 1.5 1 1 1.5-1.4 1.5 1.4 1-1-1.4-1.5 1.4-1.5-1-1-1.5 1.4-1.5-1.4-1 1z"/></symbol>
+<symbol id="st-open" viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="#0066cc" stroke-width="3"/></symbol>
+<symbol id="st-done" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="#1a1a1a"/><path d="M10 18.5l5.5 5.5L26 13" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="st-re" viewBox="0 0 36 36"><path d="M18 4L34 32H2L18 4z" fill="#e69f00"/><path d="M18 13v9" stroke="#1a1a1a" stroke-width="3.5" stroke-linecap="round"/><circle cx="18" cy="27" r="2" fill="#1a1a1a"/></symbol>
+<symbol id="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+<symbol id="chk" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+<symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+</svg>
+
+<div class="row3">
+
+<!-- ========== ホーム ========== -->
+<div class="phone">
+ <div class="hd"><div class="brand">じぶんの情報対策</div>
+  <div class="nav"><a class="cur"><svg><use href="#home"/></svg>ホーム</a><a><svg><use href="#list"/></svg>やること</a><a><svg><use href="#grid"/></svg>サービス</a><a><svg><use href="#gear"/></svg>設定</a></div></div>
+ <div class="screen">
+  <div class="hero">
+   <div class="top"><div class="bigicon"><svg><use href="#list"/></svg></div><h1>やることが<br>22件 あります</h1></div>
+   <div class="flow">
+    <div class="step"><span class="n">2</span><span class="l">選んだ<br>サービス</span></div><span class="arrow">▶</span>
+    <div class="step"><span class="n">2</span><span class="l">関係ある<br>漏えい</span></div><span class="arrow">▶</span>
+    <div class="step"><span class="n">22</span><span class="l">やること</span></div>
+   </div>
+   <a class="btn">やることを見る</a>
+   <div class="cap" style="margin-top:8px">最終確認：2026年11月7日</div>
+  </div>
+
+  <div class="card">
+   <div class="ch"><div class="avatar" style="background:var(--c-mob)"><svg><use href="#car"/></svg></div><div><div style="font-weight:700;font-size:20px;line-height:1.3">タイムズカー</div><div class="cap">9月25日 漏えいを確認</div></div></div>
+   <div class="chips"><span class="chip strong"><svg><use href="#idcard"/></svg>本人確認書類の画像</span><span class="chip"><svg><use href="#mail"/></svg>氏名・住所</span></div>
+   <div class="cf"><span class="cnt"><b>0</b> / 9 対策済み</span><span class="sm" style="color:var(--accent);font-weight:700">やることを見る ›</span></div>
+  </div>
+  <div class="card">
+   <div class="ch"><div class="avatar" style="background:var(--c-air)"><svg><use href="#plane"/></svg></div><div><div style="font-weight:700;font-size:20px;line-height:1.3">スカイチケット</div><div class="cap">10月3日 漏えいを確認</div></div></div>
+   <div class="chips"><span class="chip strong"><svg><use href="#credit"/></svg>クレジットカード</span><span class="chip"><svg><use href="#key"/></svg>ID・パスワード</span><span class="chip"><svg><use href="#mail"/></svg>連絡先</span></div>
+   <div class="cf"><span class="cnt"><b>0</b> / 13 対策済み</span><span class="sm" style="color:var(--accent);font-weight:700">やることを見る ›</span></div>
+  </div>
+
+  <div class="recent"><div style="font-weight:700;margin-bottom:4px">最近の公表（選んだサービス以外も）</div>
+   <div class="r"><div class="avatar" style="background:var(--c-shop)"><svg><use href="#store"/></svg></div><div style="flex:1"><span class="d">11月6日</span>ブックオフ</div><span class="chip strong" style="font-size:13px">漏えいを確認</span></div>
+   <div class="r"><div class="avatar" style="background:var(--c-kara)"><svg><use href="#food"/></svg></div><div style="flex:1"><span class="d">11月6日</span>ビッグエコー</div><span class="chip strong" style="font-size:13px">漏えいを確認</span></div>
+   <div class="r"><div class="avatar" style="background:var(--c-tel)"><svg><use href="#phone"/></svg></div><div style="flex:1"><span class="d">11月6日</span>So-net</div><span class="chip strong" style="font-size:13px">漏えいを確認</span></div>
+  </div>
+ </div>
+</div>
+
+<!-- ========== やること ========== -->
+<div class="phone">
+ <div class="hd"><div class="brand">じぶんの情報対策</div>
+  <div class="nav"><a><svg><use href="#home"/></svg>ホーム</a><a class="cur"><svg><use href="#list"/></svg>やること</a><a><svg><use href="#grid"/></svg>サービス</a><a><svg><use href="#gear"/></svg>設定</a></div></div>
+ <div class="screen">
+  <h1 style="margin:4px 0 2px">やること</h1>
+  <div class="cap" style="margin-bottom:14px">22件のうち 1件 対策済み</div>
+
+  <div class="next">
+   <div class="lab"><span>つぎの 1件</span><span>22件中 2件目</span></div>
+   <div class="body"><svg><use href="#mailx"/></svg><div><h2>タイムズカーを名乗るメール・SMSのリンクは押さない</h2><div class="cap">約1分 ・ おわびを装う偽メールが出回っています</div></div></div>
+   <div class="acts"><a class="btn"><svg><use href="#chk"/></svg>済みにする</a><a class="btn ghost">やり方を見る</a></div>
+  </div>
+
+  <div class="card">
+   <div class="ch"><div class="avatar" style="background:var(--c-mob)"><svg><use href="#car"/></svg></div><div style="flex:1"><div style="font-weight:700;font-size:20px;line-height:1.3">タイムズカー</div><div class="cap">9月25日 漏えいを確認</div></div><span class="cnt"><b>1</b> / 9</span></div>
+   <div class="sub"><svg><use href="#idcard"/></svg>本人確認書類の画像が漏れたとき</div>
+   <div class="task"><svg class="st"><use href="#st-done"/></svg><div class="tt">信用情報機関に「本人申告」をする<small>対策済み ・ 11月7日</small></div><span class="tag done">対策済み</span><svg class="chev"><use href="#chev"/></svg></div>
+   <div class="task"><svg class="st"><use href="#st-open"/></svg><div class="tt">身に覚えのない契約書や請求が届いたら、送付元と警察に連絡する<small>約5分</small></div><span class="tag todo">未対応</span><svg class="chev"><use href="#chev"/></svg></div>
+   <div class="panel">
+    <div class="sm" style="font-weight:700">やり方</div>
+    <ol>
+     <li><span class="num">1</span><span>届いた書類は捨てずに取っておく</span></li>
+     <li><span class="num">2</span><span>差出人の会社に「申し込んでいない」と伝える</span></li>
+     <li><span class="num">3</span><span>警察相談専用電話に相談する</span></li>
+    </ol>
+    <div class="phone-no"><svg><use href="#tel"/></svg><div><div class="cap">警察相談専用電話（平日 8:30〜17:15）</div><b>#9110</b></div></div>
+    <div class="dont"><svg><use href="#ban"/></svg><span>書類に書かれた電話番号やURLには連絡しない</span></div>
+    <div class="skip"><span style="font-weight:700;flex:none">しなくてよい</span><span>すでに本人申告をした人は、出し直す必要はありません</span></div>
+    <div class="cap">※画面や手順は機種により異なります</div>
+   </div>
+   <div class="sub"><svg><use href="#key"/></svg>ID・パスワードが漏れたとき</div>
+   <div class="task"><svg class="st"><use href="#st-re"/></svg><div class="tt">タイムズカーのパスワードを変える<small>10月7日の続報で対象が広がりました</small></div><span class="tag re">再確認</span><svg class="chev"><use href="#chev"/></svg></div>
+   <div class="task"><svg class="st"><use href="#st-open"/></svg><div class="tt">同じパスワードを使っている他のサービスも変える<small>約10分</small></div><span class="tag todo">未対応</span><svg class="chev"><use href="#chev"/></svg></div>
+   <div class="donefold"><svg class="chev"><use href="#chev"/></svg>このほか 対策済み 1件</div>
+  </div>
+ </div>
+</div>
+
+<!-- ========== サービス ========== -->
+<div class="phone">
+ <div class="hd"><div class="brand">じぶんの情報対策</div>
+  <div class="nav"><a><svg><use href="#home"/></svg>ホーム</a><a><svg><use href="#list"/></svg>やること</a><a class="cur"><svg><use href="#grid"/></svg>サービス</a><a><svg><use href="#gear"/></svg>設定</a></div></div>
+ <div class="screen">
+  <h1 style="margin:4px 0 2px">使っているサービスを選ぶ</h1>
+  <div class="cap">あとから追加や変更ができます</div>
+  <div class="search"><svg><use href="#search"/></svg>例：せぶん、ぺいぺい、たいむず</div>
+  <div style="font-weight:700">よく使われているサービス</div>
+  <div class="grid">
+   <div class="pick on"><div class="avatar" style="background:var(--c-pay)"><svg><use href="#credit"/></svg></div><div class="nm">PayPay<small>PayPay株式会社</small></div><div class="box"><svg><use href="#chk"/></svg></div></div>
+   <div class="pick"><div class="avatar" style="background:var(--c-shop)"><svg><use href="#cart"/></svg></div><div class="nm">楽天市場<small>楽天グループ</small></div><div class="box"></div></div>
+   <div class="pick"><div class="avatar" style="background:var(--c-shop)"><svg><use href="#cart"/></svg></div><div class="nm">Amazon<small>アマゾンジャパン</small></div><div class="box"></div></div>
+   <div class="pick on"><div class="avatar" style="background:var(--c-tel)"><svg><use href="#phone"/></svg></div><div class="nm">LINE<small>LINEヤフー</small></div><div class="box"><svg><use href="#chk"/></svg></div></div>
+   <div class="pick"><div class="avatar" style="background:var(--c-tel)"><svg><use href="#phone"/></svg></div><div class="nm">ドコモ<small>NTTドコモ</small></div><div class="box"></div></div>
+   <div class="pick"><div class="avatar" style="background:var(--c-tel)"><svg><use href="#phone"/></svg></div><div class="nm">au<small>KDDI</small></div><div class="box"></div></div>
+  </div>
+  <div style="font-weight:700;margin-bottom:8px">種類から探す</div>
+  <div class="cat"><div class="avatar" style="background:var(--danger)"><svg><use href="#list"/></svg></div><div class="nm">最近、漏えいが公表された <span>23</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-conv)"><svg><use href="#store"/></svg></div><div class="nm">コンビニ <span>3</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-shop)"><svg><use href="#cart"/></svg></div><div class="nm">通販・ネットショップ <span>8</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-food)"><svg><use href="#food"/></svg></div><div class="nm">飲食店のアプリ <span>6</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-air)"><svg><use href="#plane"/></svg></div><div class="nm">旅行・宿・航空券 <span>4</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-mob)"><svg><use href="#car"/></svg></div><div class="nm">カーシェア・タクシー <span>3</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-tel)"><svg><use href="#phone"/></svg></div><div class="nm">携帯・ネット回線 <span>11</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="cat"><div class="avatar" style="background:var(--c-bank)"><svg><use href="#bank"/></svg></div><div class="nm">銀行・カード <span>3</span></div><svg class="chev"><use href="#chev"/></svg></div>
+  <div class="sticky">
+   <div class="cap" style="margin-bottom:4px">選択中 4件</div>
+   <span class="tok"><span class="avatar" style="background:var(--c-mob)"><svg><use href="#car"/></svg></span>タイムズカー ✕</span><span class="tok"><span class="avatar" style="background:var(--c-air)"><svg><use href="#plane"/></svg></span>スカイチケット ✕</span><span class="tok"><span class="avatar" style="background:var(--c-pay)"><svg><use href="#credit"/></svg></span>PayPay ✕</span><span class="tok"><span class="avatar" style="background:var(--c-tel)"><svg><use href="#phone"/></svg></span>LINE ✕</span>
+   <div class="acts"><a class="btn">決定</a></div>
+  </div>
+ </div>
+</div>
+
+</div>
+</body></html>
