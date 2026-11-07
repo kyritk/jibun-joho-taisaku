@@ -302,7 +302,7 @@ function aboutPage() {
 <p>掲載内容の誤り、企業からの訂正・削除のご依頼、「このサービスも選べるようにしてほしい」は <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">GitHub の依頼フォーム</a> からお願いします。公式発表に基づく修正を優先し、確認でき次第すみやかに対応します。</p>
 <h2>免責</h2>
 <p>掲載の網羅性・即時性は保証しません。本サイトの情報に基づいて行った行動の結果について、故意または重大な過失がある場合を除き、運営者は責任を負いません。最終的な判断は、各社からの連絡と公的機関の案内に基づいて行ってください。</p>
-<p class="small muted">ソースコードと事案データは <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">GitHub</a> で公開しています。IPA・デジタル庁などの政府系資料は政府標準利用規約2.0に沿って出典を明記のうえ、要約と事実項目のみ利用しています。本サイトは国の機関が作成したものではありません。</p>`;
+<p class="small muted">ソースコードと事案データは <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">GitHub</a> で公開しています。プログラムは GNU AGPL-3.0、事案データとやることカードは CC BY-NC-SA 4.0（出典表示・非営利・同条件）で利用できます。企業・自治体での利用はご相談ください。IPA・デジタル庁などの政府系資料は政府標準利用規約2.0に沿って出典を明記のうえ、要約と事実項目のみ利用しています。本サイトは国の機関が作成したものではありません。</p>`;
   return page({ rel, title: 'このサイトについて', description: '「じぶんの情報対策」の目的、できること、やらないこと、情報の根拠、訂正窓口。', body: b, canonical: 'about.html' });
 }
 
