@@ -2,66 +2,42 @@
 
 **使っているサービスの漏洩と、やることだけ。**
 
-使っているサービスを選ぶだけで、自分に関係ある情報漏洩と、自分がやることだけが揃い、
-対策済みの安心な状態に到達できるツール。企画書は [docs/企画書_1.md](docs/企画書_1.md)。
+企業が公表した情報漏洩のうち、あなたが使っているサービスのものだけを表示し、やることを1つずつ案内します。
 
-フェーズ0（検証）の成果物は揃い、事案20件は承認済み。次はフェーズ1（GitHub Pages での公開）。
+**👉 https://kyritk.github.io/jibun-joho-taisaku/**（本物のURLはこれだけです）
 
-## ディレクトリ
+## 使い方は3つ
 
-| パス | 内容 |
+1. **サービスを選ぶ** — 使っているものにチェックを入れる（約2分）
+2. **漏洩を確かめる** — 関係ある会社の公表だけが出る
+3. **対策する** — やることを1つずつ「済みにする」。全部済むと「今は対策済み」になる
+
+続報（おそれ→確定、対象の追加）が出ると、必要なやることだけが「再確認」として戻ります。お知らせは届かないので、ときどき開いてください。
+
+## できること・できないこと
+
+| できること | できないこと |
 | --- | --- |
-| `docs/企画書_1.md` | 企画書（正） |
-| `docs/data-schema.md` | データスキーマ |
-| `CLAUDE.md` | 実装時に毎回守ること（企画書の要約） |
-| `data/cards.json` | 漏れた情報の種類ごとの「やることカード」と根拠 |
-| `data/services.json` | サービスマスタ（通称、運営会社、カテゴリ） |
-| `data/incidents/drafts/` | 事案の下書き（LLM構造化。**未承認**。現在は空） |
-| `data/incidents/approved/` | 承認済みの事案20件（公開対象）。`limited_info_types` で一部の人だけが対象の情報を区別 |
-| `docs/threat-model.md` | 脅威モデルと対策の一覧 |
-| `data/official-domains.json` | 表示してよいURLのホスト許可リスト |
-| `src/app.js`, `src/app.css` | クライアント側のコードとスタイル（innerHTML 不使用、依存ゼロ） |
-| `assets/icons/` | アイコン素材（Tabler filled＝MIT、自作）。ビルドが `<path>` だけを取り出し HTML 内スプライトにする。ライセンスは `THIRD_PARTY_NOTICES.md` |
-| `docs/ux-research.md`, `docs/ux-visual-research.md` | 画面設計の調査報告（文字の設計／絵と形の設計） |
-| `scripts/validate.mjs` | データ検証（スキーマ、参照整合性、URL許可リスト） |
-| `scripts/build.mjs` | 静的サイト生成 → `dist/`（Node 標準ライブラリのみ） |
-| `scripts/check-dist.mjs` | 出力の自己検査（CSP、外部リソースなし、inline script なし） |
-| `.github/workflows/` | CI（PR：検証＋ビルド）とデプロイ（main：GitHub Pages） |
+| 会社が公式に公表した漏洩のうち、関係あるものだけを表示 | あなたの情報が漏れたかどうかの判定（会社からの連絡で確認してください） |
+| 漏れた情報の種類ごとに、公的機関（IPA、警視庁など）が勧める対処を案内 | 未公表の漏洩の検知、ダークウェブの監視 |
+| 公式に確認した電話番号・URLだけを表示 | メール・SMS・通知の送信（このサイトを名乗るメールは偽物です） |
 
-## 使い方
+## 安心のために
 
-```sh
-npm run validate        # データ検証（エラーがあれば exit 1）
-npm run build           # 承認済みだけで dist/ を生成
-npm run build:preview   # 下書きも含めて生成（確認用。公開しない）
-npm run check           # dist/ の自己検査
-npm run all             # 上の3つをまとめて
-```
+- **何も預かりません。** 氏名・メールアドレス・カード番号などの入力欄はありません。選んだサービスと完了状態は、あなたの端末の中にだけ保存されます。
+- **公式発表だけ。** 事案は企業の公式発表を開発者が目視で照合したものだけを載せています。まとめサイトの文章は転載しません。
+- **通信しません。** 外部スクリプト・広告・アクセス解析を使わず、ブラウザの設定（CSP）で外部通信を禁止しています。
 
-`dist/` は CSP で `script-src 'self'` を要求するため、`file://` で開くとスクリプトが動かないことがある。ローカル確認は任意の静的サーバーで `dist/` を配信する。
+## 誤り・追加の依頼
 
-公開URL：https://kyritk.github.io/jibun-joho-taisaku/
+表示内容の誤り、企業からの訂正・削除のご依頼、「このサービスも選べるようにしてほしい」は [GitHub の依頼フォーム](https://github.com/kyritk/jibun-joho-taisaku/issues/new/choose) からお願いします。電話番号・URL・事実の誤りは確認でき次第、即日で直します。脆弱性の報告は [SECURITY.md](SECURITY.md) を参照してください。
 
-## 公開してはいけないものを入れない仕組み
+---
 
-- `scripts/check-repo.mjs` が、秘密情報・端末のパスやユーザー名・メールアドレス・公開文書の未完了項目を検査します（CI でも実行）。
-- クローンしたら一度だけ `git config core.hooksPath .githooks` を実行すると、コミット前にも同じ検査が走ります。
-- 絶対に公開しない語は `.private-terms`（git 管理外、1行1語）に書きます。手元のメモや未完了の項目は `private/`（git 管理外）に置きます。
+## 開発者向け
 
-## 事案の承認フロー
-
-1. `data/incidents/drafts/<id>.json` を開き、`announcements[].url` の公式発表と1項目ずつ照合する。
-2. 問題なければ `review.approved: true`、`approved_on`、`approved_by` を入れ、`data/incidents/approved/` へ移す。
-3. `npm run validate` が通ることを確認する。
-4. 続報が出たら `announcements` に追記し、`changes` に何が変わったかを書く（`docs/data-schema.md`）。
-
-## ライセンス
-
-| 対象 | ライセンス | 要点 |
-| --- | --- | --- |
-| コード（`src/`、`scripts/`、`.github/`、自作アイコンなど、`data/` 以外） | [GNU AGPL-3.0](LICENSE) | 自由に使えるが、改変して配信・提供する場合は改変後のソースも公開する |
-| データ（`data/` 配下。承認済み事案DB、やることカード、サービスマスタ、許可リスト） | [CC BY-NC-SA 4.0](data/LICENSE) | 出典を示せば非営利目的で利用・改変できる。商用利用は個別にご相談ください |
-| 第三者素材（Tabler Icons など） | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | それぞれのライセンスに従う |
-
-事案の事実そのもの（企業の公表内容）は各社のものです。本リポジトリが権利を主張するのは、事実を選別・整理・承認した編集物としてのデータです。
-企業・自治体で利用したい場合（商用ライセンス、ホワイトラベル提供）は、GitHub の Issue からご連絡ください。
+- 方針と守ることは [CLAUDE.md](CLAUDE.md)、企画の全文は [docs/企画書_1.md](docs/企画書_1.md)、データ形式は [docs/data-schema.md](docs/data-schema.md)。
+- 依存ゼロ（Node 標準ライブラリのみ）。`npm run all` で検証→ビルド→出力検査。`dist/` は静的サーバーで配信して確認する。
+- 事案は `data/incidents/drafts/` で下書きし、公式発表と照合して `approved/` へ移す（PR マージ＝承認）。
+- クローン後に `git config core.hooksPath .githooks` を実行すると、公開してはいけないもの（秘密情報、端末の情報、未完了項目）の検査がコミット前にも走る。
+- ライセンス：コードは [AGPL-3.0](LICENSE)、`data/` は [CC BY-NC-SA 4.0](data/LICENSE)、第三者素材は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。企業・自治体での利用は Issue からご相談ください。
