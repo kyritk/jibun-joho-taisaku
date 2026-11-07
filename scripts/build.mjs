@@ -14,7 +14,7 @@ const includeDrafts = args.includes('--include-drafts');
 const outDir = path.resolve(root, opt('--out', 'dist'));
 const SITE_URL = opt('--site-url', 'https://kyritk.github.io/jibun-joho-taisaku/');
 const SITE_NAME = 'じぶんの情報対策';
-const TAGLINE = '使っているサービスの漏えいと、やることだけ。';
+const TAGLINE = '使っているサービスの漏洩と、やることだけ。';
 const REPO_URL = 'https://github.com/kyritk/jibun-joho-taisaku';
 
 const read = (p) => JSON.parse(fs.readFileSync(path.join(root, p), 'utf8'));
@@ -49,8 +49,8 @@ const ext = (u, label, where) => `<a href="${safeUrl(u, where)}" target="_blank"
 const fmtDate = (d) => { const [y, m, dd] = d.split('-'); return `${y}年${Number(m)}月${Number(dd)}日`; };
 const fmtMd = (d) => { const [, m, dd] = d.split('-'); return `${Number(m)}月${Number(dd)}日`; };
 
-const STATUS_LABEL = { suspected: '漏えいのおそれ', confirmed: '漏えいを確認', individually_notified: '漏えいを確認', denied: '漏えいなしと公表' };
-const STATUS_SUB = { suspected: '漏えいのおそれがあると公表', confirmed: '漏えいを確認したと公表', individually_notified: '漏えいを確認し、対象の人に会社から連絡しています', denied: 'その後「漏えいはなかった」と公表されました' };
+const STATUS_LABEL = { suspected: '漏洩のおそれ', confirmed: '漏洩を確認', individually_notified: '漏洩を確認', denied: '漏洩なしと公表' };
+const STATUS_SUB = { suspected: '漏洩のおそれがあると公表', confirmed: '漏洩を確認したと公表', individually_notified: '漏洩を確認し、対象の人に会社から連絡しています', denied: 'その後「漏洩はなかった」と公表されました' };
 const INFO_LABEL = {
   credentials: 'ID・パスワード', password: 'パスワード', credit_card: 'クレジットカード番号', credit_card_partial: 'カード番号の一部（下4桁など）',
   email: 'メールアドレス', phone: '電話番号', address: '住所', name: '氏名', birthdate: '生年月日', id_document_image: '本人確認書類の画像',
@@ -145,7 +145,7 @@ ${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info-c
 </nav>
 <footer>
   <div class="wrap">
-    <p><b>ご注意</b>：このサイトは「○○社が漏えい（のおそれ）を公表した」という事実と、公的機関が勧める対処をまとめたものです。あなたの情報が漏れたかどうかは、各社からの連絡でご確認ください。掲載の網羅性・即時性は保証しません。</p>
+    <p><b>ご注意</b>：このサイトは「○○社が漏洩（のおそれ）を公表した」という事実と、公的機関が勧める対処をまとめたものです。あなたの情報が漏れたかどうかは、各社からの連絡でご確認ください。掲載の網羅性・即時性は保証しません。</p>
     <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。このサイトからメールやSMSを送ることはありません。</p>
     <nav aria-label="フッター"><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
     <p class="caption">データ生成日 ${esc(today)}</p>
@@ -215,8 +215,8 @@ function incidentPage(inc) {
   const lim = inc.limited_info_types || {};
   const mainTypes = inc.leaked_info_types.filter((k) => !(k in lim));
   const list = cardsFor(inc);
-  const title = `${inc.service_name}の情報漏えい`;
-  const description = `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏えい${inc.status === 'suspected' ? 'のおそれ' : ''}について、漏れたとされる情報と、利用者がやることを公的機関の根拠つきでまとめています。`;
+  const title = `${inc.service_name}の情報漏洩`;
+  const description = `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏洩${inc.status === 'suspected' ? 'のおそれ' : ''}について、漏れたとされる情報と、利用者がやることを公的機関の根拠つきでまとめています。`;
 
   let b = `<div class="inc-head">${avatarHtml(svcById[inc.service_ids[0]])}<div class="ttl"><h1>${esc(title)}</h1><span class="sub"><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> 公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</span></div></div>
 <p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : `<b>あなたが対象かどうかは、${esc(operatorShort)}からの連絡でご確認ください。</b>`}</p>
@@ -226,7 +226,7 @@ function incidentPage(inc) {
     if (mainTypes.length) b += `<p class="caption">${mainTypes.map((k) => esc(INFO_LABEL[k] || k)).join('、')}</p>`;
     if (inc.other_info_detail) b += `<details class="small"><summary class="muted">くわしい内訳</summary><p class="muted">${esc(inc.other_info_detail)}</p></details>`;
     if (Object.keys(lim).length) b += `<p class="small">ごく一部の方だけが対象の情報：${Object.entries(lim).map(([k, note]) => `<b>${esc(INFO_LABEL[k] || k)}</b>（${esc(note)}）`).join('、')}。該当する方には会社から個別に連絡があります。</p>`;
-    if (inc.card_not_leaked_stated === true) b += '<p class="small muted">クレジットカード情報は漏えいしていない、と会社が公表しています。</p>';
+    if (inc.card_not_leaked_stated === true) b += '<p class="small muted">クレジットカード情報は漏洩していない、と会社が公表しています。</p>';
   }
   b += `<div class="banner info">${icon('info-circle')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
 
@@ -272,21 +272,21 @@ function incidentPage(inc) {
 
 function incidentIndexPage() {
   const rel = '../';
-  let b = '<h1>公表された情報漏えいの一覧</h1><p class="muted">企業が公式に公表した消費者向けサービスの事案のうち、開発者が公式発表と照合したものだけを載せています。全事案の網羅はしていません。</p><ul class="plain-list incident-list">';
+  let b = '<h1>公表された情報漏洩の一覧</h1><p class="muted">企業が公式に公表した消費者向けサービスの事案のうち、開発者が公式発表と照合したものだけを載せています。全事案の網羅はしていません。</p><ul class="plain-list incident-list">';
   for (const inc of incidents) {
-    b += `<li>${avatarHtml(svcById[inc.service_ids[0]], 'sm')}<span class="ttl"><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏えい</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">${esc(inc.operator)}・公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></span></li>`;
+    b += `<li>${avatarHtml(svcById[inc.service_ids[0]], 'sm')}<span class="ttl"><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏洩</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">${esc(inc.operator)}・公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></span></li>`;
   }
   b += '</ul>';
-  return page({ rel, title: '事案の一覧', description: '企業が公式に公表した消費者向けサービスの情報漏えい事案の一覧。', body: b, canonical: 'incidents/' });
+  return page({ rel, title: '事案の一覧', description: '企業が公式に公表した消費者向けサービスの情報漏洩事案の一覧。', body: b, canonical: 'incidents/' });
 }
 
 function aboutPage() {
   const rel = './';
   const b = `<h1>このサイトについて</h1>
-<p>「${esc(SITE_NAME)}」は、使っているサービスを選ぶだけで、自分に関係のある情報漏えいと、自分がやることだけが揃い、対策済みの安心な状態に到達できるツールです。個人が運営しています。</p>
+<p>「${esc(SITE_NAME)}」は、使っているサービスを選ぶだけで、自分に関係のある情報漏洩と、自分がやることだけが揃い、対策済みの安心な状態に到達できるツールです。個人が運営しています。</p>
 <h2>できること</h2>
 <ul>
-<li>企業が公式に公表した漏えいのうち、あなたが選んだサービスのものだけを表示します。</li>
+<li>企業が公式に公表した漏洩のうち、あなたが選んだサービスのものだけを表示します。</li>
 <li>漏れた情報の種類ごとに、公的機関（IPA、警視庁、デジタル庁など）が勧める対処を「1つずつ」案内します。</li>
 <li>続報（おそれ→確定、対象の追加）が出ると、必要なものだけが「再確認」として戻ります。</li>
 </ul>
@@ -294,7 +294,7 @@ function aboutPage() {
 <ul>
 <li>あなたの氏名・メールアドレス・カード番号・本人確認書類などを預かりません。サーバーに利用者のデータを一切持ちません。</li>
 <li>メール・SMS・通知を送りません。「このサイトからの連絡」を名乗るメールは偽物です。</li>
-<li>公表されていない漏えいを探すことはしません。対象は企業が公表した事案だけです。</li>
+<li>公表されていない漏洩を探すことはしません。対象は企業が公表した事案だけです。</li>
 <li>通知メールの貼り付けや、個人情報の入力は受け付けません。入力欄がないこと自体が、安全のための設計です。</li>
 </ul>
 <h2>表示する情報の根拠</h2>
@@ -337,20 +337,20 @@ function privacyPage() {
 function faqPage() {
   const rel = './';
   const b = `<h1>よくある質問</h1>
-<h2>見覚えのないサービスの漏えいが出てきました</h2>
+<h2>見覚えのないサービスの漏洩が出てきました</h2>
 <p>「サービス」画面で選んだサービスに関係する事案だけを表示しています。選んだ覚えがなければ、「サービス」画面でチェックを外してください。リンクから開いた場合、そのサービスが自動で追加されることがあります。</p>
 <h2>自分が対象かどうか分かりません</h2>
-<p>このサイトは「会社が漏えいを公表した」という事実を示すだけで、あなた個人が対象かどうかは分かりません。対象かどうかは、その会社からの連絡（メール・書面・アプリ内のお知らせ）で確認してください。会社の公式窓口は、各事案のページに載せています。連絡が来ていなくても、先頭の「その会社を名乗るメールのリンクは押さない」だけは行っておくと安全です。</p>
+<p>このサイトは「会社が漏洩を公表した」という事実を示すだけで、あなた個人が対象かどうかは分かりません。対象かどうかは、その会社からの連絡（メール・書面・アプリ内のお知らせ）で確認してください。会社の公式窓口は、各事案のページに載せています。連絡が来ていなくても、先頭の「その会社を名乗るメールのリンクは押さない」だけは行っておくと安全です。</p>
 <h2>会社を名乗るメールが届きました。本物ですか</h2>
-<p>漏えいのあとは、その会社を名乗るニセのメールが増えます。メールの中のリンクは押さず、アプリか、自分で検索して開いた公式サイトで確認してください。このサイトからメールを送ることはありません。</p>
+<p>漏洩のあとは、その会社を名乗るニセのメールが増えます。メールの中のリンクは押さず、アプリか、自分で検索して開いた公式サイトで確認してください。このサイトからメールを送ることはありません。</p>
 <h2>このサイトは私の情報を保存しますか</h2>
 <p>サーバーには何も保存しません。選んだサービスと、やることの完了日は、あなたの端末の中にだけ保存されます。くわしくは <a href="${rel}privacy.html">プライバシーポリシー</a> をご覧ください。</p>
 <h2>「対策済み」にしたのに、また「再確認」に戻りました</h2>
-<p>会社の続報で「漏えいのおそれ」が「確定」になったり、漏れた情報の種類が増えたりすると、関係するやることだけが「再確認」に戻ります。もう一度内容を確認し、済んでいれば「済みにする」を押してください。</p>
+<p>会社の続報で「漏洩のおそれ」が「確定」になったり、漏れた情報の種類が増えたりすると、関係するやることだけが「再確認」に戻ります。もう一度内容を確認し、済んでいれば「済みにする」を押してください。</p>
 <h2>親や家族の分を確認したいです</h2>
 <p>家族の端末でこのサイトを開き、家族が使っているサービスを選んでください。「設定」の「家族に見せる」からURLを送れます。あなたの端末で家族の分を管理する機能は、今後の予定です。</p>
 <h2>使っているサービスが一覧にありません</h2>
-<p><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">追加の依頼</a> からお知らせください。公表された漏えいがあるサービスを優先して追加しています。</p>
+<p><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">追加の依頼</a> からお知らせください。公表された漏洩があるサービスを優先して追加しています。</p>
 <h2>どこに相談すればよいですか</h2>
 <p><a href="${rel}#/help">相談窓口</a> に、消費者ホットライン（188）、警察相談専用電話（#9110）、IPA の窓口をまとめています。</p>`;
   return page({ rel, title: 'よくある質問', description: '「じぶんの情報対策」のよくある質問。対象かどうかの確認方法、ニセメール、保存される情報、再確認について。', body: b, canonical: 'faq.html' });
@@ -360,7 +360,7 @@ function appPage() {
   const rel = './';
   const data = { generated_at: today, include_drafts: includeDrafts, repo_url: REPO_URL, cards, services, incidents };
   const dataJson = JSON.stringify(data).replace(/<\//g, '<\\/').replace(/<!--/g, '<\\!--');
-  return page({ rel, title: '', description: TAGLINE + ' 使っているサービスを選ぶだけで、関係のある情報漏えいと、公的機関の根拠つきの「やること」だけが揃います。', body: '', canonical: '', withApp: true, dataJson, current: '' });
+  return page({ rel, title: '', description: TAGLINE + ' 使っているサービスを選ぶだけで、関係のある情報漏洩と、公的機関の根拠つきの「やること」だけが揃います。', body: '', canonical: '', withApp: true, dataJson, current: '' });
 }
 
 function notFoundPage() {
