@@ -4,3 +4,16 @@ dist/
 Thumbs.db
 *.log
 .env
+
+# 公開してはいけないもの（docs/threat-model.md「公開しないもの」）
+.private-terms
+private/
+*.local.*
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+.env.*

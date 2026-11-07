@@ -21,6 +21,12 @@
 - 表示するURLは、`data/official-domains.json` に登録した公式ドメインに限ります。
 - 詳細は [docs/threat-model.md](docs/threat-model.md) を参照してください。
 
+## 公開するもの・しないもの
+
+- 守り方（CSP、SRI、署名必須、脅威モデル）は公開します。設計の正しさで守り、隠すことに頼りません。
+- 未修正の脆弱性は公開しません。報告を受けた修正は GitHub の非公開フォーク（Security Advisory）で行い、マージ＝公開＝配信を同時にします。
+- 秘密情報（トークン、鍵）、開発者の端末や個人に関する情報、まだ行っていない対策の一覧は公開しません。公開文書には完了したことだけを書きます。CI とコミット前フック（`scripts/check-repo.mjs`）が機械的に検査します。
+
 ## 対象外
 
 - サイトを丸ごとコピーした偽サイト（本物のURLは `https://kyritk.github.io/jibun-joho-taisaku/` だけです）

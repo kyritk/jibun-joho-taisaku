@@ -42,6 +42,12 @@ npm run all             # 上の3つをまとめて
 
 公開URL：https://kyritk.github.io/jibun-joho-taisaku/
 
+## 公開してはいけないものを入れない仕組み
+
+- `scripts/check-repo.mjs` が、秘密情報・端末のパスやユーザー名・メールアドレス・公開文書の未完了項目を検査します（CI でも実行）。
+- クローンしたら一度だけ `git config core.hooksPath .githooks` を実行すると、コミット前にも同じ検査が走ります。
+- 絶対に公開しない語は `.private-terms`（git 管理外、1行1語）に書きます。手元のメモや未完了の項目は `private/`（git 管理外）に置きます。
+
 ## 事案の承認フロー
 
 1. `data/incidents/drafts/<id>.json` を開き、`announcements[].url` の公式発表と1項目ずつ照合する。

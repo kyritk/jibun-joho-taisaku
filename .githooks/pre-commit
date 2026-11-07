@@ -1,0 +1,7 @@
+#!/bin/sh
+# コミット前に、公開してはいけないものが含まれていないかを検査する（scripts/check-repo.mjs）。
+# 有効化：git config core.hooksPath .githooks
+node "$(git rev-parse --show-toplevel)/scripts/check-repo.mjs" --staged || {
+  echo "コミットを中止しました。上の ERROR を直すか、本当に公開してよいなら該当行を見直してください。" >&2
+  exit 1
+}
