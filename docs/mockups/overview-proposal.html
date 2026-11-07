@@ -194,13 +194,80 @@ svg{display:inline-block;vertical-align:middle;flex:none}
 .phone{position:relative}
 .hero .sum{margin:6px 0 0;font-size:16px;line-height:1.5;color:var(--text)}
 </style>
+<style>
+/* メリハリ：4段階の文字（30 / 22 / 16 / 13）。1画面に30pxは1つ、22pxは3つまで。補足はすべて13px灰 */
+.brand{font-size:15px;color:var(--text2)}
+.nav a{font-size:12px}
+.cap{font-size:13px}
+.sec{font-size:13px;font-weight:700;color:var(--text2);margin:18px 0 6px;letter-spacing:.06em}
+/* 工程バー：現在だけ大きく */
+.journey li{font-size:13px}
+.journey li.cur{font-size:16px}
+.journey .dot{width:28px;height:28px;font-size:14px;border-width:2px;margin-top:5px}
+.journey li.cur .dot{width:38px;height:38px;font-size:18px;margin-top:0;box-shadow:inset 0 0 0 3px #fff,inset 0 0 0 16px var(--text)}
+.journey li::before{top:18px}
+.journey .here{font-size:12px}
+.journey .t{font-size:12px}
+/* ホーム（未選択） */
+.steps-home .num{width:30px;height:30px;font-size:15px}
+.steps-home b{font-size:18px}
+.steps-home small{font-size:13px}
+.cando div{font-size:13px;color:var(--text2);border-color:transparent;background:var(--sunken)}
+.cando b{font-size:13px;color:var(--text)}
+.recent .r{font-size:14px;min-height:44px;padding:6px 0}
+.recent .r .d{font-size:12px}
+.recent .avatar{width:32px;height:32px}.recent .avatar svg{width:18px;height:18px}
+/* ホーム（選択後）：見出し30、残り件数36、ほかの数字は20灰 */
+.hero .sum{font-size:14px;color:var(--text2)}
+.hero .btn{width:100%;min-height:52px;font-size:18px}
+.nums{gap:6px;margin:12px 0 12px}
+.nums a{min-height:auto;padding:6px 4px;border-color:transparent;background:var(--sunken)}
+.nums .n{font-size:20px;color:var(--text2)}
+.nums .l{font-size:11px}
+.nums a.todo{background:#fff;border:2px solid var(--accent)}
+.nums a.todo .n{font-size:36px;color:var(--accent)}
+.nums a.todo .l{color:var(--accent);font-weight:700}
+.chip{font-size:13px;padding:3px 10px 3px 6px}
+.chip svg{width:18px;height:18px}
+.card .ch{padding:12px 16px 8px}
+.cf{padding:8px 16px}
+.cf .sm{font-size:15px}
+.next-what{border:0;background:var(--sunken);padding:10px 14px}
+.next-what .h{font-size:13px;color:var(--text2)}
+.next-what li{font-size:14px;padding:4px 0}
+.next-what .num{width:22px;height:22px;font-size:12px;margin-top:2px}
+/* やること：つぎの1件が主役、目次と一覧の補足は13px */
+.jline{font-size:13px}
+.toc{padding:8px 12px 4px}
+.toc .h{font-size:12px}
+.toc a{min-height:44px;padding:6px 0}
+.toc .nm{font-weight:400;font-size:15px}
+.toc .cnt{font-size:13px;font-weight:400}
+.toc .cnt b{font-size:17px}
+.toc .avatar{width:28px;height:28px}.toc .avatar svg{width:16px;height:16px}
+.next .lab{font-size:13px}
+.next .body svg{width:48px;height:48px}
+.next .body h2{font-size:22px;line-height:1.4}
+.next .acts .btn{font-size:17px}
+.next .acts .btn.ghost{font-size:15px;min-height:44px;padding:6px 14px}
+.fold .fh .nm small{font-size:13px}
+.fold.closed .fh .nm{font-size:16px}
+.fold.closed .fh .cnt b{font-size:18px}
+.sub{font-size:13px;padding:10px 16px 2px}
+.sub svg{width:18px;height:18px}
+.task{min-height:56px;padding:10px 12px 10px 14px}
+.task .st{width:32px;height:32px}
+.task .tt small{font-size:13px}
+.tag{font-size:12px;padding:1px 8px}
+.totop{font-size:13px;padding:6px 12px}
+</style>
 <div class="row3">
 
 <div class="phone">
  <div class="hd"><div class="brand">じぶんの情報対策</div>
   <div class="nav"><a class="cur"><svg><use href="#home"/></svg>ホーム</a><a><svg><use href="#list"/></svg>やること</a><a><svg><use href="#grid"/></svg>サービス</a><a><svg><use href="#gear"/></svg>設定</a></div></div>
  <div class="screen">
-  <h1 style="margin:6px 0 2px;font-size:24px">使っているサービスの漏洩と、やることだけ</h1>
+  <h1 style="margin:6px 0 4px;font-size:30px;line-height:1.3">使っているサービスの漏洩と、<br>やることだけ</h1>
   <div class="cap" style="margin-bottom:10px">全部で3つ。終わると「今は対策済み」になります。</div>
   <ol class="steps-home">
    <li><span class="num">1</span><div><b>サービスを選ぶ</b><small>使っているものにチェックを入れる ・ 約2分</small></div></li>
@@ -212,9 +279,9 @@ svg{display:inline-block;vertical-align:middle;flex:none}
    <div><b>できること</b>会社が公表した漏洩のうち、あなたに関係あるものだけを表示します。</div>
    <div><b>できないこと</b>あなたの情報が漏れたかは分かりません。会社からの連絡で確認します。</div>
   </div>
-  <a class="btn" style="width:100%;min-height:56px;font-size:19px"><svg><use href="#grid"/></svg>1 サービスを選ぶ</a>
+  <a class="btn" style="width:100%;min-height:56px;font-size:20px"><svg><use href="#grid"/></svg>1 サービスを選ぶ</a>
   <div class="cap" style="margin-top:8px">選んだ内容はこの端末の中にだけ保存されます。氏名やメールは入力しません。</div>
-  <div class="recent" style="margin-top:20px"><div style="font-weight:700;margin-bottom:4px">最近の公表（選んだサービス以外も）</div>
+  <div class="recent" style="margin-top:20px"><div class="sec" style="margin-top:0">最近の公表（選んだサービス以外も）</div>
    <div class="r"><div class="avatar" style="background:var(--c-shop)"><svg><use href="#store"/></svg></div><div style="flex:1"><span class="d">11月6日</span>ブックオフ</div><span class="chip strong" style="font-size:13px">漏洩を確認</span></div>
    <div class="r"><div class="avatar" style="background:var(--c-kara)"><svg><use href="#food"/></svg></div><div style="flex:1"><span class="d">11月6日</span>ビッグエコー</div><span class="chip strong" style="font-size:13px">漏洩を確認</span></div>
   </div>
@@ -231,7 +298,7 @@ svg{display:inline-block;vertical-align:middle;flex:none}
    <li><span class="dot">3</span><span class="lbl">3 対策する<span class="t">22件</span></span></li>
   </ol>
   <div class="hero">
-   <div class="top"><div class="bigicon"><svg><use href="#list"/></svg></div><h1 style="font-size:24px">やることが<br>22件 あります</h1></div>
+   <div class="top"><div class="bigicon"><svg><use href="#list"/></svg></div><h1 style="font-size:30px;line-height:1.25">やることが<br>22件 あります</h1></div>
    <p class="sum">2件の漏洩に対して、やること22件のうち <b>0件</b> が対策済みです。</p>
    <div class="nums">
     <a><span class="n">2</span><span class="l">選んだ<br>サービス</span></a>
@@ -242,7 +309,7 @@ svg{display:inline-block;vertical-align:middle;flex:none}
    <a class="btn">3 対策する（22件）</a>
    <div class="cap" style="margin-top:8px">最終確認：2026年11月7日</div>
   </div>
-  <div style="font-weight:700;margin:16px 0 8px">関係ある漏洩</div>
+  <div class="sec">関係ある漏洩</div>
   <div class="card">
    <div class="ch"><div class="avatar" style="background:var(--c-mob)"><svg><use href="#car"/></svg></div><div><div style="font-weight:700;font-size:20px;line-height:1.3">タイムズカー</div><div class="cap">9月25日 漏洩を確認 ・ 最新の公表 10月7日（第2報）</div></div></div>
    <div class="chips"><span class="chip strong"><svg><use href="#idcard"/></svg>本人確認書類の画像</span><span class="chip"><svg><use href="#mail"/></svg>氏名・住所</span></div>
@@ -268,7 +335,7 @@ svg{display:inline-block;vertical-align:middle;flex:none}
   <div class="nav"><a><svg><use href="#home"/></svg>ホーム</a><a class="cur"><svg><use href="#list"/></svg>やること</a><a><svg><use href="#grid"/></svg>サービス</a><a><svg><use href="#gear"/></svg>設定</a></div></div>
  <div class="screen">
   <div class="jline">全部で3つ <span class="pill">いまここ 3 対策する</span><span style="margin-left:auto">22件中 1件 対策済み</span></div>
-  <h1 style="margin:0 0 10px">やること</h1>
+  <h1 style="margin:0 0 10px;font-size:22px">やること</h1>
   <div class="toc"><div class="h">目次</div>
    <a><span class="avatar" style="background:var(--c-mob)"><svg><use href="#car"/></svg></span><span class="nm">タイムズカー</span><span class="cnt"><b>1</b> / 9 対策済み</span></a>
    <a><span class="avatar" style="background:var(--c-air)"><svg><use href="#plane"/></svg></span><span class="nm">スカイチケット</span><span class="cnt"><b>0</b> / 13 対策済み</span></a>
