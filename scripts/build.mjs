@@ -220,18 +220,19 @@ function incidentPage(inc) {
 
   let b = `<div class="inc-head">${avatarHtml(svcById[inc.service_ids[0]])}<div class="ttl"><h1>${esc(title)}</h1><span class="sub"><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> 公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</span></div></div>
 <p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : `<b>あなたが対象かどうかは、${esc(operatorShort)}からの連絡でご確認ください。</b>`}</p>
-<p class="small muted">公表された件数：${esc(inc.counts.wording)}</p>`;
+<p class="caption">公表された件数：${esc(inc.counts.wording)}</p>
+<nav class="toc" aria-label="目次"><h2 class="sec">目次</h2><ul class="toc-list">${[['facts', '漏れたとされる情報'], ['todo', 'やること'], ['contact', '会社の公式窓口'], ['timeline', '会社の公表（公式ページ）']].filter(([k]) => !(denied && (k === 'facts' || k === 'todo')) && !(k === 'contact' && !((inc.official_contact || {}).phone || (inc.official_contact || {}).url))).map(([k, l]) => `<li><a href="#${k}">${l}</a></li>`).join('')}</ul></nav>`;
   if (!denied) {
-    b += `<h2 class="small muted">漏れたとされる情報</h2>${chipsHtml(inc)}`;
+    b += `<h2 class="sec" id="facts" tabindex="-1">漏れたとされる情報</h2>${chipsHtml(inc)}`;
     if (mainTypes.length) b += `<p class="caption">${mainTypes.map((k) => esc(INFO_LABEL[k] || k)).join('、')}</p>`;
     if (inc.other_info_detail) b += `<details class="small"><summary class="muted">くわしい内訳</summary><p class="muted">${esc(inc.other_info_detail)}</p></details>`;
     if (Object.keys(lim).length) b += `<p class="small">ごく一部の方だけが対象の情報：${Object.entries(lim).map(([k, note]) => `<b>${esc(INFO_LABEL[k] || k)}</b>（${esc(note)}）`).join('、')}。該当する方には会社から個別に連絡があります。</p>`;
     if (inc.card_not_leaked_stated === true) b += '<p class="small muted">クレジットカード情報は漏洩していない、と会社が公表しています。</p>';
   }
-  b += `<div class="banner info">${icon('info-circle')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
+  b += `<div class="banner info">${icon('info-circle')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録すると：ホームにこの事案が出て、やることを1つずつ「済みにする」で進められます。続報があれば、必要なやることだけが「再確認」で戻ります。登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
 
   if (!denied) {
-    b += '<h2>やること</h2><ol class="task-list">';
+    b += '<h2 id="todo" tabindex="-1">やること</h2><ol class="task-list">';
     let currentType = null;
     list.forEach((x, i) => {
       if (x.infoType !== currentType) {
@@ -251,9 +252,9 @@ function incidentPage(inc) {
     b += '</ol>';
   }
   const oc = inc.official_contact || {};
-  if (oc.phone || oc.url) b += `<h2>会社の公式窓口</h2><p>${oc.phone ? `<b>${esc(oc.phone)}</b> ` : ''}${oc.url ? ext(oc.url, '問い合わせページ', where) : ''}</p>`;
+  if (oc.phone || oc.url) b += `<h2 id="contact" tabindex="-1">会社の公式窓口</h2><p>${oc.phone ? `<b>${esc(oc.phone)}</b> ` : ''}${oc.url ? ext(oc.url, '問い合わせページ', where) : ''}</p>`;
 
-  b += '<h2>会社の公表（公式ページ）</h2><ul class="timeline">';
+  b += '<h2 id="timeline" tabindex="-1">会社の公表（公式ページ）</h2><ul class="timeline">';
   for (const a of inc.announcements) {
     b += `<li><span class="d">${fmtDate(a.date)}</span>${ext(a.url, a.title, where)}`;
     for (const ch of a.changes || []) {
