@@ -3,7 +3,7 @@
   "license": "AGPL-3.0-only",
   "version": "0.1.0",
   "private": true,
-  "description": "じぶんの情報対策 — 使っているサービスの漏えいと、やることだけ",
+  "description": "じぶんの情報対策 — 使っているサービスの漏洩と、やることだけ",
   "type": "module",
   "scripts": {
     "validate": "node scripts/validate.mjs",

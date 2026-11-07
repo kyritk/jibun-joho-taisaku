@@ -42,13 +42,13 @@
     "wording": "約660万アカウント（うち本人確認書類画像約160万件）", // 会社の言い回しをそのまま
     "breakdown": ""
   },
-  "card_not_leaked_stated": true,      // 会社が「クレジットカード情報は漏えいしていない」と明記したか。null=言及なし
+  "card_not_leaked_stated": true,      // 会社が「クレジットカード情報は漏洩していない」と明記したか。null=言及なし
   "announcements": [                   // 公表の時系列。先頭が第1報
     {
       "date": "2026-09-28",
       "type": "first",                 // first | update | final | retraction
       "url": "https://...",            // 企業の公式発表URL。まとめサイトは不可
-      "title": "不正アクセスによる個人情報漏えいに関するお知らせ",
+      "title": "不正アクセスによる個人情報漏洩に関するお知らせ",
       "facts": "・会員情報約660万件が対象\n・本人確認書類画像約160万件を含む", // 事実項目のみ。文章の転載禁止
       "changes": ["status:suspected->confirmed", "info_added:id_document_image"] // 第2報以降で何が変わったか
     }

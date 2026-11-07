@@ -88,8 +88,8 @@
   const today = new Date().toISOString().slice(0, 10);
   let flash = null; // { kind, text } 次の画面で1回だけ出す
 
-  const STATUS_LABEL = { suspected: '漏えいのおそれ', confirmed: '漏えいを確認', individually_notified: '漏えいを確認', denied: '漏えいなしと公表' };
-  const STATUS_SUB = { suspected: '漏えいのおそれがあると公表', confirmed: '漏えいを確認したと公表', individually_notified: '漏えいを確認し、対象の人に会社から連絡しています', denied: 'その後「漏えいはなかった」と公表されました' };
+  const STATUS_LABEL = { suspected: '漏洩のおそれ', confirmed: '漏洩を確認', individually_notified: '漏洩を確認', denied: '漏洩なしと公表' };
+  const STATUS_SUB = { suspected: '漏洩のおそれがあると公表', confirmed: '漏洩を確認したと公表', individually_notified: '漏洩を確認し、対象の人に会社から連絡しています', denied: 'その後「漏洩はなかった」と公表されました' };
   const INFO_LABEL = {
     credentials: 'ID・パスワード', password: 'パスワード', credit_card: 'クレジットカード番号', credit_card_partial: 'カード番号の一部（下4桁など）',
     email: 'メールアドレス', phone: '電話番号', address: '住所', name: '氏名', birthdate: '生年月日', id_document_image: '本人確認書類の画像',
@@ -209,7 +209,7 @@
   function flowNode(nSvc, nInc, nTodo) {
     const step = (n, l) => el('li', null, el('span', { class: 'n' }, String(n)), el('span', { class: 'l' }, l));
     const arrow = () => el('li', { class: 'arrow', 'aria-hidden': 'true' }, icon('chevron-down'));
-    return el('ol', { class: 'flow', 'aria-label': '選んだサービス、関係ある漏えい、やることの件数' }, step(nSvc, '選んだサービス'), arrow(), step(nInc, '関係ある漏えい'), arrow(), step(nTodo, 'やること'));
+    return el('ol', { class: 'flow', 'aria-label': '選んだサービス、関係ある漏洩、やることの件数' }, step(nSvc, '選んだサービス'), arrow(), step(nInc, '関係ある漏洩'), arrow(), step(nTodo, 'やること'));
   }
   function incidentCard(inc) {
     const list = cardsFor(inc);
@@ -219,7 +219,7 @@
     const head = el('div', { class: 'inc-head' }, avatarFor(serviceOf(inc)),
       el('div', { class: 'ttl' }, el('h3', null, inc.service_name), el('span', { class: 'sub' }, `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}`)));
     const card = el('article', { class: 'inc-card' }, head);
-    if (denied) { card.append(el('p', { class: 'task-withdrawn' }, 'その後「漏えいはなかった」と公表されました。やることはありません。')); return card; }
+    if (denied) { card.append(el('p', { class: 'task-withdrawn' }, 'その後「漏洩はなかった」と公表されました。やることはありません。')); return card; }
     card.append(infoChips(inc));
     card.append(el('a', { class: 'inc-foot', href: '#/todo' },
       el('span', { class: 'count' }, el('b', null, String(n)), ` / ${list.length} 対策済み`),
@@ -240,8 +240,8 @@
     let hero;
     if (!selected.size) {
       hero = el('section', { class: 'hero start', 'aria-labelledby': 'h1' },
-        el('div', { class: 'hero-head' }, el('span', { class: 'av big', 'aria-hidden': 'true' }, icon('layout-grid')), el('h1', { id: 'h1' }, '使っているサービスを選ぶと、関係のある漏えいだけが分かります')),
-        el('p', null, '企業が公式に公表した情報漏えいのうち、あなたが使っているサービスのものだけを表示し、やることを1つずつ案内します。'),
+        el('div', { class: 'hero-head' }, el('span', { class: 'av big', 'aria-hidden': 'true' }, icon('layout-grid')), el('h1', { id: 'h1' }, '使っているサービスを選ぶと、関係のある漏洩だけが分かります')),
+        el('p', null, '企業が公式に公表した情報漏洩のうち、あなたが使っているサービスのものだけを表示し、やることを1つずつ案内します。'),
         el('p', { class: 'small muted' }, '選んだ内容はこの端末の中にだけ保存されます。氏名やメールアドレスは入力しません。'),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, icon('layout-grid'), 'サービスを選ぶ')));
     } else if (s.open > 0) {
@@ -256,7 +256,7 @@
         flowNode(selected.size, s.active.length, 0),
         el('p', null, s.active.length
           ? 'やることはすべて終わっています。続報が出たら、必要なものだけをここに出します。'
-          : '選んだサービスについて、公表された漏えいはいまのところありません。新しい公表があれば、ここに出します。'),
+          : '選んだサービスについて、公表された漏洩はいまのところありません。新しい公表があれば、ここに出します。'),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn lg', href: '#/services' }, 'サービスを追加する'), s.active.length ? el('a', { class: 'btn text', href: '#/todo' }, '終わったやることを見る') : null),
         el('p', { class: 'caption hero-meta' }, `最終確認：${fmtDate(today)}`));
     }
@@ -264,7 +264,7 @@
 
     // 関係ある事案（1事案＝1カード）
     if (selected.size && s.mine.length) {
-      const sec = el('section', { 'aria-labelledby': 'mine' }, el('h2', { id: 'mine', class: 'small muted' }, '関係ある漏えい'));
+      const sec = el('section', { 'aria-labelledby': 'mine' }, el('h2', { id: 'mine', class: 'small muted' }, '関係ある漏洩'));
       for (const inc of orderIncidents(s.mine)) sec.append(incidentCard(inc));
       wrap.append(sec);
     }
@@ -288,7 +288,7 @@
       wrap.append(el('h1', null, 'やること'), el('div', { class: 'hero start' }, el('p', null, 'まず、使っているサービスを選んでください。'), el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: '#/services' }, 'サービスを選ぶ'))));
       return wrap;
     }
-    wrap.append(el('h1', null, 'やること'), el('p', { class: 'muted' }, s.total ? `${s.total}件のうち ${s.total - s.open}件 対策済み` : '選んだサービスについて、公表された漏えいはいまのところありません。'));
+    wrap.append(el('h1', null, 'やること'), el('p', { class: 'muted' }, s.total ? `${s.total}件のうち ${s.total - s.open}件 対策済み` : '選んだサービスについて、公表された漏洩はいまのところありません。'));
     const rows = new Map(); // key → { row, panel }
     const sections = orderIncidents(s.mine).map((inc) => incidentSection(inc, rows));
     // つぎの1件（未対応の先頭）。直下に全体一覧があるので俯瞰は失わない
@@ -353,7 +353,7 @@
       el('span', { class: 'row-status' }, tagFor(x), icon('chevron-down', 'chev')));
     const panel = el('div', { class: 'task-panel', id: panelId, hidden: true });
     panel.append(el('p', { class: 'reason' }, x.card.reason));
-    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, `${fmtMd(x.reopenDate)}の続報で、対象の情報が増えたか、漏えいが確定しました。もう一度確認してください。`)));
+    if (x.reopened) panel.append(banner('warning', 'alert-triangle', el('p', null, `${fmtMd(x.reopenDate)}の続報で、対象の情報が増えたか、漏洩が確定しました。もう一度確認してください。`)));
     panel.append(howNode(x.card));
     if (x.card.contact) panel.append(contactNode(x.card.contact));
     for (const k of x.card.contact_list || []) panel.append(contactNode(k));
@@ -390,7 +390,7 @@
   function pickNode(s, onChange) {
     const input = el('input', { type: 'checkbox', value: s.id, checked: selected.has(s.id) });
     input.addEventListener('change', () => { if (input.checked) selected.add(s.id); else selected.delete(s.id); save(LS.services, [...selected]); onChange(); });
-    return el('label', { class: 'pick' }, avatarFor(s), el('span', { class: 'name' }, s.name, el('span', { class: 'op' }, s.operator), hasIncident(s.id) ? el('span', { class: 'hit' }, '漏えいの公表あり') : null), input);
+    return el('label', { class: 'pick' }, avatarFor(s), el('span', { class: 'name' }, s.name, el('span', { class: 'op' }, s.operator), hasIncident(s.id) ? el('span', { class: 'hit' }, '漏洩の公表あり') : null), input);
   }
   function viewServices() {
     const wrap = el('div', { class: 'wrap' });
@@ -418,10 +418,10 @@
     for (const s of popular) grid.append(pickNode(s, sync));
     wrap.append(el('section', { 'aria-labelledby': 'pop' }, el('h2', { id: 'pop', class: 'small muted' }, 'よく使われているサービス'), grid));
 
-    // 最近漏えいが公表されたサービス ＋ カテゴリ
+    // 最近漏洩が公表されたサービス ＋ カテゴリ
     const recentIds = [...new Set(incidents.filter((i) => i.status !== 'denied').sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1)).flatMap((i) => i.service_ids))].filter((id) => svcById[id]);
     const cats = el('div', null);
-    cats.append(catDetails('最近、漏えいが公表された', el('span', { class: 'av c-recent', 'aria-hidden': 'true' }, icon('alert-circle')), recentIds.map((id) => svcById[id]), sync));
+    cats.append(catDetails('最近、漏洩が公表された', el('span', { class: 'av c-recent', 'aria-hidden': 'true' }, icon('alert-circle')), recentIds.map((id) => svcById[id]), sync));
     for (const cat of services.categories) {
       const list = services.services.filter((s) => s.category === cat.key);
       if (list.length) cats.append(catDetails(cat.label, el('span', { class: `av c-${cat.key}`, 'aria-hidden': 'true' }, icon(cat.icon)), list, sync));
@@ -433,7 +433,7 @@
     const tokens = el('div', { class: 'tokens' });
     const label = el('span', { class: 'label' });
     const decide = el('a', { class: 'btn', href: '#/' }, '決定');
-    decide.addEventListener('click', () => { flash = { kind: 'success', text: `${selected.size}件のサービスを選びました。関係のある漏えいだけを表示します。` }; });
+    decide.addEventListener('click', () => { flash = { kind: 'success', text: `${selected.size}件のサービスを選びました。関係のある漏洩だけを表示します。` }; });
     const bar = el('div', { class: 'sticky-bar' }, el('div', { class: 'inner' }, label, tokens, decide));
     function refreshTokens() {
       clear(tokens);
