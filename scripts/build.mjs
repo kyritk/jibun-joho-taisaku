@@ -1,6 +1,6 @@
 // 本番ビルド。 node scripts/build.mjs [--out dist] [--include-drafts] [--site-url https://.../]
 // Node 標準ライブラリのみ。ネットワークは使わない。出力はすべて相対パスで、どのサブパスでも動く。
-// セキュリティ方針は docs/threat-model.md。出力の自己検査は scripts/check-dist.mjs。
+// セキュリティ方針は docs/threat-model.md、画面設計は docs/ux-research.md。出力の自己検査は scripts/check-dist.mjs。
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
@@ -40,35 +40,36 @@ const safeUrl = (u, where) => {
   return esc(parsed.href);
 };
 const ext = (u, label, where) => `<a href="${safeUrl(u, where)}" target="_blank" rel="noopener noreferrer">${esc(label || u)}</a>`;
-const nl = (s) => esc(s).replace(/\n/g, '<br>');
 const fmtDate = (d) => { const [y, m, dd] = d.split('-'); return `${y}年${Number(m)}月${Number(dd)}日`; };
+const fmtMd = (d) => { const [, m, dd] = d.split('-'); return `${Number(m)}月${Number(dd)}日`; };
 
-const STATUS_LABEL = { suspected: '漏えいのおそれ', confirmed: '漏えいを確認', individually_notified: '対象者に個別連絡中', denied: '漏えいなし（取り下げ）' };
+const STATUS_LABEL = { suspected: '漏えいのおそれ', confirmed: '漏えいを確認', individually_notified: '漏えいを確認', denied: '漏えいなしと公表' };
+const STATUS_SUB = { suspected: '漏えいのおそれがあると公表', confirmed: '漏えいを確認したと公表', individually_notified: '漏えいを確認し、対象の人に会社から連絡しています', denied: 'その後「漏えいはなかった」と公表されました' };
 const INFO_LABEL = {
   credentials: 'ID・パスワード', password: 'パスワード', credit_card: 'クレジットカード番号', credit_card_partial: 'カード番号の一部（下4桁など）',
   email: 'メールアドレス', phone: '電話番号', address: '住所', name: '氏名', birthdate: '生年月日', id_document_image: '本人確認書類の画像',
   bank_account: '銀行口座', my_number: 'マイナンバー', financial_assets: '資産の情報', family_composition: '家族構成', medical: '病歴・診療の情報',
   purchase_history: '購入・利用履歴', other: 'その他',
 };
-const svcById = Object.fromEntries(services.services.map((s) => [s.id, s]));
+const ICONS = {
+  check: ['M20 6 9 17l-5-5'],
+  'check-circle': ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'm8 12 3 3 5-6'],
+  circle: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z'],
+  alert: ['M12 3 2 20h20L12 3z', 'M12 10v4', 'M12 17h.01'],
+  info: ['M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z', 'M12 11v6', 'M12 8h.01'],
+};
+const icon = (name, cls = '') => `<svg class="icon${cls ? ' ' + cls : ''}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name].map((d) => `<path d="${d}"></path>`).join('')}</svg>`;
 
 // ---------- ページの共通枠
 const CSP = [
-  "default-src 'none'",
-  "script-src 'self'",
-  "style-src 'self'",
-  "img-src 'self'",
-  "connect-src 'self'",
-  "manifest-src 'self'",
-  "base-uri 'none'",
-  "object-src 'none'",
-  "form-action 'none'",
-  "require-trusted-types-for 'script'",
-  "trusted-types 'none'",
+  "default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self'", "connect-src 'self'", "manifest-src 'self'",
+  "base-uri 'none'", "object-src 'none'", "form-action 'none'", "require-trusted-types-for 'script'", "trusted-types 'none'",
 ].join('; ');
 
-function page({ rel, title, description, body, canonical, withApp = false, dataJson = null }) {
+function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '' }) {
   const fullTitle = title ? `${title}｜${SITE_NAME}` : SITE_NAME;
+  const nav = [['', 'ホーム'], ['todo', 'やること'], ['services', 'サービス'], ['settings', '設定']]
+    .map(([k, label]) => `<a href="${rel}#/${k}"${current === k && withApp ? ' aria-current="page"' : ''}>${label}</a>`).join('');
   return `<!doctype html>
 <html lang="ja">
 <head>
@@ -77,29 +78,40 @@ function page({ rel, title, description, body, canonical, withApp = false, dataJ
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#0b57d0">
+<meta name="theme-color" content="#0017c1">
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
-${canonical ? `<link rel="canonical" href="${esc(SITE_URL + canonical)}">` : ''}
+${canonical !== undefined ? `<link rel="canonical" href="${esc(SITE_URL + canonical)}">` : ''}
 <link rel="stylesheet" href="${rel}app.css">
 <link rel="icon" href="${rel}icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${rel}icon-180.png">
 <link rel="manifest" href="${rel}manifest.webmanifest">
 </head>
 <body>
-<header>
-  <h1><a href="${rel}">${esc(SITE_NAME)}</a></h1>
-  <p class="tagline">${esc(TAGLINE)}</p>
-  <nav class="site" aria-label="サイト内"><a href="${rel}">じぶんのやること</a><a href="${rel}incidents/">事案の一覧</a><a href="${rel}about.html">このサイトについて</a></nav>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="${rel}#/">${esc(SITE_NAME)}</a>
+    <nav class="primary" aria-label="主な画面">${nav}</nav>
+  </div>
 </header>
-<main${withApp ? '' : ' class="static"'}>
-${body}
+<main${withApp ? ' id="app"' : ' class="static"'}>
+${withApp ? '' : `<div class="wrap">${body}</div>`}
 </main>
+${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info')}<div><p>この画面にはJavaScriptが必要です。JavaScriptを使わずに読める <a href="${rel}incidents/">事案の一覧</a> もあります。</p></div></div></div></noscript>` : ''}
+<nav class="help" aria-label="困ったとき">
+  <div class="wrap">
+    <a href="${rel}#/settings">家族に見せる</a>
+    <a href="${rel}#/help">相談窓口</a>
+    <a href="${rel}faq.html">よくある質問</a>
+  </div>
+</nav>
 <footer>
-  <p><b>ご注意</b>：このサイトは「○○社が漏えい（のおそれ）を公表した」という事実と、公的機関が勧める対処をまとめたものです。あなたの情報が漏れたかどうかは、各社からの連絡でご確認ください。掲載の網羅性・即時性は保証しません。</p>
-  <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。このサイトからメールやSMSを送ることはありません。</p>
-  <nav aria-label="フッター"><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
-  <p class="small">データ生成日 ${esc(today)}</p>
+  <div class="wrap">
+    <p><b>ご注意</b>：このサイトは「○○社が漏えい（のおそれ）を公表した」という事実と、公的機関が勧める対処をまとめたものです。あなたの情報が漏れたかどうかは、各社からの連絡でご確認ください。掲載の網羅性・即時性は保証しません。</p>
+    <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。このサイトからメールやSMSを送ることはありません。</p>
+    <nav aria-label="フッター"><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
+    <p class="caption">データ生成日 ${esc(today)}</p>
+  </div>
 </footer>
 ${dataJson ? `<script id="data" type="application/json">${dataJson}</script>` : ''}
 ${withApp ? `<script src="${rel}app.js" defer></script>` : ''}
@@ -108,12 +120,13 @@ ${withApp ? `<script src="${rel}app.js" defer></script>` : ''}
 `;
 }
 
-// ---------- 事案ごとの部品（静的ページとアプリで共通の判断）
+// ---------- 事案ごとの部品（アプリと同じ判断）
+const infoTypesSorted = [...cards.info_types].sort((a, b) => (a.urgency || 9) - (b.urgency || 9));
 function cardsFor(inc) {
   const out = [{ card: cards.always_first_card, infoType: null }];
   const limited = inc.limited_info_types || {};
   const leaked = new Set(inc.leaked_info_types.filter((k) => !(k in limited)));
-  for (const t of cards.info_types) {
+  for (const t of infoTypesSorted) {
     if (!t.matches.some((k) => leaked.has(k))) continue;
     for (const c of t.cards) out.push({ card: c, infoType: t });
   }
@@ -125,14 +138,14 @@ function contactHtml(key, where) {
   let s = `<div class="contact">${esc(c.label)}：`;
   if (c.phone) s += `<b>${esc(c.phone)}</b>`;
   if (c.url) s += (c.phone ? '　' : '') + ext(c.url, c.url, where);
-  if (c.hours) s += `<span class="muted small">（${esc(c.hours)}）</span>`;
+  if (c.hours) s += `<span class="caption">（${esc(c.hours)}）</span>`;
   return s + '</div>';
 }
 function sourcesHtml(keys, where) {
-  return '<div class="src small muted">根拠：' + keys.map((k) => { const s = cards.sources[k]; return s.url ? ext(s.url, s.title, where) : esc(s.title); }).join('、') + '</div>';
+  return '<details><summary>根拠を見る（公的機関の資料）</summary><ul>' + keys.map((k) => { const s = cards.sources[k]; return `<li>${s.url ? ext(s.url, s.title, where) : esc(s.title)}</li>`; }).join('') + '</ul></details>';
 }
 
-// ---------- 事案別ページ（静的。検索流入の受け口）
+// ---------- 事案別ページ（静的。検索流入の受け口。docs/ux-research.md 5.4）
 function incidentPage(inc) {
   const rel = '../../';
   const where = `incident ${inc.id}`;
@@ -146,38 +159,39 @@ function incidentPage(inc) {
   const description = `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏えい${inc.status === 'suspected' ? 'のおそれ' : ''}について、漏れたとされる情報と、利用者がやることを公的機関の根拠つきでまとめています。`;
 
   let b = `<h1>${esc(title)}</h1>
-<p><span class="badge ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> <span class="muted small">最終更新 ${fmtDate(inc.last_updated)}</span>${inc._approved === false ? ' <span class="badge draft">下書き</span>' : ''}</p>
-<p>${esc(inc.operator)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の情報漏えい${inc.status === 'suspected' ? 'のおそれ' : ''}を公表しました。${denied ? 'その後、<b>漏えいはなかった</b>と公表されたため、やることはありません。' : `<b>あなたが対象かどうかは、${esc(operatorShort)}からの連絡でご確認ください。</b>`}</p>
-<p class="muted small">公表された件数：${esc(inc.counts.wording)}</p>`;
+<p><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> <span class="caption">公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}</span>${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</p>
+<p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : `<b>あなたが対象かどうかは、${esc(operatorShort)}からの連絡でご確認ください。</b>`}</p>
+<p class="small muted">公表された件数：${esc(inc.counts.wording)}</p>`;
   if (!denied) {
-    b += `<p>漏れたとされる情報：${mainTypes.map((k) => `<b>${esc(INFO_LABEL[k] || k)}</b>`).join('、')}${inc.other_info_detail ? `<br><span class="muted small">${esc(inc.other_info_detail)}</span>` : ''}</p>`;
+    b += `<p>漏れたとされる情報：${mainTypes.map((k) => `<b>${esc(INFO_LABEL[k] || k)}</b>`).join('、')}</p>`;
+    if (inc.other_info_detail) b += `<details class="small"><summary class="muted">くわしい内訳</summary><p class="muted">${esc(inc.other_info_detail)}</p></details>`;
     if (Object.keys(lim).length) b += `<p class="small">ごく一部の方だけが対象の情報：${Object.entries(lim).map(([k, note]) => `<b>${esc(INFO_LABEL[k] || k)}</b>（${esc(note)}）`).join('、')}。該当する方には会社から個別に連絡があります。</p>`;
-    if (inc.card_not_leaked_stated === true) b += '<p class="muted small">クレジットカード情報は漏えいしていない、と会社が公表しています。</p>';
+    if (inc.card_not_leaked_stated === true) b += '<p class="small muted">クレジットカード情報は漏えいしていない、と会社が公表しています。</p>';
   }
-  const oc = inc.official_contact || {};
-  if (oc.phone || oc.url) b += `<p class="small">会社の公式窓口：${oc.phone ? `<b>${esc(oc.phone)}</b> ` : ''}${oc.url ? ext(oc.url, '問い合わせページ', where) : ''}</p>`;
-
-  b += `<div class="notice info"><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b><br><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a><br><span class="small muted">登録内容はあなたの端末の中にだけ保存されます。</span></div>`;
+  b += `<div class="banner info">${icon('info')}<div><p><b>このサービスを登録しておくと、続報が出たときに「やること」が更新されます。</b></p><p><a class="btn" href="${rel}#s=${encodeURIComponent(inc.service_ids.join(','))}">じぶんのやることに登録する</a></p><p class="caption">登録内容はあなたの端末の中にだけ保存されます。</p></div></div>`;
 
   if (!denied) {
-    b += '<h2>やること</h2><ol class="cards">';
+    b += '<h2>やること</h2><ol class="task-list">';
     let currentType = null;
     list.forEach((x, i) => {
       if (x.infoType !== currentType) {
         currentType = x.infoType;
-        if (currentType) b += `<p class="muted small type-head"><b>${esc(currentType.label)}</b>が漏れたときにやること${currentType.needs_research ? ' <span class="badge draft">公的な根拠を調査中</span>' : ''}</p>`;
+        if (currentType) b += `<li class="type-head"><b>${esc(currentType.label)}</b>が漏れたとき${currentType.needs_research ? ' <span class="tag neutral">根拠を調査中</span>' : ''}</li>`;
       }
       const t = x.card.title.replace('{service}', inc.service_name);
-      b += `<li class="card"><span class="num">${i + 1}.</span><div><div class="ct">${esc(t)}</div><div class="cd">${esc(x.card.detail)}</div>`;
+      b += `<li class="task-item"><div class="task-row">${icon('circle', 'row-icon')}<div class="row-main"><div class="row-title">${i + 1}. ${esc(t)}</div><div class="row-meta">約${x.card.minutes}分</div></div></div>`;
+      b += `<div class="task-panel"><p class="reason">${esc(x.card.reason)}</p><p class="how">${esc(x.card.detail)}</p>`;
       if (x.card.contact) b += contactHtml(x.card.contact, where);
       for (const k of x.card.contact_list || []) b += contactHtml(k, where);
       b += sourcesHtml(x.card.sources, where) + '</div></li>';
       if (x.infoType && x.card === x.infoType.cards[x.infoType.cards.length - 1] && x.infoType.skip_if.length) {
-        b += `<li class="skip small">やらなくていいこと：${x.infoType.skip_if.map(esc).join('<br>')}</li>`;
+        b += `<li class="skip-note">やらなくていいこと：${x.infoType.skip_if.map(esc).join('<br>')}</li>`;
       }
     });
     b += '</ol>';
   }
+  const oc = inc.official_contact || {};
+  if (oc.phone || oc.url) b += `<h2>会社の公式窓口</h2><p>${oc.phone ? `<b>${esc(oc.phone)}</b> ` : ''}${oc.url ? ext(oc.url, '問い合わせページ', where) : ''}</p>`;
 
   b += '<h2>会社の公表（公式ページ）</h2><ul class="timeline">';
   for (const a of inc.announcements) {
@@ -189,7 +203,7 @@ function incidentPage(inc) {
       else if (ch === 'count_update') b += '<span class="ch">件数の訂正・確定</span>';
       else if (ch.startsWith('status:')) b += `<span class="ch">${esc(STATUS_LABEL[ch.split('->')[1]] || '')}</span>`;
     }
-    b += `<details class="small"><summary class="muted">事実のメモ</summary><div class="muted facts">${esc(a.facts)}</div></details></li>`;
+    b += `<details><summary>事実のメモ</summary><div class="facts">${esc(a.facts)}</div></details></li>`;
   }
   b += '</ul>';
   b += `<p class="small muted">このページは企業の公式発表を元に、事実項目だけを整理したものです。文章の転載はしていません。誤りがあれば <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正の依頼</a> からお知らせください。</p>`;
@@ -198,9 +212,9 @@ function incidentPage(inc) {
 
 function incidentIndexPage() {
   const rel = '../';
-  let b = '<h1>公表された情報漏えいの一覧</h1><p class="muted">企業が公式に公表した消費者向けサービスの事案のうち、開発者が公式発表と照合したものだけを載せています。全事案の網羅はしていません。</p><ul class="incident-list">';
+  let b = '<h1>公表された情報漏えいの一覧</h1><p class="muted">企業が公式に公表した消費者向けサービスの事案のうち、開発者が公式発表と照合したものだけを載せています。全事案の網羅はしていません。</p><ul class="plain-list incident-list">';
   for (const inc of incidents) {
-    b += `<li><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏えい</a> <span class="badge ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="muted small">${esc(inc.operator)}・公表 ${fmtDate(inc.first_published)}・最終更新 ${fmtDate(inc.last_updated)}・${esc(inc.counts.wording)}</span></li>`;
+    b += `<li><a href="./${esc(inc.id)}/">${esc(inc.service_name)}の情報漏えい</a> <span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span><br><span class="caption">${esc(inc.operator)}・公表 ${fmtMd(inc.first_published)}・最終更新 ${fmtMd(inc.last_updated)}・${esc(inc.counts.wording)}</span></li>`;
   }
   b += '</ul>';
   return page({ rel, title: '事案の一覧', description: '企業が公式に公表した消費者向けサービスの情報漏えい事案の一覧。', body: b, canonical: 'incidents/' });
@@ -213,14 +227,14 @@ function aboutPage() {
 <h2>できること</h2>
 <ul>
 <li>企業が公式に公表した漏えいのうち、あなたが選んだサービスのものだけを表示します。</li>
-<li>漏れた情報の種類ごとに、公的機関（IPA、警視庁、デジタル庁など）が勧める対処を「1枚1行動」のカードにして示します。</li>
-<li>続報（おそれ→確定、対象の追加）が出ると、必要なカードだけが未完了に戻ります。</li>
+<li>漏れた情報の種類ごとに、公的機関（IPA、警視庁、デジタル庁など）が勧める対処を「1つずつ」案内します。</li>
+<li>続報（おそれ→確定、対象の追加）が出ると、必要なものだけが「再確認」として戻ります。</li>
 </ul>
 <h2>やらないこと</h2>
 <ul>
 <li>あなたの氏名・メールアドレス・カード番号・本人確認書類などを預かりません。サーバーに利用者のデータを一切持ちません。</li>
-<li>メール・SMS・プッシュ通知を送りません。「このサイトからの連絡」を名乗るメールは偽物です。</li>
-<li>ダークウェブ監視や、未公表の漏えいの検知はしません。対象は企業が公表した事案だけです。</li>
+<li>メール・SMS・通知を送りません。「このサイトからの連絡」を名乗るメールは偽物です。</li>
+<li>公表されていない漏えいを探すことはしません。対象は企業が公表した事案だけです。</li>
 <li>通知メールの貼り付けや、個人情報の入力は受け付けません。入力欄がないこと自体が、安全のための設計です。</li>
 </ul>
 <h2>表示する情報の根拠</h2>
@@ -242,15 +256,15 @@ function aboutPage() {
 function privacyPage() {
   const rel = './';
   const b = `<h1>プライバシーポリシー</h1>
-<p class="muted small">最終更新：${esc(today)}</p>
+<p class="caption">最終更新：${esc(today)}</p>
 <h2>サーバーに保存する情報</h2>
 <p>ありません。このサイトは静的なファイルだけで動いており、利用者の入力をサーバーに送る仕組みを持ちません。</p>
 <h2>あなたの端末の中にだけ保存する情報</h2>
 <table><tr><th>項目</th><th>内容</th><th>目的</th></tr>
 <tr><td>選んだサービス</td><td>サービスのID（例：timescar）</td><td>関係のある事案だけを表示するため</td></tr>
-<tr><td>やることの完了状態</td><td>事案とカードのIDと、完了した日</td><td>「対策済み」を表示し、続報で戻すため</td></tr>
-<tr><td>最終確認日</td><td>このサイトを最後に開いた日</td><td>「新着」を表示するため</td></tr></table>
-<p>これらはブラウザの localStorage に保存され、このサイト以外からは読めません。「この端末の記録を消す」ボタンでいつでも削除できます。ブラウザのデータを削除すると消えます。「引き継ぎコード」はこれらをまとめた文字列で、暗号化していないため、他の人に見せないでください。</p>
+<tr><td>やることの完了状態</td><td>事案とやることのIDと、完了した日</td><td>「対策済み」を表示し、続報で戻すため</td></tr>
+<tr><td>最終確認日</td><td>このサイトを最後に開いた日</td><td>前回からの変化を表示するため</td></tr></table>
+<p>これらはブラウザの localStorage に保存され、このサイト以外からは読めません。「設定」の「この端末の記録を消す」でいつでも削除できます。ブラウザのデータを削除すると消えます。「引き継ぎコード」はこれらをまとめた文字列で、暗号化していないため、他の人に見せないでください。</p>
 <h2>外部への通信</h2>
 <p>このサイトは、アクセス解析、広告、外部フォント、外部スクリプトを一切使いません。ブラウザの Content Security Policy で外部への通信を技術的に禁止しています。外部リンクを開く際、どのページから来たかの情報（リファラ）は送りません。</p>
 <h2>サイトの配信事業者が記録する情報</h2>
@@ -260,50 +274,42 @@ function privacyPage() {
   return page({ rel, title: 'プライバシーポリシー', description: '「じぶんの情報対策」が端末内に保存する項目と、外部に送らないことの説明。', body: b, canonical: 'privacy.html' });
 }
 
+function faqPage() {
+  const rel = './';
+  const b = `<h1>よくある質問</h1>
+<h2>見覚えのないサービスの漏えいが出てきました</h2>
+<p>「サービス」画面で選んだサービスに関係する事案だけを表示しています。選んだ覚えがなければ、「サービス」画面でチェックを外してください。リンクから開いた場合、そのサービスが自動で追加されることがあります。</p>
+<h2>自分が対象かどうか分かりません</h2>
+<p>このサイトは「会社が漏えいを公表した」という事実を示すだけで、あなた個人が対象かどうかは分かりません。対象かどうかは、その会社からの連絡（メール・書面・アプリ内のお知らせ）で確認してください。会社の公式窓口は、各事案のページに載せています。連絡が来ていなくても、先頭の「その会社を名乗るメールのリンクは押さない」だけは行っておくと安全です。</p>
+<h2>会社を名乗るメールが届きました。本物ですか</h2>
+<p>漏えいのあとは、その会社を名乗るニセのメールが増えます。メールの中のリンクは押さず、アプリか、自分で検索して開いた公式サイトで確認してください。このサイトからメールを送ることはありません。</p>
+<h2>このサイトは私の情報を保存しますか</h2>
+<p>サーバーには何も保存しません。選んだサービスと、やることの完了日は、あなたの端末の中にだけ保存されます。くわしくは <a href="${rel}privacy.html">プライバシーポリシー</a> をご覧ください。</p>
+<h2>「対策済み」にしたのに、また「再確認」に戻りました</h2>
+<p>会社の続報で「漏えいのおそれ」が「確定」になったり、漏れた情報の種類が増えたりすると、関係するやることだけが「再確認」に戻ります。もう一度内容を確認し、済んでいれば「済みにする」を押してください。</p>
+<h2>親や家族の分を確認したいです</h2>
+<p>家族の端末でこのサイトを開き、家族が使っているサービスを選んでください。「設定」の「家族に見せる」からURLを送れます。あなたの端末で家族の分を管理する機能は、今後の予定です。</p>
+<h2>使っているサービスが一覧にありません</h2>
+<p><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">追加の依頼</a> からお知らせください。公表された漏えいがあるサービスを優先して追加しています。</p>
+<h2>どこに相談すればよいですか</h2>
+<p><a href="${rel}#/help">相談窓口</a> に、消費者ホットライン（188）、警察相談専用電話（#9110）、IPA の窓口をまとめています。</p>`;
+  return page({ rel, title: 'よくある質問', description: '「じぶんの情報対策」のよくある質問。対象かどうかの確認方法、ニセメール、保存される情報、再確認について。', body: b, canonical: 'faq.html' });
+}
+
 function appPage() {
   const rel = './';
-  const data = { generated_at: today, include_drafts: includeDrafts, cards, services, incidents };
+  const data = { generated_at: today, include_drafts: includeDrafts, repo_url: REPO_URL, cards, services, incidents };
   const dataJson = JSON.stringify(data).replace(/<\//g, '<\\/').replace(/<!--/g, '<\\!--');
-  const b = `${includeDrafts ? '<div class="notice draft small">このビルドは<b>承認前の下書きデータ</b>を含みます（検証用）。</div>' : ''}
-<noscript><div class="notice">この画面はJavaScriptが必要です。JavaScriptを使わずに読める <a href="${rel}incidents/">事案の一覧</a> もあります。</div></noscript>
-<div id="link-notice" class="notice info hidden"></div>
-<nav aria-label="画面" class="row">
-  <a class="btn secondary" href="#select">1. サービスを選ぶ</a>
-  <a class="btn secondary" href="#todo">2. じぶんのやること</a>
-</nav>
-<section id="select">
-  <h2>1. 使っているサービスを選ぶ</h2>
-  <p class="muted">選んだ内容はこの端末の中にだけ保存されます。サーバーには送りません。</p>
-  <div id="services"></div>
-  <div class="row"><a class="btn" href="#todo">「じぶんのやること」を見る</a><span class="muted" id="sel-count"></span></div>
-  <p class="small muted">使っているサービスが一覧にない場合は <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">追加の依頼</a> からお知らせください。</p>
-</section>
-<section id="todo">
-  <h2>2. じぶんのやること</h2>
-  <div id="summary"></div>
-  <div id="incidents"></div>
-</section>
-<section id="transfer">
-  <h2>引き継ぎ（機種変更のとき）</h2>
-  <p class="muted">選んだサービスと完了状態を、短いコードにして書き出せます。新しい端末でこのコードを読み込めば続きから使えます。コードは他の人に見せないでください。</p>
-  <div class="row"><button class="btn secondary" id="export" type="button">コードを書き出す</button><button class="btn secondary" id="import" type="button">コードを読み込む</button><button class="btn secondary" id="reset" type="button">この端末の記録を消す</button></div>
-  <div id="transfer-msg" class="hidden" aria-live="polite"></div>
-  <textarea id="code" aria-label="引き継ぎコード" placeholder="ここにコードが表示されます／貼り付けます" spellcheck="false"></textarea>
-</section>
-<section id="install">
-  <h2>次に見に来やすくする</h2>
-  <p class="muted">通知は送りません。ホーム画面にこのサイトを追加しておくと、次に確認しやすくなります。iPhone は共有ボタン→「ホーム画面に追加」、Android は ブラウザのメニュー→「ホーム画面に追加」です。</p>
-</section>`;
-  return page({ rel, title: '', description: TAGLINE + ' 使っているサービスを選ぶだけで、関係のある情報漏えいと、公的機関の根拠つきの「やること」だけが揃います。', body: b, canonical: '', withApp: true, dataJson });
+  return page({ rel, title: '', description: TAGLINE + ' 使っているサービスを選ぶだけで、関係のある情報漏えいと、公的機関の根拠つきの「やること」だけが揃います。', body: '', canonical: '', withApp: true, dataJson, current: '' });
 }
 
 function notFoundPage() {
   const rel = './';
-  return page({ rel, title: 'ページが見つかりません', description: 'ページが見つかりません。', body: `<h1>ページが見つかりません</h1><p><a href="${rel}">トップへ戻る</a>、または <a href="${rel}incidents/">事案の一覧</a> をご覧ください。</p>` });
+  return page({ rel, title: 'ページが見つかりません', description: 'ページが見つかりません。', body: `<h1>ページが見つかりません</h1><p><a href="${rel}#/">ホームへ戻る</a>、または <a href="${rel}incidents/">事案の一覧</a> をご覧ください。</p>` });
 }
 
 // ---------- アイコン（SVG と PNG）。PNG は zlib だけで生成する
-const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#0b57d0"/><path d="M18 34l10 10 20-22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+const ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#0017c1"/><path d="M18 34l10 10 20-22" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
 `;
 function crc32(buf) {
   let c, crc = 0xffffffff;
@@ -329,13 +335,13 @@ function makeIconPng(size) {
     return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
   };
   for (let y = 0; y < size; y++) {
-    raw[y * (size * 4 + 1)] = 0; // filter: none
+    raw[y * (size * 4 + 1)] = 0;
     for (let x = 0; x < size; x++) {
       const ux = (x + 0.5) / s, uy = (y + 0.5) / s;
       const d = Math.min(...segs.map((sg) => distSeg(ux, uy, sg)));
       const white = d < 3.5;
       const o = y * (size * 4 + 1) + 1 + x * 4;
-      raw[o] = white ? 255 : 0x0b; raw[o + 1] = white ? 255 : 0x57; raw[o + 2] = white ? 255 : 0xd0; raw[o + 3] = 255;
+      raw[o] = white ? 255 : 0x00; raw[o + 1] = white ? 255 : 0x17; raw[o + 2] = white ? 255 : 0xc1; raw[o + 3] = 255;
     }
   }
   const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(size, 0); ihdr.writeUInt32BE(size, 4); ihdr[8] = 8; ihdr[9] = 6; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
@@ -352,6 +358,7 @@ fs.rmSync(outDir, { recursive: true, force: true });
 write('index.html', appPage());
 write('about.html', aboutPage());
 write('privacy.html', privacyPage());
+write('faq.html', faqPage());
 write('404.html', notFoundPage());
 write('incidents/index.html', incidentIndexPage());
 for (const inc of incidents) write(`incidents/${inc.id}/index.html`, incidentPage(inc));
@@ -363,12 +370,12 @@ write('icon-180.png', makeIconPng(180));
 write('icon-512.png', makeIconPng(512));
 write('manifest.webmanifest', JSON.stringify({
   name: SITE_NAME, short_name: SITE_NAME, description: TAGLINE, lang: 'ja', start_url: './', scope: './', display: 'standalone',
-  background_color: '#f7f7f5', theme_color: '#0b57d0',
+  background_color: '#ffffff', theme_color: '#0017c1',
   icons: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' }, { src: 'icon-180.png', sizes: '180x180', type: 'image/png' }, { src: 'icon.svg', sizes: 'any', type: 'image/svg+xml' }],
 }, null, 2));
 write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}sitemap.xml\n`);
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-  [['', today], ['about.html', today], ['privacy.html', today], ['incidents/', today], ...incidents.map((i) => [`incidents/${i.id}/`, i.last_updated])]
+  [['', today], ['about.html', today], ['privacy.html', today], ['faq.html', today], ['incidents/', today], ...incidents.map((i) => [`incidents/${i.id}/`, i.last_updated])]
     .map(([u, d]) => `  <url><loc>${esc(SITE_URL + u)}</loc><lastmod>${d}</lastmod></url>`).join('\n') + '\n</urlset>\n');
 write('.nojekyll', '');
 console.log(`built ${path.relative(root, outDir)}: incidents ${incidents.length}${includeDrafts ? ' (including drafts)' : ''}, site ${SITE_URL}`);

@@ -48,6 +48,9 @@ const checkCard = (c, where) => {
   if (c.contact && !contactKeys.has(c.contact)) err(`${where}/${c.id}: 未定義の contact "${c.contact}"`);
   for (const k of c.contact_list || []) if (!contactKeys.has(k)) err(`${where}/${c.id}: 未定義の contact "${k}"`);
   if (typeof c.reopen_on_confirm !== 'boolean') err(`${where}/${c.id}: reopen_on_confirm は boolean`);
+  if (!c.reason || typeof c.reason !== 'string') err(`${where}/${c.id}: reason（理由1文）が必要`);
+  if (!Number.isInteger(c.minutes) || c.minutes < 1) err(`${where}/${c.id}: minutes（所要時間の目安、分）が必要`);
+  if (/(ログイン|アカウント|インストール|アップデート|ダークウェブ|ハッカー)/.test(c.title + c.detail + c.reason)) warn(`${where}/${c.id}: 文言ガイドで避ける語を含む（ログイン／アカウント／インストール／アップデート／ダークウェブ／ハッカー）`);
 };
 checkCard(cards.always_first_card, 'always_first_card');
 const matchedKeys = new Set();
@@ -59,6 +62,7 @@ for (const t of cards.info_types) {
     matchedKeys.add(m);
   }
   if (!Array.isArray(t.cards) || t.cards.length === 0) err(`info_types/${t.key}: cards が空`);
+  if (!Number.isInteger(t.urgency) || t.urgency < 1) err(`info_types/${t.key}: urgency（1が最優先）が必要`);
   for (const c of t.cards || []) checkCard(c, `info_types/${t.key}`);
 }
 for (const [k, s] of Object.entries(cards.sources)) if (!s.verified_on) warn(`source "${k}" は未確認（verified_on が null）。公開前に原文を確認`);
@@ -75,6 +79,13 @@ for (const s of services.services) {
   serviceIds.add(s.id);
   if (!s.name || !s.operator) err(`services/${s.id}: name/operator が必要`);
   if (!catKeys.has(s.category)) err(`services/${s.id}: 未知の category "${s.category}"`);
+  if (s.popular_rank !== undefined && (!Number.isInteger(s.popular_rank) || s.popular_rank < 1)) err(`services/${s.id}: popular_rank は1以上の整数`);
+  if (!Array.isArray(s.aliases)) err(`services/${s.id}: aliases は配列`);
+}
+{
+  const ranks = services.services.filter((s) => s.popular_rank).map((s) => s.popular_rank);
+  if (new Set(ranks).size !== ranks.length) err('services: popular_rank が重複');
+  if (ranks.length > 10) warn(`services: popular_rank が ${ranks.length} 件。1画面に見せる候補は6〜10件が目安`);
 }
 
 // ---- incidents
