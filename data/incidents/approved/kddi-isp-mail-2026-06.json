@@ -1,0 +1,58 @@
+{
+  "id": "kddi-isp-mail-2026-06",
+  "service_ids": [
+    "nifty-mail",
+    "biglobe-mail",
+    "jcom-mail",
+    "commufa-mail",
+    "pikara-mail"
+  ],
+  "service_name": "プロバイダのメール（@nifty、BIGLOBE、J:COM、コミュファ光、ピカラ）",
+  "operator": "KDDI株式会社（ISP事業者向けメールシステム）",
+  "status": "confirmed",
+  "leaked_info_types": [
+    "email",
+    "credentials"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "メールアドレス（ISP各社発行）およびメールシステムのパスワード（ハッシュ化・暗号化済を含む）。auメール・UQ mobileメール・au one netメールは対象外",
+  "counts": {
+    "headline": 12231954,
+    "wording": "漏えいが確認された電子メールアドレス 対象人数12,231,954名（2026年7月21日訂正）、うちパスワード 対象人数7,616,173名",
+    "breakdown": "ISP別内訳はKDDI発表に記載なし"
+  },
+  "card_not_leaked_stated": null,
+  "announcements": [
+    {
+      "date": "2026-06-23",
+      "type": "first",
+      "url": "https://newsroom.kddi.com/news/assets/2026/kddi_nr_s-71_4593/kddi_nr_s-71_4593_pdf_01.pdf",
+      "title": "ISP事業者向けメールシステムに対する不正アクセスの発生について",
+      "facts": "・2026-06-17にISP事業者向けメールシステムへの不正アクセスを確認、同日改修。第三者製ソフトウェアの脆弱性を悪用\n・対象ISP 6社：STNet（ピカラのメール）、KDDIウェブコミュニケーションズ（CPIメール）、JCOM（J:COM NETのメール）、中部テレコミュニケーション（コミュファ光のメール）、ニフティ（@niftyメール）、ビッグローブ（BIGLOBEメール）\n・漏えいした可能性のある情報：メールボックスに紐づくメールアドレス・パスワード 最大1,422万件（解約・休眠含む）\n・個人情報保護委員会・総務省へ報告・相談\n・お客様はISP事業者からの案内に従いメールパスワード変更が必要",
+      "changes": []
+    },
+    {
+      "date": "2026-07-06",
+      "type": "final",
+      "url": "https://newsroom.kddi.com/news/assets/2026/kddi_nr_s-73_4619/kddi_nr_s-73_4619_pdf_01.pdf",
+      "title": "ISP事業者向けメールシステムに対する不正アクセスについてのお詫びとご報告（2026年7月21日更新）",
+      "facts": "・漏えいした事実が確認された情報：本システムで作成された電子メールアドレス 対象人数12,231,954名（2026-07-21訂正）、本システムのパスワード 対象人数7,616,173名（前者の内数）\n・不正アクセスは一部ISPで2026-05-16から発生、6-17確認。ゼロデイ脆弱性\n・auメール、UQ mobileメール、au one netメールは異なる設備のため影響・漏えいなしと明記\n・ISP事業者と連携しパスワード変更対応、ISPによる強制変更を推進",
+      "changes": [
+        "status:suspected->confirmed",
+        "count_update"
+      ]
+    }
+  ],
+  "official_contact": {
+    "phone": "",
+    "url": ""
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "利用者への個別案内・パスワード強制変更は各ISP事業者（@nifty、BIGLOBE、J:COM等）が実施。各ISPの公式お知らせURLを追加で収集してから承認すること。au one net は対象外なのでサービスマスタで紐づけない。"
+  },
+  "first_published": "2026-06-23",
+  "last_updated": "2026-07-06"
+}

@@ -1,0 +1,95 @@
+{
+  "id": "furusato-choice-2026-10",
+  "service_ids": [
+    "furusato-choice"
+  ],
+  "service_name": "ふるさとチョイス",
+  "operator": "株式会社トラストバンク",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "name",
+    "email",
+    "address",
+    "phone",
+    "credentials",
+    "credit_card_partial",
+    "birthdate",
+    "purchase_history",
+    "other"
+  ],
+  "limited_info_types": {
+    "credit_card_partial": "2名のみ（下4桁・名義・有効期限）。この情報だけでは決済できないと公表。該当する方には個別連絡済み",
+    "birthdate": "2名のみ。該当する方には個別連絡済み"
+  },
+  "other_info_detail": "寄附控除試算額。クレジットカード（下4桁・名義・有効期限）・生年月日・ポイント履歴・寄附履歴・送付先は5名のみの追加項目。パスワードはハッシュ化",
+  "counts": {
+    "headline": 4454097,
+    "wording": "4,454,097件（現時点で確認できている件数、今後の調査で変動の可能性）",
+    "breakdown": "会員情報 4,454,097件。うち5名に追加項目の流出（カード情報は2名）"
+  },
+  "card_not_leaked_stated": false,
+  "announcements": [
+    {
+      "date": "2026-10-19",
+      "type": "first",
+      "url": "https://www.trustbank.co.jp/newsroom/news/news261019/",
+      "title": "不正アクセスの疑いに伴うサービス一時停止のお知らせ",
+      "facts": "・不正アクセスの疑いがある事象を検知、サービス停止・調査中\n・情報種別・件数の記載なし",
+      "changes": []
+    },
+    {
+      "date": "2026-10-20",
+      "type": "update",
+      "url": "https://www.trustbank.co.jp/newsroom/newsrelease/news261020/",
+      "title": "不正アクセスによる寄附者様情報の外部流出に関するお詫びとお知らせ",
+      "facts": "・不正アクセスは10/17に実施、10/19 15:50にサービス停止\n・流出項目：氏名、メールアドレス、住所、電話番号、ハッシュ化されたパスワード、寄附控除試算額\n・件数：4,454,097件（現時点で確認できている件数、今後変動の可能性）\n・「流出したことが判明」\n・問い合わせ：toiawase@trustbank.co.jp",
+      "changes": [
+        "status:suspected->confirmed",
+        "info_added:name",
+        "info_added:email",
+        "info_added:address",
+        "info_added:phone",
+        "info_added:credentials"
+      ]
+    },
+    {
+      "date": "2026-10-23",
+      "type": "update",
+      "url": "https://www.trustbank.co.jp/newsroom/newsrelease/news20261023/",
+      "title": "不正アクセスによる寄附者様情報の外部流出に関するお詫びとお知らせ（第2報）",
+      "facts": "・5名について追加項目の流出判明：ポイント履歴5名、寄附履歴2名、クレジットカード情報（下4桁・名義・有効期限）2名、生年月日2名、送付先1名、住所の一部1名\n・カード情報は決済代行会社から都度取得、当社システムに保存なし。当該情報のみで決済不可と記載\n・5名へ個別連絡済み\n・会員へのメール送付を10/21から順次実施",
+      "changes": [
+        "status:confirmed->individually_notified",
+        "info_added:credit_card_partial"
+      ]
+    },
+    {
+      "date": "2026-10-26",
+      "type": "update",
+      "url": "https://www.trustbank.co.jp/newsroom/news/faq20261026/",
+      "title": "不正アクセスによる個人情報流出に関するよくあるご質問（寄附者様向け）",
+      "facts": "・流出の有無は10/21からの個別お知らせメールで通知（流出未確認者にも通知）\n・全会員の現在のパスワードを無効化、11/6 12:00以降に再設定が必要\n・カード情報流出は2名のみ",
+      "changes": []
+    },
+    {
+      "date": "2026-11-05",
+      "type": "update",
+      "url": "https://www.trustbank.co.jp/newsroom/newsrelease/news20261105/",
+      "title": "不正アクセスによる寄附者様情報の外部流出に関するお詫びとお知らせ（第5報）",
+      "facts": "・Web版を11/6 12:00から順次再開。アプリ版・チョイスPayは再開予定（日時未定）\n・全会員のパスワード無効化、ログイン時に新パスワード設定が必要\n・不審なメール・SMS・電話・郵便物への注意喚起",
+      "changes": []
+    }
+  ],
+  "official_contact": {
+    "phone": "",
+    "url": ""
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "電話窓口・専用フォームの記載なし。寄附者向け連絡先はメール toiawase@trustbank.co.jp のみ。第3報・第4報（再開関連）は省略。同社は2026-10-05にも別件（254件）を公表しており混同注意。"
+  },
+  "first_published": "2026-10-19",
+  "last_updated": "2026-11-05"
+}

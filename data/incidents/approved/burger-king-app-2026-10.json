@@ -1,0 +1,46 @@
+{
+  "id": "burger-king-app-2026-10",
+  "service_ids": [
+    "burger-king"
+  ],
+  "service_name": "バーガーキングのアプリ",
+  "operator": "株式会社ビーケー・ジャパン",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "name",
+    "email",
+    "phone",
+    "birthdate",
+    "other"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "会員ID、登録種別、都道府県、性別、モバイルオーダー履歴の有無、メールアドレス認証の有無",
+  "counts": {
+    "headline": 11180000,
+    "wording": "約1,118万件",
+    "breakdown": ""
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-10-15",
+      "type": "first",
+      "url": "https://www.burgerking.co.jp/images/notice/2026/10/15/d4d114ca-ebd7-4f3d-94ef-c4ea7a84a139.pdf",
+      "title": "不正アクセスによる公式アプリ会員情報漏えいに関するお詫びとお知らせ",
+      "facts": "・2026-10-02〜10-07 に不正アクセスが行われ、会員情報の漏えいが2026-10-13 に判明（「確認」表現）\n・対象：公式アプリ会員情報 約1,118万件\n・項目：会員ID、メールアドレス、登録種別、都道府県、性別、生年月日、氏名（漢字・カナ）、電話番号、モバイルオーダー履歴の有無、メールアドレス認証の有無\n・クレジットカード番号は保持しておらず漏えいしていない\n・ログインパスワード情報の漏えいは現在確認されていない\n・二次被害は未確認\n・個人情報保護委員会へ報告済み\n・対象客へのメールによる案内を順次実施中\n・問い合わせ：カスタマーサービス 0120-945-630（平日10時〜17時）、customerservice@burgerking.co.jp",
+      "changes": []
+    }
+  ],
+  "official_contact": {
+    "phone": "0120-945-630（平日10時〜17時）",
+    "url": ""
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "公式PDFの発表主体は「株式会社ビーケー・ジャパン」。ニュース一覧はSPAで取得できず、続報の有無は未確認。"
+  },
+  "first_published": "2026-10-15",
+  "last_updated": "2026-10-15"
+}

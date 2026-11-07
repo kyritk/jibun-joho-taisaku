@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "updated": "2026-11-07",
+  "_comment": "サービスマスタ。name は利用者が認識している通称。password_change_url と official_contact_phone は開発者が公式サイトで確認したものだけ入れる（未確認は null）。",
+  "categories": [
+    { "key": "convenience", "label": "コンビニ", "icon": "🏪" },
+    { "key": "shopping", "label": "通販・ネットショップ", "icon": "🛒" },
+    { "key": "retail", "label": "お店・家電・本", "icon": "🏬" },
+    { "key": "food", "label": "飲食店のアプリ", "icon": "🍽️" },
+    { "key": "travel", "label": "旅行・宿・航空券", "icon": "✈️" },
+    { "key": "mobility", "label": "カーシェア・タクシー", "icon": "🚗" },
+    { "key": "telecom", "label": "携帯・ネット回線", "icon": "📱" },
+    { "key": "payment", "label": "決済・ポイント", "icon": "💳" },
+    { "key": "finance", "label": "銀行・カード", "icon": "🏦" },
+    { "key": "entertainment", "label": "カラオケ・ゲーム・動画", "icon": "🎤" },
+    { "key": "delivery", "label": "宅配・郵便", "icon": "📦" },
+    { "key": "software", "label": "ソフト・アプリ", "icon": "💻" },
+    { "key": "fashion", "label": "衣料・美容", "icon": "👕" }
+  ],
+  "services": [
+    { "id": "seven-eleven-app", "name": "セブン-イレブンアプリ", "operator": "株式会社セブン‐イレブン・ジャパン", "category": "convenience", "aliases": ["セブンイレブン", "7NOW"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "familymart-app", "name": "ファミペイ（ファミリーマート）", "operator": "株式会社ファミリーマート", "category": "convenience", "aliases": ["ファミマ", "FamiPay"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "lawson-app", "name": "ローソンアプリ", "operator": "株式会社ローソン", "category": "convenience", "aliases": ["ローソン"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "amazon-jp", "name": "Amazon", "operator": "アマゾンジャパン合同会社", "category": "shopping", "aliases": ["アマゾン"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "rakuten-ichiba", "name": "楽天市場", "operator": "楽天グループ株式会社", "category": "shopping", "aliases": ["楽天"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "yahoo-shopping", "name": "Yahoo!ショッピング", "operator": "LINEヤフー株式会社", "category": "shopping", "aliases": ["ヤフーショッピング"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "mercari", "name": "メルカリ", "operator": "株式会社メルカリ", "category": "shopping", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "qoo10", "name": "Qoo10", "operator": "eBay Japan合同会社", "category": "shopping", "aliases": ["キューテン"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "lindt-jp", "name": "リンツ オンラインショップ・公式アプリ", "operator": "リンツ＆シュプルングリージャパン株式会社", "category": "shopping", "aliases": ["Lindt"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "furusato-choice", "name": "ふるさとチョイス", "operator": "株式会社トラストバンク", "category": "shopping", "aliases": ["ふるさと納税"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "nojima-online", "name": "ノジマオンライン", "operator": "株式会社ノジマ", "category": "shopping", "aliases": ["ノジマ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "zozotown", "name": "ZOZOTOWN", "operator": "株式会社ZOZO", "category": "fashion", "aliases": ["ゾゾタウン"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "peach-john", "name": "ピーチ・ジョン", "operator": "株式会社ピーチ・ジョン", "category": "fashion", "aliases": ["PEACH JOHN"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "uniqlo", "name": "ユニクロアプリ", "operator": "株式会社ユニクロ", "category": "fashion", "aliases": ["UNIQLO"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "bookoff", "name": "ブックオフ（アプリ・会員）", "operator": "ブックオフコーポレーション株式会社", "category": "retail", "aliases": ["BOOKOFF"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "joshin", "name": "ジョーシン（上新電機）", "operator": "上新電機株式会社", "category": "retail", "aliases": ["Joshin", "上新電機"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "yodobashi", "name": "ヨドバシカメラ", "operator": "株式会社ヨドバシカメラ", "category": "retail", "aliases": ["ヨドバシ.com"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "biccamera", "name": "ビックカメラ", "operator": "株式会社ビックカメラ", "category": "retail", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "nitori", "name": "ニトリアプリ", "operator": "株式会社ニトリ", "category": "retail", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "yakiniku-king", "name": "焼肉きんぐのアプリ", "operator": "株式会社物語コーポレーション", "category": "food", "aliases": ["焼肉きんぐ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "burger-king", "name": "バーガーキングのアプリ", "operator": "株式会社ビーケー・ジャパンホールディングス", "category": "food", "aliases": ["バーガーキング", "BURGER KING"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "mcdonalds", "name": "マクドナルドのアプリ", "operator": "日本マクドナルド株式会社", "category": "food", "aliases": ["マック", "マクド"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "sukiya", "name": "すき家のアプリ", "operator": "株式会社すき家", "category": "food", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "starbucks", "name": "スターバックスのアプリ", "operator": "スターバックス コーヒー ジャパン 株式会社", "category": "food", "aliases": ["スタバ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "ginnosara", "name": "銀のさら・釜寅・すし上等（宅配の注文サイト・アプリ）", "operator": "株式会社ライドオンエクスプレスホールディングス", "category": "food", "aliases": ["銀のさら", "釜寅", "すし上等"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "skyticket", "name": "スカイチケット（skyticket）", "operator": "株式会社アドベンチャー", "category": "travel", "aliases": ["skyticket"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "jalan", "name": "じゃらん", "operator": "株式会社リクルート", "category": "travel", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "rakuten-travel", "name": "楽天トラベル", "operator": "楽天グループ株式会社", "category": "travel", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "ikyu", "name": "一休.com", "operator": "株式会社一休", "category": "travel", "aliases": ["一休"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "timescar", "name": "タイムズカー", "operator": "タイムズモビリティ株式会社（パーク24グループ）", "category": "mobility", "aliases": ["タイムズカーシェア", "Times Car"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "careco", "name": "カレコ", "operator": "三井不動産リアルティ株式会社", "category": "mobility", "aliases": ["careco"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "go-taxi", "name": "GO（タクシーアプリ）", "operator": "GO株式会社", "category": "mobility", "aliases": ["GOタクシー"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "docomo", "name": "ドコモ（dアカウント）", "operator": "株式会社NTTドコモ", "category": "telecom", "aliases": ["docomo", "dアカウント"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "au", "name": "au（au ID）", "operator": "KDDI株式会社", "category": "telecom", "aliases": ["KDDI", "au ID"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "au-one-net", "name": "au one net（プロバイダのメール）", "operator": "KDDI株式会社", "category": "telecom", "aliases": ["au one net"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "softbank", "name": "ソフトバンク（My SoftBank）", "operator": "ソフトバンク株式会社", "category": "telecom", "aliases": ["SoftBank"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "rakuten-mobile", "name": "楽天モバイル", "operator": "楽天モバイル株式会社", "category": "telecom", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "so-net", "name": "So-net", "operator": "ソニーネットワークコミュニケーションズ株式会社", "category": "telecom", "aliases": ["ソネット", "NURO"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "nifty-mail", "name": "@nifty（ニフティのメール）", "operator": "ニフティ株式会社", "category": "telecom", "aliases": ["ニフティ", "@niftyメール"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "biglobe-mail", "name": "BIGLOBE（ビッグローブのメール）", "operator": "ビッグローブ株式会社", "category": "telecom", "aliases": ["ビッグローブ", "BIGLOBEメール"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "jcom-mail", "name": "J:COM NET（J:COMのメール）", "operator": "JCOM株式会社", "category": "telecom", "aliases": ["ジェイコム", "J:COM"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "commufa-mail", "name": "コミュファ光（のメール）", "operator": "中部テレコミュニケーション株式会社", "category": "telecom", "aliases": ["コミュファ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "pikara-mail", "name": "ピカラ光（のメール）", "operator": "株式会社STNet", "category": "telecom", "aliases": ["ピカラ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "paypay", "name": "PayPay", "operator": "PayPay株式会社", "category": "payment", "aliases": ["ペイペイ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "d-barai", "name": "d払い", "operator": "株式会社NTTドコモ", "category": "payment", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "rakuten-pay", "name": "楽天ペイ", "operator": "楽天ペイメント株式会社", "category": "payment", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "au-pay", "name": "au PAY", "operator": "KDDI株式会社", "category": "payment", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "v-point", "name": "Vポイント（旧Tポイント）", "operator": "株式会社CCCMKホールディングス", "category": "payment", "aliases": ["Tポイント", "Vポイント"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "ponta", "name": "Ponta", "operator": "株式会社ロイヤリティ マーケティング", "category": "payment", "aliases": ["ポンタ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "rakuten-card", "name": "楽天カード", "operator": "楽天カード株式会社", "category": "finance", "aliases": [], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "smbc-card", "name": "三井住友カード（Vpass）", "operator": "三井住友カード株式会社", "category": "finance", "aliases": ["Vpass"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "jcb", "name": "JCBカード（MyJCB）", "operator": "株式会社ジェーシービー", "category": "finance", "aliases": ["MyJCB"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "bigecho", "name": "ビッグエコー（第一興商のカラオケ店の会員・予約）", "operator": "株式会社第一興商", "category": "entertainment", "aliases": ["DAM", "第一興商", "DKダイニング", "カラオケCLUB DAM"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "joysound", "name": "JOYSOUND（うたスキ）", "operator": "株式会社エクシング", "category": "entertainment", "aliases": ["うたスキ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "capcom-id", "name": "CAPCOM ID（カプコンのゲーム）", "operator": "株式会社カプコン", "category": "entertainment", "aliases": ["カプコン", "モンハン"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "nintendo-account", "name": "ニンテンドーアカウント", "operator": "任天堂株式会社", "category": "entertainment", "aliases": ["Switch", "任天堂"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "psn", "name": "PlayStation Network", "operator": "株式会社ソニー・インタラクティブエンタテインメント", "category": "entertainment", "aliases": ["PSN", "プレステ"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "netflix", "name": "Netflix", "operator": "Netflix合同会社", "category": "entertainment", "aliases": ["ネットフリックス"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "sagawa", "name": "佐川急便（スマートクラブ）", "operator": "佐川急便株式会社", "category": "delivery", "aliases": ["佐川"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "yamato", "name": "ヤマト運輸（クロネコメンバーズ）", "operator": "ヤマト運輸株式会社", "category": "delivery", "aliases": ["クロネコ", "クロネコヤマト"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "japan-post", "name": "日本郵便（ゆうびんID）", "operator": "日本郵便株式会社", "category": "delivery", "aliases": ["郵便局"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+
+    { "id": "sourcenext", "name": "ソースネクスト（ポケトーク・筆まめなど）", "operator": "ソースネクスト株式会社", "category": "software", "aliases": ["SOURCENEXT", "ポケトーク", "筆まめ", "筆王"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "gyazo", "name": "Gyazo", "operator": "株式会社Helpfeel", "category": "software", "aliases": ["ギャゾー"], "password_change_url": null, "official_contact_phone": null, "verified_on": null },
+    { "id": "line", "name": "LINE", "operator": "LINEヤフー株式会社", "category": "software", "aliases": ["ライン"], "password_change_url": null, "official_contact_phone": null, "verified_on": null }
+  ]
+}

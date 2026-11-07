@@ -1,0 +1,48 @@
+{
+  "id": "sourcenext-2026-10",
+  "service_ids": [
+    "sourcenext"
+  ],
+  "service_name": "ソースネクスト（会員情報）",
+  "operator": "ソースネクスト株式会社",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "email",
+    "credentials",
+    "name",
+    "address",
+    "phone",
+    "birthdate",
+    "other"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "性別、FAX番号、会社名・役職名・部署名、システム固有の識別情報（加入サービス、登録日、ログイン日など）",
+  "counts": {
+    "headline": 22519960,
+    "wording": "流出した可能性のある情報 22,519,960件",
+    "breakdown": ""
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-10-15",
+      "type": "first",
+      "url": "https://www.sourcenext.com/support/i/2026/1015_info/",
+      "title": "当社サイトへの不正アクセスによるお客様情報流出のお詫びとお知らせ",
+      "facts": "・2026-10-09 10時頃 第三者による不正アクセス開始（会員情報取得APIを不正利用）\n・2026-10-13 9時頃 社内で確認、同日13:36 封じ込め完了\n・流出した可能性のある情報の件数：22,519,960件\n・項目：メールアドレス、パスワード、氏名・氏名カナ、住所、性別、電話番号・FAX番号、生年月日、会社名・役職名・部署名、システム固有の識別情報（加入サービス、登録日、ログイン日など）\n・登録状況により対象項目は異なる\n・クレジットカード情報は対象システムに保存されておらず流出対象外\n・ログイン時にパスワード再設定を要求、他サービスで同一パスワード使用時は変更を依頼\n・対象客へ登録メールアドレス宛にお詫びと案内を順次送付（メール未登録者には郵送予定）\n・10/15 個人情報保護委員会へ報告完了\n・問い合わせ：0120-035-116（10時〜18時、土日祝含む）、フォーム https://support.sourcenext.com/fa/support/web/form167.html、FAQ https://www.sourcenext.com/support/i/2026/1015_1/",
+      "changes": []
+    }
+  ],
+  "official_contact": {
+    "phone": "0120-035-116（10時〜18時、土日祝日含む）",
+    "url": "https://support.sourcenext.com/fa/support/web/form167.html"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "見出しは「流出」だが本文は「流出した可能性のある」表現。10/19付の続報は確認できず。別件として2026-10-27／11-05にメール配信サービス「Cuenote FC」経由の流出（142,669件、本件とは無関係と明記）が公表されている（https://www.sourcenext.com/support/i/2026/1027_info/ 、 https://www.sourcenext.com/support/i/2026/1105_info/ ）。別レコード化を検討。"
+  },
+  "first_published": "2026-10-15",
+  "last_updated": "2026-10-15"
+}

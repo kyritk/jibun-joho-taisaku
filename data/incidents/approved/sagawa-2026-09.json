@@ -1,0 +1,85 @@
+{
+  "id": "sagawa-2026-09",
+  "service_ids": [
+    "sagawa"
+  ],
+  "service_name": "佐川急便（お荷物問い合わせサービス・スマートクラブ）",
+  "operator": "佐川急便株式会社",
+  "status": "suspected",
+  "leaked_info_types": [
+    "name",
+    "address",
+    "phone",
+    "email",
+    "other"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "スマートクラブ会員ID。メールアドレスはスマートクラブ登録者のみ。荷物を送った・通販で受け取っただけの人も氏名・住所・電話番号が対象の可能性。",
+  "counts": {
+    "headline": 53230000,
+    "wording": "現時点で最大約5,323万件（重複を含む件数）",
+    "breakdown": "送り状データ（2026-06-21〜09-30）／運賃契約者情報／スマートクラブ会員情報の合計。区分別件数は未公表、実人数ではない"
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-09-30",
+      "type": "first",
+      "url": "https://www2.sagawa-exp.co.jp/information/detail/419/",
+      "title": "「お荷物問い合わせサービス」への不正アクセスの発生について(第1報）",
+      "facts": "・9/30に「お荷物問い合わせサービス」への第三者による不正アクセスを確認、アクセスを一部制限\n・個人情報に関する記載なし",
+      "changes": []
+    },
+    {
+      "date": "2026-10-01",
+      "type": "update",
+      "url": "https://www2.sagawa-exp.co.jp/information/detail/420/",
+      "title": "「お荷物問い合わせサービス」への不正アクセスによる個人情報流出の可能性について（第2報）",
+      "facts": "・顧客の個人情報が外部に流出した可能性があることが判明\n・対象の可能性：荷物の送り主・届け先（氏名、住所、電話番号。9/30から遡り約100日分）、運賃契約者（氏名、住所、電話番号）、スマートクラブ登録者（氏名、住所、電話番号、メールアドレス、会員ID）\n・含まれない情報：クレジットカード情報、パスワード\n・件数・範囲は調査中",
+      "changes": [
+        "info_added:name",
+        "info_added:address",
+        "info_added:phone",
+        "info_added:email"
+      ]
+    },
+    {
+      "date": "2026-10-01",
+      "type": "update",
+      "url": "https://www2.sagawa-exp.co.jp/information/detail/421/",
+      "title": "（第3報）専用コールセンター開設",
+      "facts": "・専用コールセンター開設：0120-28-3449（9:00〜17:00、土日祝含む）",
+      "changes": []
+    },
+    {
+      "date": "2026-10-09",
+      "type": "update",
+      "url": "https://www2.sagawa-exp.co.jp/information/detail/426/",
+      "title": "「お荷物問い合わせサービス」への不正アクセスによる個人情報流出の可能性について（第4報）",
+      "facts": "・発覚日時 2026-09-30 07:30。不正利用の事実は未確認\n・10/1に個人情報保護委員会へ速報\n・件数は名寄せ中のため未公表",
+      "changes": []
+    },
+    {
+      "date": "2026-10-23",
+      "type": "update",
+      "url": "https://www2.sagawa-exp.co.jp/information/detail/430/",
+      "title": "「お荷物問い合わせサービス」の再開および 個人情報の流出に関する調査状況について（第5報）",
+      "facts": "・10/23「お荷物問い合わせサービス」再開\n・流出した可能性のある個人情報：現時点で最大約5,323万件（重複を含む件数）。実人数ではない\n・①送り状データ（2026-06-21〜09-30）：依頼主・届け先の氏名、住所、電話番号 ②運賃契約者情報 ③スマートクラブ会員情報：氏名、住所、電話番号、メールアドレス、会員ID\n・クレジットカード情報・パスワードは含まれない。手書き送り状は対象外\n・「すべての情報が実際に外部へ流出したことを確認した件数ではない」。二次被害は未確認\n・対象者へ順次案内、個別案内が困難な場合は本お知らせをもって通知に代える\n・専用チャット https://app.chatplus.jp/chat/visitor/8219d0ce_1?t=btn 、コールセンター 0120-28-3449\n・FAQ https://www2.sagawa-exp.co.jp/information/detail/425/ ：通販で受け取っただけの消費者も対象の可能性（スマートクラブ登録の有無を問わない）",
+      "changes": [
+        "count_update"
+      ]
+    }
+  ],
+  "official_contact": {
+    "phone": "0120-28-3449（9:00〜17:00、土日祝含む）",
+    "url": "https://www2.sagawa-exp.co.jp/information/detail/425/"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "公式ページ本文はJS読み込みのため、ページが参照する公式XMLから取得。発表主体は佐川急便株式会社。消費者（送り主・届け先）も対象になり得る。個別案内は順次で11/7時点で完了告知なし。 窓口URLは当初チャット事業者（app.chatplus.jp）のURLだったが、公式ドメイン方針により佐川急便のFAQページに差し替え（2026-11-07）。"
+  },
+  "first_published": "2026-09-30",
+  "last_updated": "2026-10-23"
+}

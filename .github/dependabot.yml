@@ -1,0 +1,7 @@
+# SHA固定した GitHub Actions の更新をPRで通知する（docs/threat-model.md T2）。npm 依存は持たないので対象外。
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

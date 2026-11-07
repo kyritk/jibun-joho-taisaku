@@ -1,0 +1,56 @@
+{
+  "id": "nojima-online-2026-11",
+  "service_ids": [
+    "nojima-online"
+  ],
+  "service_name": "ノジマオンライン",
+  "operator": "株式会社ノジマ",
+  "status": "confirmed",
+  "leaked_info_types": [
+    "name",
+    "birthdate",
+    "address",
+    "phone",
+    "credentials",
+    "email",
+    "other"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "性別、郵便番号、ログインID。パスワードは「暗号化された」状態",
+  "counts": {
+    "headline": 7000000,
+    "wording": "約700万件（退会された方は含まれない）",
+    "breakdown": "ノジマオンライン＋中古スマホ買取サイトの合計"
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-11-02",
+      "type": "first",
+      "url": "https://www.nojima.co.jp/wp-content/uploads/2026/11/fa47750556e505f2ddb83dc080a6420f.pdf",
+      "title": "ノジマオンラインの不正アクセスに伴う個人情報漏えいに関するお詫びとお知らせ",
+      "facts": "・11/1に「ノジマオンライン」会員管理システムへの不正アクセスを検知・確認、同日に個人情報の外部漏えいを確認\n・対象サイト：ノジマオンライン（EC専門サイト）、中古スマホ買取サイト\n・対象人数：約700万件（退会者は含まない）\n・対象情報：氏名（漢字・カナ）、生年月日、性別、郵便番号、住所、電話番号、ログインID・暗号化されたパスワード、メールアドレス\n・両サイトでクレジットカード情報は保持していない\n・所轄警察署へ相談、個人情報保護委員会等へ報告準備、対象サイトのサービス一時休止\n・問い合わせ：ノジマカスタマーセンター 0120-574-853（9:30〜19:00）",
+      "changes": []
+    },
+    {
+      "date": "2026-11-04",
+      "type": "update",
+      "url": "https://contents.online.nojima.co.jp/oshirase20261102/",
+      "title": "ノジマオンラインの不正アクセスに伴う個人情報漏えいに関するお詫びとお知らせ（HTML版、更新日 2026/11/4）",
+      "facts": "・漏えいの疑いがあるお客様のログインパスワードを強制リセット、再設定用URLを登録メールアドレスへ送付\n・店頭の「ノジマモバイル会員」の顧客データは影響なし\n・問い合わせフォーム https://online.nojima.co.jp/app/customer/inquiry_edit/",
+      "changes": []
+    }
+  ],
+  "official_contact": {
+    "phone": "0120-574-853（9:30〜19:00）",
+    "url": "https://online.nojima.co.jp/app/customer/inquiry_edit/"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "個別のお詫びメール送付の明記はなく、パスワード強制リセット＋再設定URL送付という形のため confirmed とした。PDFはテキスト抽出で確認。"
+  },
+  "first_published": "2026-11-02",
+  "last_updated": "2026-11-04"
+}

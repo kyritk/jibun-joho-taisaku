@@ -1,0 +1,70 @@
+{
+  "id": "joshin-2026-10",
+  "service_ids": [
+    "joshin"
+  ],
+  "service_name": "ジョーシン（Joshin web会員・ジョーシンのサブスク）",
+  "operator": "株式会社Joshin",
+  "status": "suspected",
+  "leaked_info_types": [
+    "name",
+    "address",
+    "phone",
+    "credentials",
+    "id_document_image",
+    "my_number",
+    "bank_account",
+    "purchase_history",
+    "other"
+  ],
+  "limited_info_types": {
+    "id_document_image": "免許証画像2件（リフォーム写真システム）。該当する方には会社から個別に連絡中",
+    "my_number": "マイナンバーカード画像1件（同上）。該当する方には会社から個別に連絡中",
+    "bank_account": "口座番号5件（同上）。該当する方には会社から個別に連絡中"
+  },
+  "other_info_detail": "会員番号、手書きサイン、契約番号・デバイスID、有効化コード、工事写真。免許証画像2件、マイナンバーカード画像1件、口座番号5件はリフォーム写真システムのみ（該当者に個別連絡中）。credentials はサブスクのログインID・初期パスワード（最大約23万件）",
+  "counts": {
+    "headline": 6000000,
+    "wording": "漏洩した可能性がある件数 最大約600万件（会員情報DB）。確定件数ではない",
+    "breakdown": "会員情報DB 最大約600万件／サブスク 最大約23万件／リフォーム写真システム 最大約800件"
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-10-17",
+      "type": "first",
+      "url": "https://www.joshin.co.jp/ja/news/info/info-20261017/main/0/link/20261017Notice%20and%20Apology%20Regarding%20System%20Disruption%20Caused%20by%20Unauthorized%20Access.pdf",
+      "title": "不正アクセスによるシステム障害発生のお詫びとお知らせ",
+      "facts": "・2026-10-16に不正アクセスを認識、外部アクセス制限により一部サービス停止\n・情報流出の有無は確認中。個人情報漏洩の可能性も否定できないため個人情報保護委員会へ第一報\n・件数・項目の記載なし\n・窓口：お客様相談室 joshin_otoiawase@joshin.co.jp",
+      "changes": []
+    },
+    {
+      "date": "2026-10-26",
+      "type": "update",
+      "url": "https://www.joshin.co.jp/ja/ir/news/auto_20261026556267/pdfFile.pdf",
+      "title": "不正アクセスによるシステム障害発生のお詫びとお知らせ（第2報）",
+      "facts": "・システム1 会員情報データベースサーバー：漏洩した可能性がある件数 最大約600万件。氏名、住所、電話番号、会員番号\n・システム2 ジョーシンのサブスク：最大約23万件。会員番号、電話番号＋手書きサイン、ログインID・初期パスワード、請求履歴、契約番号・デバイスID、有効化コード\n・システム3 リフォーム写真アップロードシステム：最大約800件。免許証画像2件、マイナンバーカード1件、口座番号5件（該当者には個別に連絡中）、工事写真\n・件数は漏洩した可能性のある総件数であり確定件数ではない\n・決済情報非保持化によりクレジットカード情報は保持していない\n・個人情報保護委員会・警察へ相談・報告済\n・窓口：お客様相談窓口 06-6631-1323 9:30〜18:30、joshin_otoiawase@joshin.co.jp",
+      "changes": [
+        "info_added:name",
+        "info_added:address",
+        "info_added:phone",
+        "info_added:credentials",
+        "info_added:id_document_image",
+        "info_added:my_number",
+        "info_added:bank_account"
+      ]
+    }
+  ],
+  "official_contact": {
+    "phone": "06-6631-1323（9:30〜18:30）",
+    "url": ""
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "公式は全て「可能性」表記。免許証・マイナンバーカード・口座番号は数件のみで該当者に個別連絡中。一般の会員に本人確認書類カードを出すべきかは要判断（件数が極小のため「対象者には会社から個別連絡」で足りる可能性）。第3報は11/7時点で未掲載。PDF上の社名は株式会社Joshin（旧上新電機）。"
+  },
+  "first_published": "2026-10-17",
+  "last_updated": "2026-10-26"
+}

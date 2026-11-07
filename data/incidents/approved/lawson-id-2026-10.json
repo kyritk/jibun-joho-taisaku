@@ -1,0 +1,68 @@
+{
+  "id": "lawson-id-2026-10",
+  "service_ids": [
+    "lawson-app"
+  ],
+  "service_name": "ローソンID・ローソンアプリ",
+  "operator": "株式会社ローソン",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "name",
+    "phone",
+    "address",
+    "birthdate",
+    "credit_card_partial",
+    "other"
+  ],
+  "limited_info_types": {
+    "credit_card_partial": "ローソンアプリ予約の26件のみ「カード番号の一部」。該当する方には会社から個別に連絡"
+  },
+  "other_info_detail": "性別（ローソンID）。生年月日は「漏えいの可能性」。クレジットカード番号の一部はローソンアプリ予約26件のみ。メールアドレス・メルマガ取得情報は10/24訂正で漏えい対象外",
+  "counts": {
+    "headline": 2155345,
+    "wording": "215万5,345件（ローソンID）／26件（ローソンアプリ予約）",
+    "breakdown": "ローソンID 2,155,345件、ローソンアプリ予約 26件"
+  },
+  "card_not_leaked_stated": false,
+  "announcements": [
+    {
+      "date": "2026-10-08",
+      "type": "first",
+      "url": "https://www.lawson.co.jp/contents/cont07/1533174_3310.html",
+      "title": "第三者による不正アクセスに伴う個人情報漏えいに関するお詫びとお知らせ",
+      "facts": "・不正アクセス期間：ローソンID 9/12〜9/14、ローソンアプリ予約 9/17\n・ローソンID：215万5,345件、ローソンアプリ予約：26件\n・ローソンアプリ予約の漏えい項目：氏名、電話番号、クレジットカード番号の一部\n・個人情報保護委員会へ報告済み\n・対象者へ順次個別にメール案内（送信元 lawson_id@mailservice.lawson.jp）\n・問い合わせ：ローソンカスタマーセンター専用受付フォーム https://lawson-faq.lawson.co.jp/",
+      "changes": []
+    },
+    {
+      "date": "2026-10-13",
+      "type": "update",
+      "url": "https://www.lawson.co.jp/contents/cont07/1533174_3310.html",
+      "title": "（同ページ内 10月13日追記）",
+      "facts": "・個別案内メールの送信元に lawson_id@id.lawson.jp を追加",
+      "changes": []
+    },
+    {
+      "date": "2026-10-24",
+      "type": "update",
+      "url": "https://www.lawson.co.jp/contents/cont07/1533174_3310.html",
+      "title": "（同ページ内 10月24日訂正）",
+      "facts": "・訂正：ローソンIDの「メールアドレス」「メルマガ取得情報」は漏えいしていないと判明\n・ローソンIDの「生年月日」は漏えいの可能性があるとして対象に追加\n・訂正後のローソンID漏えい確認項目：氏名、性別、電話番号、住所",
+      "changes": [
+        "info_removed:email",
+        "info_added:birthdate"
+      ]
+    }
+  ],
+  "official_contact": {
+    "phone": "",
+    "url": "https://lawson-faq.lawson.co.jp/"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "本件ページに電話番号なし。すべての続報は同一URL内の追記。カード情報は26件のみ「番号の一部」。10/24の訂正でメールアドレスが対象外になった（info_removed の実例）。"
+  },
+  "first_published": "2026-10-08",
+  "last_updated": "2026-10-24"
+}

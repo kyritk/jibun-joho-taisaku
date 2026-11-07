@@ -1,0 +1,49 @@
+{
+  "id": "rakuten-travel-2026-10",
+  "service_ids": [
+    "rakuten-travel"
+  ],
+  "service_name": "楽天トラベル（海外ホテル予約サイト・多言語予約サイト）",
+  "operator": "楽天グループ株式会社",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "name",
+    "email",
+    "phone",
+    "credit_card_partial",
+    "purchase_history",
+    "other"
+  ],
+  "limited_info_types": {
+    "credit_card_partial": "支払情報 最大約3万6千件（発行者識別番号と下4桁・名義・有効期限）。全桁・セキュリティコードは含まれないと公表"
+  },
+  "other_info_detail": "居住国、社内用識別番号、予約情報（施設名・予約金額等）、同伴者の氏名・居住国。カードは発行者識別番号＋下4桁・名義・有効期限・ブランド区分（全桁・セキュリティコードは含まれない）。国内の楽天トラベル（日本語サイト）が対象かは公式発表上は「海外ホテル予約サイトの一部ページ」「多言語予約サイト」に限定。",
+  "counts": {
+    "headline": 2600000,
+    "wording": "最大約260万件（ログイン者情報）",
+    "breakdown": "事象①：予約者情報 最大約4万件（うち支払情報 最大約3万6千件）、ログイン者情報 最大約260万件。事象②：ログイン顧客 最大約86万件、宿泊施設従業員 最大約4万件"
+  },
+  "card_not_leaked_stated": false,
+  "announcements": [
+    {
+      "date": "2026-10-26",
+      "type": "first",
+      "url": "https://travel.rakuten.co.jp/info/announce/20261026.html",
+      "title": "海外ホテル予約サイトの一部ページならびに多言語予約サイトに関するお詫びとお知らせ",
+      "facts": "・事象①海外ホテル予約サイト：9/10異常検知、9/15原因特定、9/16改修完了\n・事象①対象：予約者情報（氏名、メールアドレス、電話番号、居住国、予約情報、同伴者の氏名・居住国）最大約4万件、うち支払情報 最大約3万6千件；ログイン者情報（氏名、メールアドレス、電話番号）最大約260万件\n・支払情報に含まれるもの：カード発行者識別番号と下4桁、名義、有効期限、国際ブランド区分。含まれないもの：カード番号の全桁、セキュリティコード。パスワード・身分証情報・住所は含まれない\n・事象②多言語予約サイト：10/20不正アクセスの可能性を検知、10/21改修完了。ログイン顧客のメールアドレス 最大約86万件、宿泊施設従業員のアカウント名・メールアドレス 最大約4万件\n・表現：「不正アクセスの対象となったことを確認」\n・対象者へ順次個別の連絡と注意喚起を実施\n・問い合わせ：事象① travel-support@faq.rakuten.co.jp、事象② https://travel.faq.rakuten.net/en-us/s/inquiries",
+      "changes": []
+    }
+  ],
+  "official_contact": {
+    "phone": "",
+    "url": "https://travel.faq.rakuten.net/en-us/s/inquiries"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "「漏えい」ではなく「不正アクセスの対象となったことを確認」という表現。対象は海外ホテル予約サイトの一部ページ・多言語予約サイトで、通常の国内予約利用者が対象かは要確認。"
+  },
+  "first_published": "2026-10-26",
+  "last_updated": "2026-10-26"
+}

@@ -1,0 +1,83 @@
+{
+  "id": "bookoff-2026-10",
+  "service_ids": [
+    "bookoff"
+  ],
+  "service_name": "ブックオフ（オンラインストア・公式アプリ・Web会員）",
+  "operator": "ブックオフコーポレーション株式会社（公表主体はブックオフグループホールディングス株式会社）",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "name",
+    "birthdate",
+    "email",
+    "phone",
+    "address",
+    "credentials",
+    "other"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "性別、職業、ニックネーム、パスワードのハッシュ値、ポイントカード番号、会員番号",
+  "counts": {
+    "headline": 6383279,
+    "wording": "漏えい対象者数 6,383,279人（有効会員6,170,908人・退会会員212,371人）。第1報時点は「最大 約643万件」",
+    "breakdown": "有効会員 6,170,908人／退会会員 212,371人；会員データ数 6,427,735件（会員番号ベース）"
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-10-09",
+      "type": "first",
+      "url": "https://ssl4.eir-parts.net/doc/9278/tdnet/2893077/00.pdf",
+      "title": "不正アクセスによる個人情報漏えいに関するお詫びとお知らせ",
+      "facts": "・2026-10-06に子会社の会員管理システムへの第三者による不正アクセスを確認、会員情報が外部から取得されたことを確認\n・漏えい可能性のある会員データ数：最大 約643万件（会員番号件数、実人数ではない）\n・漏えい可能性のある情報：氏名、生年月日、性別、メールアドレス、電話番号、郵便番号・住所、パスワードのハッシュ値、ポイントカード番号、会員番号\n・クレジットカード情報等の決済情報は当該システムで保有せず対象外\n・外部公開・悪用・書き換えは未確認\n・対象者には調査結果を踏まえ順次個別に連絡\n・窓口：0570-01-2902（ナビダイヤル）10:00〜18:30、フォーム https://www.bookoffgroup.co.jp/contact-us/contact-us-261009/\n・HTML版 https://www.bookoff.co.jp/info/news/2026/post_113.html 、ミラー https://shopping.bookoff.co.jp/information/20261009",
+      "changes": []
+    },
+    {
+      "date": "2026-10-13",
+      "type": "update",
+      "url": "https://shopping.bookoff.co.jp/information/20261013",
+      "title": "不正アクセスによる個人情報漏えいに関するお詫びとお知らせ(第2報)",
+      "facts": "・会員情報は2026-10-04〜10-06に外部へ取得された\n・漏えい対象会員データ数 6,427,735件（会員番号ベース）、漏えい対象者数 6,383,279人（有効会員6,170,908人、退会会員212,371人）\n・対象は国内ブックオフ事業の会員管理システム（オンラインストア・アプリ・Web会員）\n・クレジットカード情報・銀行口座情報は別システムで対象外。本人確認書類画像も対象外\n・2026-10-15から登録メールアドレス宛に個別メール送信開始\n・窓口 0570-01-2902、FAQ PDF https://ssl4.eir-parts.net/doc/9278/ir_material10/287328/00.pdf",
+      "changes": [
+        "status:confirmed->individually_notified",
+        "count_update"
+      ]
+    },
+    {
+      "date": "2026-10-16",
+      "type": "update",
+      "url": "https://shopping.bookoff.co.jp/information/20261016",
+      "title": "（訂正）第2報の一部訂正について",
+      "facts": "・第2報の漏えい可能性情報に「職業」「ニックネーム」が抜けていたため追加\n・件数等その他の内容に変更なし",
+      "changes": []
+    },
+    {
+      "date": "2026-10-23",
+      "type": "update",
+      "url": "https://ssl4.eir-parts.net/doc/9278/ir_material10/288762/00.pdf",
+      "title": "不正アクセスによる個人情報漏えいに関するWEB照会機能の追加および専用フリーダイヤル開設のお知らせ",
+      "facts": "・送信可能なメールアドレスへの個別メール送信を2026-10-22に完了\n・ブックオフ会員サイト内に対象者確認用WEB照会機能を追加（ログイン要）\n・2026-10-22より専用フリーダイヤル 0120-300-663（10:00〜18:30 年中無休）開設",
+      "changes": []
+    },
+    {
+      "date": "2026-11-06",
+      "type": "final",
+      "url": "https://ssl4.eir-parts.net/doc/9278/tdnet/2906882/00.pdf",
+      "title": "不正アクセスによる個人情報漏えいに関するお詫びとお知らせ（第3報）",
+      "facts": "・原因：会員情報システムの一部機能におけるアクセス制御上の問題を第三者に悪用された\n・影響範囲は訂正後第2報から変更なし（6,427,735件／6,383,279人）\n・対象外明記：クレジットカード等決済情報、銀行口座情報、本人確認書類画像、店頭買取時の文字情報、注文時の別配送先\n・個別メールは10-22完了、2026-10-26〜29に公式アプリ通知でも個別案内\n・外部公開・ポイント不正利用・二次被害は未確認。ポイント不正利用が確認された場合は全額補塡\n・窓口 0120-300-663（10:00〜18:30 年中無休）",
+      "changes": []
+    }
+  ],
+  "official_contact": {
+    "phone": "0120-300-663（10:00〜18:30 年中無休）",
+    "url": "https://www.bookoffgroup.co.jp/contact-us/contact-us-261009/"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "bookoff.co.jp のお知らせHTMLは本文がJS描画のため取得不可。内容はTDnet PDFと shopping.bookoff.co.jp のミラーから抽出。会員サイト内に対象者確認用WEB照会機能あり。"
+  },
+  "first_published": "2026-10-09",
+  "last_updated": "2026-11-06"
+}

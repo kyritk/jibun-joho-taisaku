@@ -1,0 +1,58 @@
+{
+  "id": "lindt-2026-10",
+  "service_ids": [
+    "lindt-jp"
+  ],
+  "service_name": "リンツ オンラインショップ・公式アプリ",
+  "operator": "リンツ＆シュプルングリージャパン株式会社",
+  "status": "individually_notified",
+  "leaked_info_types": [
+    "name",
+    "email",
+    "address",
+    "phone",
+    "birthdate",
+    "credentials",
+    "other"
+  ],
+  "limited_info_types": {},
+  "other_info_detail": "会員ID、性別、メルマガ受信設定、登録店舗情報、フリガナ、会員登録日時、最終ログイン日時。パスワードはハッシュ化済み。",
+  "counts": {
+    "headline": 3147377,
+    "wording": "3,147,377件（2026-10-30訂正。当初発表は3,147,469件）",
+    "breakdown": "オンラインショップ・公式アプリ共通会員。退会済み・ゲスト購入者・送り先情報は対象外"
+  },
+  "card_not_leaked_stated": true,
+  "announcements": [
+    {
+      "date": "2026-10-23",
+      "type": "first",
+      "url": "https://www.lindt.jp/contents/chocolat-cafe/notice_20261023/",
+      "title": "委託先事業者への不正アクセスによる個人情報漏えいに関するお詫びとお知らせ",
+      "facts": "・委託先：株式会社フューチャーショップ（ECシステム提供・会員情報管理）\n・2026-10-17 23:02〜10-18 00:16に委託先サーバーへソフトウェア脆弱性を悪用した不正アクセス。10/19に報告、同日侵入経路遮断\n・対象：オンラインショップ・公式アプリ共通の会員情報\n・情報：会員ID、氏名、メールアドレス、住所、電話番号、生年月日、性別、メルマガ受信設定、登録店舗情報、ログインパスワード（ハッシュ化済み）、その他会員情報（フリガナ、会員登録日時、最終ログイン日時等）\n・件数：3,147,469件\n・表現：「取得された／漏えいした」。10/29時点で悪用は未確認\n・対象外：10/18 00:16時点で退会済みの会員、ゲスト購入者、送り先として登録された人、クレジットカード等の支払い情報（カード情報は保存しない仕組み）\n・10/21 16:00オンラインショップ停止。10/26パスワード強制リセット、公式アプリのストア公開停止\n・10/27から登録メールアドレス宛に順次連絡\n・個人情報保護委員会へ委託先と連名報告\n・問い合わせ：0120-713-065（9:00〜21:00、土日祝含む）、privacy-incident-jp@lindt.jp、フォーム https://www.lindt.jp/contents/contact/",
+      "changes": []
+    },
+    {
+      "date": "2026-10-30",
+      "type": "update",
+      "url": "https://www.lindt.jp/contents/chocolat-cafe/notice_20261023/",
+      "title": "（同ページ内 2026-10-30 一部更新および追記）",
+      "facts": "・対象件数を3,147,377件に訂正（同一会員の二重計上）、対象外の範囲を追記",
+      "changes": [
+        "count_update"
+      ]
+    }
+  ],
+  "official_contact": {
+    "phone": "0120-713-065（9:00〜21:00）",
+    "url": "https://www.lindt.jp/contents/contact/"
+  },
+  "review": {
+    "approved": true,
+    "approved_on": "2026-11-07",
+    "approved_by": "Kyri",
+    "notes": "第一報と更新は同一URLに追記。オンラインショップ再開の公式告知は11/7時点で確認できず。"
+  },
+  "first_published": "2026-10-23",
+  "last_updated": "2026-10-30"
+}

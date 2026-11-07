@@ -1,0 +1,17 @@
+{
+  "name": "jibun-joho-taisaku",
+  "version": "0.1.0",
+  "private": true,
+  "description": "じぶんの情報対策 — 使っているサービスの漏えいと、やることだけ",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate.mjs",
+    "build": "node scripts/build.mjs --out dist",
+    "build:preview": "node scripts/build.mjs --out dist --include-drafts",
+    "check": "node scripts/check-dist.mjs dist",
+    "all": "node scripts/validate.mjs && node scripts/build.mjs --out dist && node scripts/check-dist.mjs dist"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

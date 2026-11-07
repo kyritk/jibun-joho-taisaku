@@ -1,0 +1,27 @@
+# PR と push で、データ検証とビルドが通ることを確認する。書き込み権限は持たない（docs/threat-model.md T7）。
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: データ検証
+        run: node scripts/validate.mjs
+      - name: ビルド（approved のみ）
+        run: node scripts/build.mjs --out dist
+      - name: 出力の自己検査（外部リソース・inline script が無いこと）
+        run: node scripts/check-dist.mjs dist
