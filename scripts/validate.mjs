@@ -137,6 +137,8 @@ const checkIncidentDir = (dir, mustBeApproved) => {
       if (!ANN_TYPES.has(a.type)) err(`${where}: announcements[${i}].type が不正 "${a.type}"`);
       if (!/^https:\/\//.test(a.url || '')) err(`${where}: announcements[${i}].url は https の公式URL`);
       checkUrl(a.url, `${where}: announcements[${i}]`);
+      // 自由記述（facts）の中の URL も許可リストのホストだけ（文字として表示されても利用者がコピーして開く）
+      for (const u of String(a.facts || '').match(/https?:\/\/[^\s）」、]+/g) || []) checkUrl(u, `${where}: announcements[${i}].facts`);
       if (i === 0 && a.type !== 'first') err(`${where}: 先頭の announcement は type "first"`);
       if (a.date < prev) err(`${where}: announcements は日付順に並べる`);
       prev = a.date;

@@ -81,10 +81,14 @@
 
   const svcById = Object.fromEntries(services.services.map((s) => [s.id, s]));
   const catByKey = Object.fromEntries(services.categories.map((c) => [c.key, c]));
-  let selected = new Set((load(LS.services, []) || []).filter((id) => svcById[id]));
+  // 端末内の値は型を確かめてから使う（壊れた値で描画が止まらないように）
+  const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+  const loadedServices = load(LS.services, []);
+  let selected = new Set((Array.isArray(loadedServices) ? loadedServices : []).filter((id) => typeof id === 'string' && svcById[id]));
   let done = load(LS.done, {}); if (!isObj(done)) done = {};
   let seen = load(LS.seen, {}); if (!isObj(seen)) seen = {};
-  const lastVisit = load(LS.lastVisit, null);
+  const loadedLastVisit = load(LS.lastVisit, null);
+  const lastVisit = typeof loadedLastVisit === 'string' && DATE_RE.test(loadedLastVisit) ? loadedLastVisit : null;
   const today = new Date().toISOString().slice(0, 10);
   let flash = null; // { kind, text } 次の画面で1回だけ出す
   let totop = null; // やること画面の「先頭へ」ボタン（1画面分より下で表示）
@@ -823,11 +827,13 @@
   }
   function rerender() {
     const view = route();
-    const fn = VIEWS[view] || viewHome;
+    // ハッシュ由来の文字列なので own property だけを見る（"constructor" 等でプロトタイプのメソッドを呼ばない）
+    const known = Object.hasOwn(VIEWS, view);
+    const fn = known ? VIEWS[view] : viewHome;
     clear(app);
     app.append(fn());
-    document.title = TITLES[view] || TITLES[''];
-    const current = VIEWS[view] ? view : '';
+    document.title = (known && TITLES[view]) || TITLES[''];
+    const current = known ? view : '';
     // タブ＝工程。済んだ工程（1・2＝サービスを選んだ、3＝全部済み）は番号の丸を✓に
     const s = summary();
     const stepDone = { services: selected.size > 0, status: selected.size > 0, todo: !!(s.total && !s.open) };

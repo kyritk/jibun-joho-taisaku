@@ -7,6 +7,8 @@ import crypto from 'node:crypto';
 
 const dir = process.argv[2] || 'dist';
 const errors = [];
+// 規定の CSP（scripts/build.mjs の CSP と同じ文字列。片方を変えたら両方を変える）
+const CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; object-src 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'; upgrade-insecure-requests";
 const sriCache = {};
 const sriOf = (file) => (sriCache[file] ||= 'sha384-' + crypto.createHash('sha384').update(fs.readFileSync(path.join(dir, file))).digest('base64'));
 const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
@@ -19,28 +21,37 @@ for (const f of htmlFiles) {
   // CSP meta が head の先頭付近にある
   if (!/<meta http-equiv="Content-Security-Policy"/.test(html)) errors.push(`${rel}: CSP meta が無い`);
   if (!/<meta name="referrer" content="no-referrer">/.test(html)) errors.push(`${rel}: referrer meta が無い`);
-  // inline script（src 無しの <script>）は data block 以外禁止
-  for (const m of html.matchAll(/<script\b([^>]*)>/g)) {
+  // CSP の内容が build.mjs と完全に一致する（弱められていない）
+  if (!html.includes(`<meta http-equiv="Content-Security-Policy" content="${CSP}">`)) errors.push(`${rel}: CSP の内容が規定と違う`);
+  // inline script（src 無しの <script>）は data block 以外禁止。属性値の中の > でタグの切れ目を誤らないよう、引用符つきの属性値をひとまとまりで読む
+  const ATTRS = String.raw`((?:[^>"']|"[^"]*"|'[^']*')*)`;
+  for (const m of html.matchAll(new RegExp(String.raw`<script\b${ATTRS}>`, 'gi'))) {
     const attrs = m[1];
-    const isData = /type="application\/json"/.test(attrs);
-    const hasSrc = /\bsrc="/.test(attrs);
+    const isData = /\btype\s*=\s*"application\/json"/i.test(attrs);
+    const hasSrc = /\bsrc\s*=/i.test(attrs);
     if (!isData && !hasSrc) errors.push(`${rel}: inline script がある (${attrs.trim()})`);
-    if (hasSrc && /src="(https?:)?\/\//.test(attrs)) errors.push(`${rel}: 外部スクリプト (${attrs.trim()})`);
+    if (hasSrc && /\bsrc\s*=\s*["']?(https?:)?\/\//i.test(attrs)) errors.push(`${rel}: 外部スクリプト (${attrs.trim()})`);
+    if (hasSrc && !/\bintegrity\s*=\s*"sha384-/.test(attrs)) errors.push(`${rel}: integrity の無いスクリプト (${attrs.trim()})`);
   }
-  // 外部のスタイル・画像・フォント・iframe
-  for (const m of html.matchAll(/<(link|img|iframe|embed|object|source)\b[^>]*>/g)) {
+  // 埋め込みデータは JSON として読める（エスケープの誤りでアプリが白紙にならない）
+  for (const m of html.matchAll(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/g)) {
+    try { JSON.parse(m[1]); } catch (e) { errors.push(`${rel}: 埋め込み JSON が読めない（${e.message}）`); }
+  }
+  // 外部のスタイル・画像・フォント・音声・動画・iframe
+  for (const m of html.matchAll(new RegExp(String.raw`<(link|img|iframe|embed|object|source|video|audio|track|image|use)\b${ATTRS}>`, 'gi'))) {
     const tag = m[0];
     if (/^<link\b[^>]*rel="canonical"/.test(tag)) continue; // canonical は読み込みではない
-    if (/(href|src)="(https?:)?\/\//.test(tag)) errors.push(`${rel}: 外部リソース ${tag.slice(0, 80)}`);
+    if (/\b(href|src|srcset|poster|xlink:href)\s*=\s*["']?(https?:)?\/\//i.test(tag)) errors.push(`${rel}: 外部リソース ${tag.slice(0, 80)}`);
     if (/^<(iframe|embed|object)/.test(tag)) errors.push(`${rel}: 埋め込み要素 ${tag.slice(0, 60)}`);
   }
   if (/<style\b/.test(html)) errors.push(`${rel}: inline <style> がある（style-src 'self' で遮断される）`);
-  if (/\bon[a-z]+="/.test(html)) errors.push(`${rel}: inline イベントハンドラがある`);
-  if (/\bstyle="/.test(html)) errors.push(`${rel}: style 属性がある（CSPで遮断される）`);
-  // 外部リンクは rel="noopener noreferrer"
-  for (const m of html.matchAll(/<a\b[^>]*href="https?:\/\/[^"]*"[^>]*>/g)) {
+  if (/<[a-z][^>]*\s+on[a-z]+\s*=/i.test(html)) errors.push(`${rel}: inline イベントハンドラがある`);
+  if (/<[a-z][^>]*\s+style\s*=/i.test(html)) errors.push(`${rel}: style 属性がある（CSPで遮断される）`);
+  // 外部リンクは rel="noopener noreferrer"（プロトコル相対 // も外部）
+  for (const m of html.matchAll(/<a\b[^>]*href\s*=\s*["']?(?:https?:)?\/\/[^"'\s>]*["']?[^>]*>/gi)) {
     if (!/rel="noopener noreferrer"/.test(m[0])) errors.push(`${rel}: 外部リンクに rel が無い ${m[0].slice(0, 80)}`);
   }
+  if (/\b(href|src)\s*=\s*["']\/\//i.test(html)) errors.push(`${rel}: プロトコル相対 URL がある`);
   if (/javascript:/i.test(html)) errors.push(`${rel}: javascript: URL がある`);
   // 転送・埋め込み・フォームの経路が無い
   if (/<meta\b[^>]*http-equiv="refresh"/i.test(html)) errors.push(`${rel}: meta refresh がある`);
@@ -68,9 +79,10 @@ for (const f of htmlFiles) {
 for (const f of files.filter((x) => x.endsWith('.js'))) {
   const js = fs.readFileSync(f, 'utf8');
   const rel = path.relative(dir, f);
-  for (const sink of ['innerHTML', 'outerHTML', 'document.write', 'insertAdjacentHTML', 'eval(', 'new Function', 'setHTMLUnsafe']) {
+  for (const sink of ['innerHTML', 'outerHTML', 'document.write', 'insertAdjacentHTML', 'eval(', 'new Function', 'setHTMLUnsafe', 'createContextualFragment', 'DOMParser', 'srcdoc', 'location.href =', 'location.assign(', 'location.replace(']) {
     if (js.includes(sink)) errors.push(`${rel}: 危険なシンク ${sink}`);
   }
+  if (/\bset(?:Timeout|Interval)\(\s*['"`]/.test(js)) errors.push(`${rel}: 文字列引数の setTimeout/setInterval`);
   if (/\bfetch\(\s*['"`]https?:/.test(js)) errors.push(`${rel}: 外部への fetch`);
 }
 // security.txt（RFC 9116）がある

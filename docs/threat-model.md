@@ -136,6 +136,13 @@ GitHub Pages は HTTP ヘッダを設定できないため、CSP は `<meta http
 - [x] ブランチ保護：main への直接push禁止、force push 禁止、CI必須（`gh api` で設定）
 - [x] SECURITY.md（脆弱性の報告先）とプライバシーポリシー（端末内保存の項目、GitHub のログ）
 - [x] 承認フロー：`drafts/` → 目視 → `approved/`。CI は `approved/` だけをビルド
+- [x] 配信物の確認：`upload-pages-artifact` に `include-hidden-files: true`（`.well-known/` を含める）。配置後に `security.txt` が 200 で返ることを deploy ワークフローが確認
+- [x] 埋め込み JSON は `<` を `<` に置き換え（`</script>`・`<!--` 対策）、`check-dist.mjs` が JSON として読めることを検査。公開 JSON の `review` は承認の事実だけ（内部メモは含めない）
+- [x] `build.mjs` 単体でも事案 id・サービス id・status の文字種、出力先が `dist/` 内であること、報道ホストが根拠以外に使われないことを確認（`validate.mjs` との二重防御）
+- [x] `check-dist.mjs`：CSP の内容の完全一致、属性名の大小・引用符の違い、`srcset`/`poster`/`xlink:href`、プロトコル相対 URL、全 `<script src>` の integrity、JS の追加シンクを検査
+- [x] クライアント：画面の選択とタイトルは own property だけを見る。端末内の値（選んだサービス・最終確認日）は型と書式を確かめてから使う
+- [x] `validate.mjs`：事実メモ（facts）の中の URL も許可リストのホストに限る
+- [x] GitHub：Actions の SHA 固定を必須化（`sha_pinning_required`）、未使用の Wiki・Projects を無効化
 - [x] アイコン：`assets/icons/*.svg` を信頼できない入力として扱い、ビルドで `<path>` の `d`・`fill-rule` だけを取り出して HTML 内スプライトにする（外部SVG・data: URI・絵文字は不使用。`check-dist.mjs` が `<use href="#i-…">` 以外と絵文字を検出）
 
 ## 5. 見直しのタイミング
