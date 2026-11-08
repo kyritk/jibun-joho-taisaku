@@ -156,7 +156,9 @@ main > .wrap > * + * { margin-top: var(--s-5); }
 .steps-home li { display: flex; gap: var(--s-3); align-items: flex-start; padding: var(--s-2) 0; border-top: 1px solid var(--divider); line-height: 1.4; }
 .steps-home li:first-child { border-top: 0; }
 .steps-home .num { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--text); color: var(--bg); font-weight: 700; font-size: .875rem; display: inline-flex; align-items: center; justify-content: center; margin-top: 2px; }
-.steps-home .goal .num { background: var(--success); color: #ffffff; }
+/* 終点：塗らない輪郭の丸（現在の状態に見えないように。塗りの●✓は「済み」の印） */
+.steps-home .goal .num { background: transparent; border: 2px solid var(--success); color: var(--success); box-sizing: border-box; }
+.steps-home .goal .num svg.icon { width: 18px; height: 18px; }
 .steps-home .num svg.icon { width: 16px; height: 16px; vertical-align: 0; }
 .steps-home b { display: block; font-size: 1.0625rem; }
 .steps-home small { display: block; font-size: var(--fs-4); color: var(--text-2); line-height: 1.5; }

@@ -315,13 +315,13 @@
       // 空状態：段A＝タグライン＋主ボタン（説明の上）。段B＝工程3段＋終点。段C＝できること・できないこと、最近の公表
       const step = (n, title, note) => el('li', null, el('span', { class: 'num', 'aria-hidden': 'true' }, n), el('span', null, el('b', null, title), el('small', null, note)));
       wrap.append(el('section', { class: 'hero start', 'aria-labelledby': 'h1' },
-        el('h1', { id: 'h1' }, '使っているサービスの漏洩と、やることだけ'),
-        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg wide', href: '#/services' }, icon('layout-grid'), '1 サービスを選ぶ'))));
+        el('h1', { id: 'h1' }, 'サービスの情報漏洩と、やること確認'),
+        el('div', { class: 'btn-row' }, el('a', { class: 'btn lg wide', href: '#/services' }, icon('layout-grid'), '利用中のサービスを選択'))));
       wrap.append(el('ol', { class: 'steps-home', 'aria-label': '全部で3つの工程' },
         step('1', 'サービスを選ぶ', 'チェックを入れるだけ ・ 約2分'),
         step('2', '漏洩を確かめる', '関係ある公表だけが出ます ・ 約1分'),
         step('3', '対策する', '1つずつ「済みにする」 ・ 1件 約1〜15分'),
-        el('li', { class: 'goal' }, el('span', { class: 'num', 'aria-hidden': 'true' }, icon('check')), el('span', null, el('b', null, '今は対策済み'), el('small', null, '続報が出たら、必要な分だけ戻ります')))));
+        el('li', { class: 'goal' }, el('span', { class: 'num', 'aria-hidden': 'true' }, icon('circle-check')), el('span', null, el('b', null, '対策済みの状態になります'), el('small', null, '3つ終わると、ここに着きます。続報が出たら、必要な分だけ戻ります')))));
       wrap.append(el('details', { class: 'fold-c' }, el('summary', null, icon('chevron-down', 'chev'), 'できること・できないこと'),
         el('ul', null,
           el('li', null, 'できること：会社が公表した漏洩のうち、関係あるものだけを表示'),
