@@ -88,11 +88,15 @@ svg.icon.xl { width: 3.5rem; height: 3.5rem; }
 .av.c-fashion { background: var(--c-fashion); } .av.c-recent { background: var(--c-recent); }
 .av.accent { background: var(--accent); color: var(--accent-ink); } .av.success { background: var(--success); } .av.done { background: var(--done); color: var(--done-ink); }
 
-/* ---------- ヘッダーとナビ（4項目、アイコン＋文字。隠しメニューなし） */
+/* ---------- ヘッダーとナビ（タブは工程順の4項目、アイコン＋文字。設定は右上の歯車。隠しメニューなし） */
 .site-header { border-bottom: 1px solid var(--divider); background: var(--surface); }
 .site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); padding-top: var(--s-3); padding-bottom: 0; }
 .brand { font-weight: 700; font-size: 1rem; text-decoration: none; color: var(--text); margin-right: auto; }
 .brand:hover { color: var(--text); }
+.gear { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--text-2); }
+.gear svg.icon { width: 24px; height: 24px; vertical-align: 0; }
+.gear:hover { color: var(--text); background: var(--sunken); }
+.gear[aria-current="page"] { color: var(--accent); background: var(--accent-tint); }
 nav.primary { display: flex; width: 100%; }
 nav.primary a { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px; min-height: 56px; padding: var(--s-2) var(--s-1) var(--s-2); text-decoration: none; font-weight: 700; font-size: .75rem; line-height: 1.3; color: var(--text-2); border-bottom: 4px solid transparent; }
 nav.primary a svg.icon { width: 26px; height: 26px; vertical-align: 0; }

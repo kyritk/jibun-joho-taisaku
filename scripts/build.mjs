@@ -105,7 +105,8 @@ const CSP = [
 
 function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '' }) {
   const fullTitle = title ? `${title}｜${SITE_NAME}` : SITE_NAME;
-  const nav = [['', 'ホーム', 'home'], ['todo', 'やること', 'list-check'], ['services', 'サービス', 'layout-grid'], ['settings', '設定', 'settings']]
+  // タブは工程順（ホーム → 1 サービス → 2 いまの状況 → 3 やること）。設定は右上の歯車（文字なし、aria-label）
+  const nav = [['', 'ホーム', 'home'], ['services', 'サービス', 'layout-grid'], ['status', 'いまの状況', 'table'], ['todo', 'やること', 'list-check']]
     .map(([k, label, ic]) => `<a href="${rel}#/${k}"${current === k && withApp ? ' aria-current="page"' : ''}>${icon(ic)}${label}</a>`).join('');
   return `<!doctype html>
 <html lang="ja">
@@ -129,6 +130,7 @@ ${SPRITE}
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="${rel}#/">${esc(SITE_NAME)}</a>
+    <a class="gear" href="${rel}#/settings" aria-label="設定"${current === 'settings' && withApp ? ' aria-current="page"' : ''}>${icon('settings')}</a>
     <nav class="primary" aria-label="主な画面">${nav}</nav>
   </div>
 </header>
