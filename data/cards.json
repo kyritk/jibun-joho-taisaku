@@ -315,6 +315,7 @@
     {
       "key": "id_document",
       "label": "本人確認書類の画像",
+      "chip_label": "本人確認書類",
       "matches": [
         "id_document_image"
       ],

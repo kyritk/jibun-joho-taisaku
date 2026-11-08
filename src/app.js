@@ -260,7 +260,7 @@
     const ol = el('ol', { class: 'journey', 'aria-label': '全部で3つの工程' });
     steps.forEach((st, i) => {
       const isCur = st.n === cur;
-      const isDone = !isCur && (st.n < cur || (st.n === 3 && s.total && !s.open) || (st.n === 1 && selected.size > 0));
+      const isDone = !isCur && (st.n < cur || (st.n === 3 && s.total && !s.open) || (st.n === 1 && selected.size > 0) || (st.n === 2 && cur === 0 && selected.size > 0));
       const dot = el('span', { class: 'dot', 'aria-hidden': 'true' }, isDone ? icon('check') : String(st.n));
       ol.append(el('li', { class: isCur ? 'cur' : isDone ? 'done' : '', 'aria-current': isCur ? 'step' : null },
         el('a', { href: st.href }, dot, el('span', { class: 'lbl' }, st.label), isCur ? el('span', { class: 'sr-only' }, '（いまここ）') : null)));
@@ -275,17 +275,19 @@
     const inc = el('button', { type: 'button', class: 'linklike' }, `関係ある漏洩 ${s.active.length}`);
     inc.addEventListener('click', onIncidents);
     const done = el('a', { href: '#/status?go=sec-log' }, `対策済み ${s.total - s.open}`);
-    return el('p', { class: 'hero-meta' }, svc, ' ・ ', inc, ' ・ ', done, ' ・ ', `最終確認 ${fmtMd(today)}`);
+    const p = el('p', { class: 'hero-meta' }, svc, ' ・ ', inc, ' ・ ', done);
+    // 前回からの変化（段C）：青枠のバナーにせず内訳の2行目に。再確認の会社は下の行に△で出る
+    if (lastVisit) {
+      const parts = [];
+      if (s.newIncidents.length) parts.push(`新しい公表 ${s.newIncidents.length}`);
+      if (s.unseen) parts.push(`再確認 ${s.unseen}`);
+      p.append(el('br'), `前回 ${fmtMd(lastVisit)}`, parts.length ? `から：${parts.join(' ・ ')}` : '');
+    }
+    return p;
   }
   // 次に起きること（段C）：1行の要約を見出しにした折りたたみ
-  function nextWhatNode() {
-    return el('details', { class: 'fold-c' },
-      el('summary', null, icon('chevron-down', 'chev'), '次に起きること（全部済ませると「今は対策済み」。続報が出ると必要な分だけ戻ります）'),
-      el('ol', null,
-        el('li', null, '全部済ませると「今は対策済み」になります'),
-        el('li', null, '続報が出ると、必要な分だけ「再確認」で戻ります'),
-        el('li', null, 'お知らせは届きません。ときどき開いてください')));
-  }
+  // 次に起きること（段C）：要約で足りるので畳まず1行
+  const nextWhatNode = () => el('p', { class: 'caption' }, '続報が出ると、必要な分だけ「再確認」で戻ります。お知らせは届かないので、ときどき開いてください。');
   // 最近の公表（段C）：箱なし、13px、状態は文字
   function recentNode(open) {
     const recent = [...incidents].sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1)).slice(0, 3);
@@ -299,33 +301,33 @@
   // 関係ある漏洩の1行（段B）：丸＋事案名＋13px補足＋件数。全部済んだ事案は灰の通常ウェイト。チップは出さない（事案別ページとやることに残す）
   function incidentRow(inc, rows) {
     const list = rowsOf(rows, inc);
-    const n = list.filter((x) => x.isDone).length;
+    const open = list.filter((x) => !x.isDone).length;
+    const re = list.filter((x) => x.reopened).length;
     const denied = inc.status === 'denied';
-    const allDone = !denied && n === list.length;
+    const allDone = !denied && !open;
     const first = inc.announcements[0];
     const last = inc.announcements[inc.announcements.length - 1];
-    const sub = denied ? 'その後「漏洩はなかった」と公表' : allDone ? '対策済み' : `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}${inc.announcements.length > 1 ? ` ・ 第${inc.announcements.length}報 ${fmtMd(last.date)}` : ''}`;
-    const cnt = denied ? el('span', { class: 'cnt ok' }, '取り下げ') : allDone ? el('span', { class: 'cnt ok' }, `${n} / ${list.length}`) : el('span', { class: 'cnt' }, el('b', null, String(n)), ` / ${list.length}`);
-    return el('li', { class: allDone || denied ? 'is-done' : '' }, el('a', { href: denied ? `./incidents/${encodeURIComponent(inc.id)}/` : '#/todo' },
+    const sub = denied ? 'その後「漏洩はなかった」と公表' : `${fmtMd(first.date)} ${STATUS_LABEL[inc.status]}${inc.announcements.length > 1 ? ` ・ 第${inc.announcements.length}報 ${fmtMd(last.date)}` : ''}`;
+    // 右端は状態語だけ。件数は段Aが持つ（共通の行動を会社ごとに数え直すと合計が合わない）
+    const cnt = denied ? el('span', { class: 'cnt ok' }, '取り下げ') : allDone ? el('span', { class: 'cnt ok' }, '対策済み') : re ? el('span', { class: 'cnt re' }, icon('alert-triangle'), `再確認 ${re}`) : el('span', { class: 'cnt' }, '未対応');
+    const hasCo = list.some((x) => x.card.scope === 'service' && !x.isDone);
+    const href = denied ? `./incidents/${encodeURIComponent(inc.id)}/` : hasCo ? `#/todo?go=co-${inc.id}` : '#/todo';
+    return el('li', { class: allDone || denied ? 'is-done' : '' }, el('a', { href },
       avatarFor(serviceOf(inc), 'sm'), el('span', { class: 'nm' }, shortName(inc), el('small', null, sub)), cnt, icon('chevron-down', 'chev')));
   }
   function viewHome() {
     const s = summary();
     const wrap = el('div', { class: 'wrap' });
     if (flash) { wrap.append(banner(flash.kind, flash.kind === 'success' ? 'circle-check' : 'info-circle', el('p', null, flash.text))); flash = null; }
-    else if (selected.size && (s.newIncidents.length || s.unseen)) {
-      const parts = [];
-      if (s.newIncidents.length) parts.push(`新しい公表 ${s.newIncidents.length}件`);
-      if (s.unseen) parts.push(`再確認 ${s.unseen}件`);
-      wrap.append(banner('info', 'info-circle', el('p', null, `前回（${fmtMd(lastVisit)}）から：${parts.join('、')}`), el('a', { href: '#/todo' }, 'やることを見る')));
-    }
 
     // 段B：関係ある漏洩（罫線の行）。段Cの「関係ある漏洩 N」を押すとここへ
     let mineSec = null;
     if (selected.size && s.mine.length) {
       const ul = el('ul', { class: 'inc-rows' });
       for (const inc of orderIncidents(s.mine, s.rows)) ul.append(incidentRow(inc, s.rows));
-      mineSec = el('section', { 'aria-labelledby': 'mine-h', id: 'mine' }, el('h2', { id: 'mine-h', class: 'sec', tabindex: '-1' }, '関係ある漏洩'), ul);
+      const allDone = s.mine.every((inc) => inc.status === 'denied' || rowsOf(s.rows, inc).every((x) => x.isDone));
+      const body = allDone && s.mine.length > 1 ? el('details', { class: 'fold-c' }, el('summary', null, icon('chevron-down', 'chev'), `${s.mine.length}社とも対策済み`), ul) : ul;
+      mineSec = el('section', { 'aria-labelledby': 'mine-h', id: 'mine' }, el('h2', { id: 'mine-h', class: 'sec', tabindex: '-1' }, '関係ある漏洩'), body);
     }
     const toMine = () => { if (mineSec) { mineSec.scrollIntoView({ block: 'start' }); mineSec.querySelector('h2').focus(); } };
 
@@ -349,7 +351,7 @@
       return wrap;
     }
 
-    wrap.append(journeyNode(s.open > 0 || !s.total ? 2 : 3, s));
+    wrap.append(journeyNode(0, s));
     if (s.open > 0) {
       // 段A：状態の箱（1画面に1つ）。見出し＋残り件数（最大の数字）＋主ボタン。内訳は段Cの1行
       wrap.append(el('section', { class: 'hero todo', 'aria-labelledby': 'h1' },
@@ -366,7 +368,7 @@
     }
     if (mineSec) wrap.append(mineSec);
     wrap.append(nextWhatNode());
-    wrap.append(recentNode(true));
+    wrap.append(recentNode(false));
     return wrap;
   }
 
@@ -402,6 +404,43 @@
     return ev.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   }
   const tlItem = (date, svc, text) => el('li', null, el('span', { class: 'd' }, fmtMd(date)), svc ? avatarFor(svc, 'xxs') : null, el('span', null, text));
+  // マトリックス（段B。docs/ux-matrix-research.md §4）：行＝情報の種類（先頭は「ニセのメール・SMS」、緊急度順）、列＝公表のあった会社、セル＝形＋文字の状態
+  // ○△×は対応表の読み方（可・一部・不可）と衝突するので、セルには必ず文字を添える。数字は右端の行合計だけ（共通の行動を会社ごとに数えると合計が合わない）
+  // <table>＋th scope＋role="region" tabindex="0" の包みで横スクロール（Roselli、WCAG 1.4.10）。先頭列は固定（CSS）
+  function matrixNode(s, types) {
+    const cols = orderIncidents(s.active, s.rows);
+    const lines = [{ icon: cards.always_first_card.icon || 'mail-x', label: 'ニセのメール・SMS', urgency: 0, rows: s.rows.filter((r) => !r.infoType), once: true, go: () => 'sec-once' }];
+    for (const ts of types) {
+      lines.push({ icon: ts.t.icon, label: ts.t.chip_label || ts.t.label, urgency: ts.t.urgency, rows: ts.list, once: !ts.serviceScoped,
+        go: (inc) => (ts.serviceScoped ? (ts.list.some((r) => r.incs.includes(inc) && !r.isDone) ? `co-${inc.id}` : 'sec-service') : ts.open ? `th-${ts.t.key}` : 'sec-once') });
+    }
+    const cellNode = (line, inc) => {
+      const mine = line.rows.filter((r) => r.incs.includes(inc));
+      if (!mine.length) return el('td', null, el('span', { class: 'mx-na', 'aria-hidden': 'true' }, '—'), el('span', { class: 'sr-only' }, '対象外'));
+      const st = mine.some((r) => r.reopened) ? 're' : mine.some((r) => !r.isDone) ? 'open' : 'done';
+      const word = st === 're' ? '再確認' : st === 'open' ? '未対応' : '済み';
+      return el('td', null, el('a', { class: `mx-cell st-${st}`, href: `#/todo?go=${line.go(inc)}`, 'aria-label': `${shortName(inc)}の${line.label}：${word}` },
+        icon(st === 're' ? 'alert-triangle' : st === 'open' ? 'ring' : 'circle-check'), el('span', { 'aria-hidden': 'true' }, word)));
+    };
+    const thead = el('thead', null, el('tr', null, el('th', { scope: 'col', class: 'rh' }, '種類＼会社'),
+      ...cols.map((inc) => el('th', { scope: 'col' }, avatarFor(serviceOf(inc), 'sm'), el('span', { class: 'co' }, shortName(inc)))),
+      el('th', { scope: 'col', class: 'tot' }, '未対応')));
+    const tbody = el('tbody');
+    for (const line of lines) {
+      const open = line.rows.filter((r) => !r.isDone).length;
+      tbody.append(el('tr', { class: open ? '' : 'is-done' },
+        el('th', { scope: 'row', class: 'rh' }, icon(line.icon, line.urgency === 1 ? 'red' : ''), line.label, el('small', null, line.once ? '1回で全社' : '会社ごと')),
+        ...cols.map((inc) => cellNode(line, inc)),
+        open ? el('td', { class: 'tot' }, el('b', null, String(open))) : el('td', { class: 'tot ok' }, '済み')));
+    }
+    const table = el('table', { class: 'mx' }, el('caption', { class: 'sr-only' }, '会社ごとの、漏れたおそれのある情報と対策の状態'), thead, tbody);
+    const legend = el('p', { class: 'mx-legend', 'aria-hidden': 'true' },
+      el('span', { class: 'st-open' }, icon('ring'), '未対応'), el('span', null, icon('circle-check'), '対策済み'),
+      el('span', { class: 'st-re' }, icon('alert-triangle'), '再確認（続報）'), el('span', null, '— その会社では漏れていない'));
+    return el('section', { id: 'sec-types', 'aria-labelledby': 'types-h' },
+      el('div', { class: 'inc-head' }, el('div', { class: 'ttl' }, el('h2', { id: 'types-h', tabindex: '-1' }, 'どの会社から、何が漏れたか'), el('span', { class: 'sub' }, '緊急度の高い順。会社の公表に基づく。セルを押すと、やることの該当箇所へ'))),
+      el('div', { class: 'mx-wrap', role: 'region', 'aria-labelledby': 'types-h', tabindex: '0' }, table), legend);
+  }
   function viewStatus() {
     const s = summary();
     const wrap = el('div', { class: 'wrap' });
@@ -421,7 +460,7 @@
     if (types.length) {
       const pub = el('button', { type: 'button', class: 'linklike' }, `${pubSvc.length}社が公表`);
       pub.addEventListener('click', goTo('sec-svc'));
-      const meta = el('p', { class: 'hero-meta' }, svcBtn, 'のうち ', pub, ' ・ ', el('a', { href: '#/todo' }, `対策済み ${s.total - s.open} / ${s.total}`), ' ・ ', `最終確認 ${fmtMd(today)}`);
+      const meta = el('p', { class: 'hero-meta' }, svcBtn, 'のうち ', pub, ' ・ ', el('a', { href: '#/todo' }, `対策済み ${s.total - s.open} / ${s.total}`), lastVisit ? [' ・ ', `前回 ${fmtMd(lastVisit)}`] : null);
       const btn = s.open > 0
         ? el('a', { class: 'btn lg wide', href: '#/todo' }, 'やることへ', el('small', null, `残り ${s.open}件`))
         : el('a', { class: 'btn secondary', href: '#/todo' }, '終わったやることを見る');
@@ -434,24 +473,12 @@
         el('p', { class: 'hero-lab' }, 'いまの状況'),
         el('div', { class: 'hero-head' }, el('span', { class: 'av big success', 'aria-hidden': 'true' }, icon('circle-check')), el('h1', { id: 'h1', class: 'long' }, `選んだ${selected.size}サービスに、公表された漏洩はありません`)),
         el('div', { class: 'btn-row' }, el('a', { class: 'btn secondary', href: '#/services' }, 'サービスを追加する')),
-        el('p', { class: 'hero-meta' }, svcBtn, ' ・ ', `最終確認 ${fmtMd(today)}`, ' ・ 新しい公表があれば、ここに出ます')));
+        el('p', { class: 'hero-meta' }, svcBtn, lastVisit ? [' ・ ', `前回 ${fmtMd(lastVisit)}`] : null, ' ・ 新しい公表があれば、ここに出ます')));
     }
 
-    // 段B：漏れたおそれのある情報（種類ごとに1行。緊急度順。会社の丸＋公表日、右端に未対応の数）
+    // 段B：マトリックス（種類×会社）
     if (types.length) {
-      const ul = el('ul', { class: 'inc-rows' });
-      for (const ts of types) {
-        const latest = ts.incs.map((i) => i.first_published).reduce((a, b) => (a > b ? a : b));
-        const avs = el('span', { class: 'avs', 'aria-hidden': 'true' }, ...ts.incs.slice(0, 3).map((inc) => avatarFor(serviceOf(inc), 'xs')));
-        const sub = el('small', null, avs, ' ', ts.incs.length > 1 ? `${ts.incs.length}社` : shortName(ts.incs[0]), ` ・ ${fmtMd(latest)} 公表`);
-        const cnt = ts.open ? el('span', { class: 'cnt' + (ts.reopened ? ' re' : '') }, ts.reopened ? '再確認 ' : '未対応 ', el('b', null, String(ts.open))) : el('span', { class: 'cnt ok' }, '対策済み');
-        const go = ts.serviceScoped ? 'sec-service' : ts.open ? `th-${ts.t.key}` : 'sec-once';
-        ul.append(el('li', { class: ts.open ? '' : 'is-done' }, el('a', { href: `#/todo?go=${go}` },
-          icon(ts.t.icon, 'ti' + (ts.t.urgency === 1 ? ' red' : '')), el('span', { class: 'nm' }, ts.t.label, sub), cnt, icon('chevron-down', 'chev'))));
-      }
-      wrap.append(el('section', { id: 'sec-types', 'aria-labelledby': 'types-h' },
-        el('div', { class: 'inc-head' }, el('div', { class: 'ttl' }, el('h2', { id: 'types-h', tabindex: '-1' }, '漏れたおそれのある情報'), el('span', { class: 'sub' }, '緊急度の高い順。会社の公表に基づく。対象かは会社からの連絡で確認'))),
-        ul));
+      wrap.append(matrixNode(s, types));
       // 段C：漏れていないと公表されたもの（肯定文）
       const notLeaked = s.active.filter((i) => i.card_not_leaked_stated === true);
       if (notLeaked.length) wrap.append(el('p', { class: 'caption' }, '漏れていないと公表：クレジットカード情報（', notLeaked.map(shortName).join('、'), '）'));
@@ -532,7 +559,7 @@
       const ordered = orderIncidents(s.active, s.rows);
       const sorted = [...svcRows].sort((a, b) => ordered.indexOf(a.incs[0]) - ordered.indexOf(b.incs[0]));
       wrap.append(listSection('service', '会社ごとにやること', 'パスワードと二段階認証は、サービスごとに必要です', sorted, rows, (x) => x.incs[0],
-        (inc) => el('li', { class: 'co-head' }, avatarFor(serviceOf(inc), 'xs'), shortName(inc))));
+        (inc) => el('li', { class: 'co-head', id: `co-${inc.id}` }, avatarFor(serviceOf(inc), 'xs'), shortName(inc))));
     }
     // 取り下げられた事案（段C）
     const denied = s.mine.filter((i) => i.status === 'denied');
