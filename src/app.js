@@ -302,6 +302,8 @@
     const s = summary();
     const wrap = el('div', { class: 'wrap' });
     if (flash) { wrap.append(banner(flash.kind, flash.kind === 'success' ? 'circle-check' : 'info-circle', el('p', null, flash.text))); flash = null; }
+    // 段C：偽の「おわび」メールや入力を求めるツールと見分けるための1行（13px）
+    wrap.append(el('p', { class: 'caption trust' }, 'このサイトはメールもSMSも送りません。入力欄はありません。'));
 
     // 段B：関係ある漏洩（罫線の行）。段Cの「関係ある漏洩 N」を押すとここへ
     let mineSec = null;
