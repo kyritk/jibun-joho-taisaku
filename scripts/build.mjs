@@ -32,20 +32,31 @@ const readDir = (dir, approved) => {
 const cards = read('data/cards.json');
 const services = read('data/services.json');
 const domains = read('data/official-domains.json');
-const allowedHosts = new Set(domains.hosts.map((h) => h.host));
+const allowedHosts = new Map(domains.hosts.map((h) => [h.host, h]));
 const incidents = [...readDir('approved', true), ...(includeDrafts ? readDir('drafts', false) : [])]
   .sort((a, b) => (a.last_updated < b.last_updated ? 1 : -1));
+// validate.mjs と二重に確認する（build 単体で実行されてもパスやクラス名に想定外の文字が入らない）
+const SAFE_ID = /^[a-z0-9-]+$/;
+for (const inc of incidents) {
+  if (!SAFE_ID.test(String(inc.id))) throw new Error(`incident id が不正: ${JSON.stringify(inc.id)}`);
+  for (const s of inc.service_ids || []) if (!SAFE_ID.test(String(s))) throw new Error(`incident ${inc.id}: service_id が不正: ${JSON.stringify(s)}`);
+  if (!/^[a-z_]+$/.test(String(inc.status))) throw new Error(`incident ${inc.id}: status が不正`);
+}
+// 公開 JSON に入れる review は承認の事実だけ（内部の判断メモ notes は出さない）
+const publicIncident = ({ _approved, review, ...i }) => ({ ...i, review: review ? { approved: review.approved, approved_on: review.approved_on, approved_by: review.approved_by } : review });
 const today = new Date().toISOString().slice(0, 10);
 
 // ---------- 安全なHTML生成（すべての動的値はここを通す）
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-const safeUrl = (u, where) => {
+const safeUrl = (u, where, { allowMedia = false } = {}) => {
   const parsed = new URL(u); // 不正なら例外でビルド失敗
   if (parsed.protocol !== 'https:') throw new Error(`${where}: https 以外のURL ${u}`);
-  if (!allowedHosts.has(parsed.hostname)) throw new Error(`${where}: 許可リストに無いホスト ${parsed.hostname}`);
+  const entry = allowedHosts.get(parsed.hostname);
+  if (!entry) throw new Error(`${where}: 許可リストに無いホスト ${parsed.hostname}`);
+  if (entry.kind === 'media' && !allowMedia) throw new Error(`${where}: 報道のURLはカードの根拠にしか使えない ${parsed.hostname}`);
   return esc(parsed.href);
 };
-const ext = (u, label, where) => `<a href="${safeUrl(u, where)}" target="_blank" rel="noopener noreferrer">${esc(label || u)}</a>`;
+const ext = (u, label, where, opts) => `<a href="${safeUrl(u, where, opts)}" target="_blank" rel="noopener noreferrer">${esc(label || u)}</a>`;
 const fmtDate = (d) => { const [y, m, dd] = d.split('-'); return `${y}年${Number(m)}月${Number(dd)}日`; };
 const fmtMd = (d) => { const [, m, dd] = d.split('-'); return `${Number(m)}月${Number(dd)}日`; };
 
@@ -174,7 +185,7 @@ function contactHtml(key, where) {
   return s + '</div></div>';
 }
 function sourcesHtml(keys, where) {
-  return `<details><summary>${icon('file-text')}根拠を見る（公的機関の資料）</summary><ul>` + keys.map((k) => { const s = cards.sources[k]; return `<li>${s.url ? ext(s.url, s.title, where) : esc(s.title)}</li>`; }).join('') + '</ul></details>';
+  return `<details><summary>${icon('file-text')}根拠を見る（公的機関の資料）</summary><ul>` + keys.map((k) => { const s = cards.sources[k]; return `<li>${s.url ? ext(s.url, s.title, where, { allowMedia: true }) : esc(s.title)}</li>`; }).join('') + '</ul></details>';
 }
 // やり方：番号つき手順（steps）が無ければ文章（detail）。禁止は赤い○斜線つきの1行
 function howHtml(card) {
@@ -298,7 +309,7 @@ function aboutPage() {
 <h2>表示する情報の根拠</h2>
 <ul>
 <li>事案：企業の公式発表（プレスリリース・お知らせページ）だけを根拠にし、開発者が目視で照合したものだけを公開します。まとめサイトの文章は転載しません。</li>
-<li>やること：${Object.values(cards.sources).map((s) => s.url ? ext(s.url, s.title, 'about') : esc(s.title)).join('、')}</li>
+<li>やること：${Object.values(cards.sources).map((s) => s.url ? ext(s.url, s.title, 'about', { allowMedia: true }) : esc(s.title)).join('、')}</li>
 <li>電話番号・URL：公的機関と企業の公式ページで確認したものだけを表示します。企業の通知メールに書かれたリンクや番号は転記しません。</li>
 </ul>
 <h2>本物のURL</h2>
@@ -356,8 +367,9 @@ function faqPage() {
 
 function appPage() {
   const rel = './';
-  const data = { generated_at: today, include_drafts: includeDrafts, repo_url: REPO_URL, cards, services, incidents };
-  const dataJson = JSON.stringify(data).replace(/<\//g, '<\\/').replace(/<!--/g, '<\\!--');
+  const data = { generated_at: today, include_drafts: includeDrafts, repo_url: REPO_URL, cards, services, incidents: incidents.map((i) => ({ ...publicIncident(i), _approved: i._approved })) };
+  // データブロックの中で </script> や <!-- が現れないよう、< を JSON として有効な < に置き換える
+  const dataJson = JSON.stringify(data).replace(/</g, '\\u003c');
   return page({ rel, title: '', description: TAGLINE + ' 使っているサービスを選ぶだけで、関係のある情報漏洩と、公的機関の根拠つきの「やること」だけが揃います。', body: '', canonical: '', withApp: true, dataJson, current: '' });
 }
 
@@ -408,7 +420,8 @@ function makeIconPng(size) {
 
 // ---------- 書き出し
 const write = (relPath, content) => {
-  const p = path.join(outDir, relPath);
+  const p = path.resolve(outDir, relPath);
+  if (!p.startsWith(outDir + path.sep)) throw new Error(`出力先が ${outDir} の外: ${relPath}`);
   fs.mkdirSync(path.dirname(p), { recursive: true });
   fs.writeFileSync(p, content);
 };
@@ -434,7 +447,7 @@ write('app.js', APP_JS);
     '',
   ].join('\n'));
 }
-write('data.json', JSON.stringify({ generated_at: today, cards, services, incidents: incidents.map(({ _approved, ...i }) => i) }, null, 0));
+write('data.json', JSON.stringify({ generated_at: today, cards, services, incidents: incidents.map(publicIncident) }, null, 0));
 write('icon.svg', ICON_SVG);
 write('icon-180.png', makeIconPng(180));
 write('icon-512.png', makeIconPng(512));

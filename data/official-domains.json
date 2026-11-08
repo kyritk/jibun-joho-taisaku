@@ -19,6 +19,7 @@
     { "host": "atmarkit.itmedia.co.jp", "kind": "media", "reason": "@IT 記事（カードの根拠としてのみ）" },
 
     { "host": "share.timescar.jp", "kind": "company", "reason": "タイムズカー公式" },
+    { "host": "inquiry.timescar.jp", "kind": "company", "reason": "タイムズカー公式の問い合わせフォーム（退会者用）。公式発表に記載" },
     { "host": "corp.timescar.jp", "kind": "company", "reason": "タイムズモビリティ" },
     { "host": "www.park24.co.jp", "kind": "company", "reason": "パーク24" },
     { "host": "skyticket.jp", "kind": "company", "reason": "skyticket 公式" },

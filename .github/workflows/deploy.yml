@@ -39,6 +39,7 @@ jobs:
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
+          include-hidden-files: true # .well-known/security.txt を含める（既定では . 始まりが除外される）
 
   deploy:
     needs: build
@@ -53,3 +54,12 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+      - name: 配信の確認（security.txt が 200 で返る）
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          for i in 1 2 3 4 5 6; do
+            if curl -fsS -o /dev/null "${PAGE_URL%/}/.well-known/security.txt"; then echo "ok"; exit 0; fi
+            sleep 10
+          done
+          echo "security.txt が配信されていない"; exit 1
