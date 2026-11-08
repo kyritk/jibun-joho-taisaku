@@ -36,7 +36,7 @@ SOFTWARE.
 
 ## 自作アイコン（`assets/icons/` のうち、先頭にコメント `custom:` があるファイル）
 
-`ring.svg`、`bank.svg`、`store.svg`、`mynumber.svg`、`mail-x.svg` はこのリポジトリのために描いたもので、コードと同じ AGPL-3.0 です。
+`ring.svg`、`bank.svg`、`store.svg`、`mynumber.svg`、`mail-x.svg`、`table.svg` はこのリポジトリのために描いたもので、コードと同じ AGPL-3.0 です。
 
 ## 使っていないもの
 

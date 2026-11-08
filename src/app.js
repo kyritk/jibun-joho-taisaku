@@ -852,7 +852,7 @@
     app.append(fn());
     document.title = TITLES[view] || TITLES[''];
     const current = VIEWS[view] ? view : '';
-    for (const a of document.querySelectorAll('nav.primary a')) {
+    for (const a of document.querySelectorAll('nav.primary a, header a.gear')) {
       const target = (a.getAttribute('href').split('#')[1] || '').replace(/^\//, '');
       if (target === current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
     }
