@@ -313,6 +313,7 @@ details.fold-rows.done .task-list { border-top: 1px solid var(--divider); }
 .task-item + .task-item { border-top: 1px solid var(--divider); }
 .type-head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) 0 var(--s-1); font-size: var(--fs-4); font-weight: 700; color: var(--text-2); }
 .type-head svg.icon { width: 1.25rem; height: 1.25rem; }
+.type-head svg.icon.red { color: var(--danger); }
 /* 会社の小見出し（「会社ごとにやること」の中。段C） */
 .co-head { display: flex; align-items: center; gap: var(--s-2); padding: var(--s-3) 0 var(--s-1); font-size: var(--fs-4); font-weight: 700; color: var(--text-2); }
 /* 行の出所：会社の丸を重ねて並べる（3つまで）＋「3社」 */
@@ -324,7 +325,8 @@ details.fold-rows.done .task-list { border-top: 1px solid var(--divider); }
 .type-head .tag { margin-left: var(--s-1); }
 .task-row { display: flex; align-items: center; gap: var(--s-3); width: 100%; min-height: 52px; padding: var(--s-2) 0; background: transparent; border: 0; text-align: left; cursor: pointer; color: var(--text); }
 .task-row:hover { background: var(--sunken); }
-.task-row .st { width: 32px; height: 32px; flex: none; vertical-align: 0; color: var(--accent); }
+/* 行の印は例外だけ（再確認△橙・対策済み✓）。題名の先頭に文字と同じ大きさで置く。未対応に印は置かない */
+.task-row .row-title .st { width: 1.25em; height: 1.25em; vertical-align: -.25em; margin-right: .3em; }
 .task-row.is-done .st { color: var(--done); }
 .task-row.is-recheck .st { color: var(--warning-fill); }
 .task-row .row-main { flex: 1 1 auto; min-width: 0; }
