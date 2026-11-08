@@ -125,7 +125,6 @@
     for (const k of leaked) if (!covered.has(k)) ul.append(el('li', { class: 'chip plain' }, INFO_LABEL[k] || k));
     return ul;
   }
-  const statusShape = (x) => icon(x.isDone ? 'circle-check' : x.reopened ? 'alert-triangle' : 'ring', 'st');
 
   // ---------- カードの計算（並び：先頭カード → 緊急度順）
   function reopenDate(inc, card, infoType) {
@@ -530,7 +529,7 @@
     const nCo = s.active.length;
     if (onceRows.length) {
       wrap.append(listSection('once', '1回やれば済むこと', nCo > 1 ? `${nCo}社に共通。1回「済みにする」と全部に反映されます` : null, onceRows, rows, (x) => x.infoType,
-        (t) => el('li', { class: 'type-head', id: `th-${t.key}` }, icon(t.icon), `${t.label}が漏れたとき`, t.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null)));
+        (t) => el('li', { class: 'type-head', id: `th-${t.key}` }, icon(t.icon, t.urgency === 1 ? 'red' : ''), `${t.label}が漏れたとき`, t.needs_research ? el('span', { class: 'tag neutral' }, '根拠を調査中') : null)));
     }
     if (svcRows.length) {
       const ordered = orderIncidents(s.active, s.rows);
@@ -612,16 +611,17 @@
     // 補足：出所（once で2社以上、または once の1社）＋ 状態 ＋ 所要時間。service は会社の小見出しの下にあるので出所は省く
     const metaParts = [];
     const showSrc = x.card.scope !== 'service';
-    const reason = x.isDone ? `対策済み ・ ${fmtMd(x.doneOn)}` : x.reopened ? (x.newIncs.length ? `${joinNames(x.newIncs)}が加わりました` : `${fmtMd(x.reopenDate)}の続報があります`) : null;
+    // 加わった会社が出所の全部なら会社名を繰り返さない（「スカイチケット ・ スカイチケットが加わりました」を避ける）
+    const reason = x.isDone ? `対策済み ・ ${fmtMd(x.doneOn)}` : x.reopened ? (x.newIncs.length ? (showSrc && x.newIncs.length === x.incs.length ? '新しく加わりました' : `${joinNames(x.newIncs)}が加わりました`) : `${fmtMd(x.reopenDate)}の続報があります`) : null;
     if (reason) metaParts.push(reason);
     if (!x.isDone) metaParts.push(`約${x.card.minutes}分`);
     const meta = el('span', { class: 'row-meta' });
     if (showSrc) meta.append(sourcesOf(x), ' ・ ');
     meta.append(metaParts.join(' ・ '));
+    // 左の印は例外（再確認△橙・対策済み✓）だけ、題名の先頭に小さく。未対応はこのリストにあること自体が状態なので印を置かない（読み上げには状態語を残す）
+    const mark = x.isDone ? icon('circle-check', 'st') : x.reopened ? icon('alert-triangle', 'st') : null;
     const row = el('button', { type: 'button', class: 'task-row' + (x.isDone ? ' is-done' : '') + (x.reopened ? ' is-recheck' : ''), 'aria-expanded': 'false', 'aria-controls': panelId },
-      statusShape(x),
-      el('span', { class: 'row-main' }, el('span', { class: 'row-title' }, title), meta),
-      // 未対応は○の形だけ（タグを並べると段Aと競合する）。読み上げには状態語を残す。再確認・対策済みは文字も出す
+      el('span', { class: 'row-main' }, el('span', { class: 'row-title' }, mark, title), meta),
       el('span', { class: 'row-status' }, x.isDone || x.reopened ? tagFor(x) : el('span', { class: 'sr-only' }, '未対応'), icon('chevron-down', 'chev')));
     const panel = el('div', { class: 'task-panel', id: panelId, hidden: true });
     panel.append(el('p', { class: 'reason' }, x.card.reason));
