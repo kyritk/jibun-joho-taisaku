@@ -249,26 +249,6 @@
   };
 
   // ---------- 全体像の部品（docs/ux-overview-research.md §4）
-  // 工程バー（段B）：全部で3つ「1 選ぶ／2 確かめる／3 対策する」。どの画面も1行の小型。現在だけ黒太字。矢印は使わない
-  // cur: 1〜3。trail: 右端に添える文字（やること画面の「22件中 1件 済み」など）
-  function journeyNode(cur, s, trail) {
-    const steps = [
-      { n: 1, label: '選ぶ', href: '#/services' },
-      { n: 2, label: '確かめる', href: '#/status' },
-      { n: 3, label: '対策する', href: '#/todo' },
-    ];
-    const ol = el('ol', { class: 'journey', 'aria-label': '全部で3つの工程' });
-    steps.forEach((st, i) => {
-      const isCur = st.n === cur;
-      const isDone = !isCur && (st.n < cur || (st.n === 3 && s.total && !s.open) || (st.n === 1 && selected.size > 0) || (st.n === 2 && cur === 0 && selected.size > 0));
-      const dot = el('span', { class: 'dot', 'aria-hidden': 'true' }, isDone ? icon('check') : String(st.n));
-      ol.append(el('li', { class: isCur ? 'cur' : isDone ? 'done' : '', 'aria-current': isCur ? 'step' : null },
-        el('a', { href: st.href }, dot, el('span', { class: 'lbl' }, st.label), isCur ? el('span', { class: 'sr-only' }, '（いまここ）') : null)));
-      if (i < 2) ol.append(el('li', { class: 'sep', 'aria-hidden': 'true' }, '—'));
-    });
-    if (trail) ol.append(el('li', { class: 'trail' }, trail));
-    return ol;
-  }
   // ホームの状態の箱の下の1行（段C）：内訳の数字。それぞれ押せる
   function metaLine(s, onIncidents) {
     const svc = el('a', { href: '#/status?go=sec-svc' }, `選んだサービス ${selected.size}`);
@@ -351,7 +331,6 @@
       return wrap;
     }
 
-    wrap.append(journeyNode(0, s));
     if (s.open > 0) {
       // 段A：状態の箱（1画面に1つ）。見出し＋残り件数（最大の数字）＋主ボタン。内訳は段Cの1行
       wrap.append(el('section', { class: 'hero todo', 'aria-labelledby': 'h1' },
@@ -448,7 +427,6 @@
       wrap.append(el('h1', null, 'いまの状況'), el('div', { class: 'hero start' }, el('p', null, 'まず、使っているサービスを選んでください。'), el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: '#/services' }, 'サービスを選ぶ'))));
       return wrap;
     }
-    wrap.append(journeyNode(2, s, s.total ? `${s.total}件中 ${s.total - s.open}件 済み` : 'やること 0件'));
     const types = typeSummary(s);
     const pubSvc = [...selected].filter((id) => (incidentsByService[id] || []).some((i) => i.status !== 'denied'));
     const noPub = [...selected].filter((id) => !pubSvc.includes(id)).map((id) => svcById[id]).sort((a, b) => (a.popular_rank || 99) - (b.popular_rank || 99));
@@ -528,7 +506,6 @@
       wrap.append(el('h1', null, 'やること'), el('div', { class: 'hero start' }, el('p', null, 'まず、使っているサービスを選んでください。'), el('div', { class: 'btn-row' }, el('a', { class: 'btn', href: '#/services' }, 'サービスを選ぶ'))));
       return wrap;
     }
-    wrap.append(journeyNode(3, s, s.total ? `${s.total}件中 ${s.total - s.open}件 済み` : null));
     const h1 = el('h1', { tabindex: '-1', class: 'sr-only' }, 'やること');
     wrap.append(h1);
     if (!s.total) wrap.append(el('p', { class: 'caption' }, '選んだサービスについて、公表された漏洩は今のところありません。'));
@@ -689,7 +666,6 @@
   }
   function viewServices() {
     const wrap = el('div', { class: 'wrap' });
-    wrap.append(journeyNode(1, summary(), false));
     wrap.append(el('h1', null, '使っているサービスを選ぶ'), el('p', { class: 'caption' }, '使っているものをすべて選んでください。あとから変えられます。'));
 
     // 検索
@@ -852,9 +828,20 @@
     app.append(fn());
     document.title = TITLES[view] || TITLES[''];
     const current = VIEWS[view] ? view : '';
+    // タブ＝工程。済んだ工程（1・2＝サービスを選んだ、3＝全部済み）は番号の丸を✓に
+    const s = summary();
+    const stepDone = { services: selected.size > 0, status: selected.size > 0, todo: !!(s.total && !s.open) };
+    const stepNo = { services: 1, status: 2, todo: 3 };
     for (const a of document.querySelectorAll('nav.primary a, header a.gear')) {
       const target = (a.getAttribute('href').split('#')[1] || '').replace(/^\//, '');
       if (target === current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      if (!a.classList.contains('step')) continue;
+      const d = !!stepDone[target];
+      a.classList.toggle('done', d);
+      const n = a.querySelector('.n');
+      if (n) { clear(n); n.append(d ? icon('check') : String(stepNo[target] || '')); }
+      const sr = a.querySelector('.sr-done');
+      if (d && !sr) a.append(el('span', { class: 'sr-only sr-done' }, '（済み）')); else if (!d && sr) sr.remove();
     }
     // #/画面?go=<要素id>：その要素まで送る（折りたたみの中なら開く）。いまの状況 → やることの種別、ホーム → いまの状況の区画
     const go = (location.hash.split('?')[1] || '').match(/(?:^|&)go=([a-z0-9_-]+)/i);

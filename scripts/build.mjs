@@ -106,8 +106,9 @@ const CSP = [
 function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '' }) {
   const fullTitle = title ? `${title}｜${SITE_NAME}` : SITE_NAME;
   // タブは工程順（ホーム → 1 サービス → 2 いまの状況 → 3 やること）。設定は右上の歯車（文字なし、aria-label）
-  const nav = [['', 'ホーム', 'home'], ['services', 'サービス', 'layout-grid'], ['status', 'いまの状況', 'table'], ['todo', 'やること', 'list-check']]
-    .map(([k, label, ic]) => `<a href="${rel}#/${k}"${current === k && withApp ? ' aria-current="page"' : ''}>${icon(ic)}${label}</a>`).join('');
+  // 2〜4番目は工程（矢印形のタブ。左上に番号の丸、済んだ工程は app.js が✓に変える）
+  const nav = [['', 'ホーム', 'home', 0], ['services', 'サービス', 'layout-grid', 1], ['status', 'いまの状況', 'table', 2], ['todo', 'やること', 'list-check', 3]]
+    .map(([k, label, ic, n]) => `<a href="${rel}#/${k}"${n ? ' class="step"' : ''}${current === k && withApp ? ' aria-current="page"' : ''}>${n ? `<span class="n" aria-hidden="true">${n}</span><span class="sr-only">工程${n}：</span>` : ''}${icon(ic)}${label}</a>`).join('');
   return `<!doctype html>
 <html lang="ja">
 <head>
