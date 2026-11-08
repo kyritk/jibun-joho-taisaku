@@ -65,6 +65,8 @@ button { font: inherit; letter-spacing: inherit; color: inherit; }
 .small { font-size: .875rem; line-height: 1.5; }
 .fine { font-size: var(--fs-5); line-height: 1.5; color: var(--text-2); }
 .caption { font-size: var(--fs-4); line-height: 1.5; color: var(--text-2); }
+.trust { margin: 0 0 var(--s-3); }
+.static h2 svg.icon { width: 1.25rem; height: 1.25rem; vertical-align: -.2em; margin-right: .3em; }
 [hidden] { display: none !important; }
 .wrap { max-width: 720px; margin: 0 auto; padding: 0 var(--s-4); }
 

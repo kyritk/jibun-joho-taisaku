@@ -63,3 +63,18 @@ jobs:
             sleep 10
           done
           echo "security.txt が配信されていない"; exit 1
+      - name: IndexNow に sitemap の URL を通知（Bing 系の検索エンジン。失敗しても配置は成功扱い）
+        continue-on-error: true
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          node --input-type=module - <<'EOF'
+          const site = process.env.PAGE_URL.replace(/\/?$/, '/');
+          const key = (await (await fetch(site + 'indexnow-key.txt')).text()).trim();
+          const xml = await (await fetch(site + 'sitemap.xml')).text();
+          const urlList = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+          const body = { host: new URL(site).host, key, keyLocation: site + 'indexnow-key.txt', urlList };
+          const r = await fetch('https://api.indexnow.org/indexnow', { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8' }, body: JSON.stringify(body) });
+          console.log(`IndexNow: HTTP ${r.status}, ${urlList.length} URLs`);
+          if (r.status >= 400) process.exit(1);
+          EOF

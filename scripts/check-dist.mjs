@@ -27,15 +27,16 @@ for (const f of htmlFiles) {
   const ATTRS = String.raw`((?:[^>"']|"[^"]*"|'[^']*')*)`;
   for (const m of html.matchAll(new RegExp(String.raw`<script\b${ATTRS}>`, 'gi'))) {
     const attrs = m[1];
-    const isData = /\btype\s*=\s*"application\/json"/i.test(attrs);
+    const isData = /\btype\s*=\s*"application\/(?:ld\+)?json"/i.test(attrs); // データブロック（埋め込みデータ・JSON-LD）は実行されない
     const hasSrc = /\bsrc\s*=/i.test(attrs);
     if (!isData && !hasSrc) errors.push(`${rel}: inline script がある (${attrs.trim()})`);
     if (hasSrc && /\bsrc\s*=\s*["']?(https?:)?\/\//i.test(attrs)) errors.push(`${rel}: 外部スクリプト (${attrs.trim()})`);
     if (hasSrc && !/\bintegrity\s*=\s*"sha384-/.test(attrs)) errors.push(`${rel}: integrity の無いスクリプト (${attrs.trim()})`);
   }
   // 埋め込みデータは JSON として読める（エスケープの誤りでアプリが白紙にならない）
-  for (const m of html.matchAll(/<script id="data" type="application\/json">([\s\S]*?)<\/script>/g)) {
+  for (const m of html.matchAll(/<script(?: id="data")? type="application\/(?:ld\+)?json">([\s\S]*?)<\/script>/g)) {
     try { JSON.parse(m[1]); } catch (e) { errors.push(`${rel}: 埋め込み JSON が読めない（${e.message}）`); }
+    if (m[1].includes('<')) errors.push(`${rel}: 埋め込み JSON に < がそのまま入っている`);
   }
   // 外部のスタイル・画像・フォント・音声・動画・iframe
   for (const m of html.matchAll(new RegExp(String.raw`<(link|img|iframe|embed|object|source|video|audio|track|image|use)\b${ATTRS}>`, 'gi'))) {

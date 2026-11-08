@@ -16,6 +16,10 @@ const SITE_URL = opt('--site-url', 'https://kyritk.github.io/jibun-joho-taisaku/
 const SITE_NAME = 'じぶんの情報対策';
 const TAGLINE = 'サービスの情報漏洩と、やること確認。';
 const REPO_URL = 'https://github.com/kyritk/jibun-joho-taisaku';
+const APPROVER = 'Kyri'; // 事案を目視承認する運営者（署名として全ページのフッターに出す）
+// IndexNow の鍵（秘密ではない。鍵ファイルを公開し、通知の keyLocation で場所を示す。deploy.yml が配置後に送信する）
+const INDEXNOW_KEY = '57363fb7a3b58dfeba823579a3268f45';
+const TRUST_LINE = 'このサイトはメールもSMSも送りません。入力欄はありません。';
 
 const read = (p) => JSON.parse(fs.readFileSync(path.join(root, p), 'utf8'));
 // Subresource Integrity：app.css / app.js の内容ハッシュを HTML に埋め、配信経路での改ざんをブラウザに検出させる（T2）
@@ -114,8 +118,24 @@ const CSP = [
   'upgrade-insecure-requests',
 ].join('; ');
 
-function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '' }) {
+// 構造化データ（JSON-LD）。実行されないデータブロックなので CSP の script-src には当たらない。< は \u003c に置き換える
+const ldJson = (obj) => `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
+const PUBLISHER = { '@type': 'Organization', name: SITE_NAME, url: SITE_URL, logo: { '@type': 'ImageObject', url: SITE_URL + 'icon-512.png', width: 512, height: 512 } };
+const AUTHOR = { '@type': 'Person', name: APPROVER, url: SITE_URL + 'about.html' };
+const breadcrumb = (items) => ({ '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: items.map(([name, u], i) => ({ '@type': 'ListItem', position: i + 1, name, item: SITE_URL + u })) });
+const article = ({ headline, description, url, published, modified }) => ({
+  '@context': 'https://schema.org', '@type': 'Article', headline, description, inLanguage: 'ja', isAccessibleForFree: true,
+  mainEntityOfPage: SITE_URL + url, datePublished: published, dateModified: modified, author: AUTHOR, publisher: PUBLISHER, image: SITE_URL + 'icon-512.png',
+});
+
+function page({ rel, title, description, body, canonical, withApp = false, dataJson = null, current = '', ogType = 'website', jsonLd = [], trust = false }) {
   const fullTitle = title ? `${title}｜${SITE_NAME}` : SITE_NAME;
+  const pageUrl = canonical !== undefined ? SITE_URL + canonical : null;
+  // OGP と Twitter カード（共有時の題名・説明・アイコン）。画像は自前のアイコンだけ
+  const og = [
+    ['og:type', ogType], ['og:site_name', SITE_NAME], ['og:locale', 'ja_JP'], ['og:title', fullTitle], ['og:description', description],
+    ...(pageUrl ? [['og:url', pageUrl]] : []), ['og:image', SITE_URL + 'icon-512.png'], ['og:image:width', '512'], ['og:image:height', '512'],
+  ].map(([p, c]) => `<meta property="${p}" content="${esc(c)}">`).join('\n');
   // タブは工程順（ホーム → 1 サービス → 2 いまの状況 → 3 やること）。設定は右上の歯車（文字なし、aria-label）
   // 2〜4番目は工程（矢印形のタブ。左上に番号の丸、済んだ工程は app.js が✓に変える）
   const nav = [['', 'ホーム', 'home', 0], ['services', 'サービス', 'layout-grid', 1], ['status', 'いまの状況', 'table', 2], ['todo', 'やること', 'list-check', 3]]
@@ -132,6 +152,10 @@ function page({ rel, title, description, body, canonical, withApp = false, dataJ
 <title>${esc(fullTitle)}</title>
 <meta name="description" content="${esc(description)}">
 ${canonical !== undefined ? `<link rel="canonical" href="${esc(SITE_URL + canonical)}">` : ''}
+<meta name="robots" content="max-image-preview:large">
+${og}
+<meta name="twitter:card" content="summary">
+${jsonLd.map(ldJson).join('\n')}
 <link rel="stylesheet" href="${rel}app.css" integrity="${SRI.css}">
 <link rel="icon" href="${rel}icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="${rel}icon-180.png">
@@ -147,14 +171,14 @@ ${SPRITE}
   </div>
 </header>
 <main${withApp ? ' id="app"' : ' class="static"'}>
-${withApp ? '' : `<div class="wrap">${body}</div>`}
+${withApp ? '' : `<div class="wrap">${trust ? `<p class="caption trust">${esc(TRUST_LINE)}</p>` : ''}${body}</div>`}
 </main>
 ${withApp ? `<noscript><div class="wrap"><div class="banner info">${icon('info-circle')}<div><p>この画面にはJavaScriptが必要です。JavaScriptを使わずに読める <a href="${rel}incidents/">事案の一覧</a> もあります。</p></div></div></div></noscript>` : ''}
 <footer>
   <div class="wrap">
-    <nav aria-label="困ったとき・このサイトについて"><a href="${rel}#/settings">家族に見せる</a><a href="${rel}#/help">相談窓口</a><a href="${rel}faq.html">よくある質問</a><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
+    <nav aria-label="困ったとき・このサイトについて"><a href="${rel}#/settings">家族に見せる</a><a href="${rel}#/help">相談窓口</a><a href="${rel}faq.html">よくある質問</a><a href="${rel}about.html">このサイトについて</a><a href="${rel}privacy.html">プライバシー</a><a href="${rel}incidents/">すべての事案</a><a href="${rel}guide/">漏れたらやること</a><a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正・追加の依頼</a><a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">ソースコード</a></nav>
     <p><b>ご注意</b>：会社が公表した事実と、公的機関が勧める対処をまとめています。あなたが対象かは各社からの連絡でご確認ください。網羅性・即時性は保証しません。</p>
-    <p class="caption">データ生成日 ${esc(today)}</p>
+    <p class="caption">運営・承認：${esc(APPROVER)} ・ <a href="${rel}about.html">このサイトについて</a> ・ データ生成日 ${esc(today)}</p>
   </div>
 </footer>
 ${dataJson ? `<script id="data" type="application/json">${dataJson}</script>` : ''}
@@ -223,7 +247,15 @@ function incidentPage(inc) {
   const list = cardsFor(inc);
   const short = inc.service_name.replace(/（.*?）/g, '').trim() || inc.service_name;
   const title = `${short}の情報漏洩`;
-  const description = `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏洩${inc.status === 'suspected' ? 'のおそれ' : ''}について、漏れたとされる情報と、利用者がやることを公的機関の根拠つきでまとめています。`;
+  const pageTitle = denied ? `${title}｜公表の経過` : `${title}｜利用者がやること・公式発表の経過`;
+  const typeWords = mainTypes.map((k) => INFO_LABEL[k] || k).slice(0, 4).join('・');
+  const description = denied
+    ? `${inc.operator}が公表した${inc.service_name}の情報漏洩は、その後「漏洩はなかった」と公表されました。公式発表の経過をまとめています。`
+    : `${inc.operator}が${fmtDate(first.date)}に公表した${inc.service_name}の情報漏洩${inc.status === 'suspected' ? 'のおそれ' : ''}。漏れたとされる情報（${typeWords || '公表内容を参照'}）、利用者がやること、${short}を名乗るメール・SMSへの注意、公式窓口、公表の経過を公的機関の根拠つきでまとめています。`;
+  const jsonLd = [
+    article({ headline: `${title}｜利用者がやること`, description, url: `incidents/${inc.id}/`, published: inc.first_published, modified: inc.last_updated }),
+    breadcrumb([['ホーム', ''], ['すべての事案', 'incidents/'], [title, `incidents/${inc.id}/`]]),
+  ];
 
   let b = `<div class="inc-head">${avatarHtml(svcById[inc.service_ids[0]])}<div class="ttl"><h1>${esc(title)}</h1><span class="sub"><span class="tag ${esc(inc.status)}">${STATUS_LABEL[inc.status]}</span> 公表 ${fmtDate(first.date)}・最終更新 ${fmtDate(inc.last_updated)}${inc._approved === false ? ' <span class="tag neutral">下書き</span>' : ''}</span></div></div>
 <p>${esc(operatorShort)}が${fmtDate(first.date)}に、${esc(inc.service_name)}の${esc(STATUS_SUB[inc.status])}。${denied ? 'やることはありません。' : '<b>あなたが対象かは、会社からの連絡でご確認ください。</b>'}</p>
@@ -242,6 +274,7 @@ function incidentPage(inc) {
     b += '<h2 id="todo" tabindex="-1">やること</h2><ol class="task-list">';
     let currentType = null;
     list.forEach((x, i) => {
+      if (i === 0) b += `<li class="type-head">${icon('mail-x')}${esc(short)}を名乗るメール・SMSが来たら</li>`;
       if (x.infoType !== currentType) {
         currentType = x.infoType;
         if (currentType) b += `<li class="type-head">${icon(currentType.icon)}${esc(currentType.label)}が漏れたとき${currentType.needs_research ? ' <span class="tag neutral">根拠を調査中</span>' : ''}</li>`;
@@ -275,7 +308,46 @@ function incidentPage(inc) {
   }
   b += '</ul>';
   b += `<p class="caption">企業の公式発表から事実項目だけを整理しています。誤りは <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正の依頼</a> からお知らせください。</p>`;
-  return page({ rel, title, description, body: b, canonical: `incidents/${inc.id}/` });
+  return page({ rel, title: pageTitle, description, body: b, canonical: `incidents/${inc.id}/`, ogType: 'article', jsonLd, trust: true });
+}
+
+// ---------- 常緑ページ：情報の種類別の「やること」。事案名を知らない人の入口で、各種類から事案ページへつなぐ
+function guidePage() {
+  const rel = '../';
+  const where = 'guide';
+  const tpl = (s) => s.replace('{service}', 'そのサービス').replace('{services}', '会社');
+  const cardLi = (card, n) => {
+    let s = `<li class="task-item"><div class="task-row">${icon('ring', 'st')}<div class="row-main"><div class="row-title">${n}. ${esc(tpl(card.title))}</div><div class="row-meta">約${esc(card.minutes)}分</div></div></div>`;
+    s += `<div class="task-panel"><p class="reason">${esc(card.reason)}</p>${howHtml(card)}`;
+    if (card.contact) s += contactHtml(card.contact, where);
+    for (const k of card.contact_list || []) s += contactHtml(k, where);
+    return s + sourcesHtml(card.sources, where) + '<p class="caption note">※画面や手順は、機種やアプリの版によって異なります。</p></div></li>';
+  };
+  const shortName = (inc) => inc.service_name.replace(/（.*?）/g, '').trim() || inc.service_name;
+  const incsFor = (t) => incidents.filter((inc) => inc.status !== 'denied' && inc.leaked_info_types.some((k) => t.matches.includes(k) && !(k in (inc.limited_info_types || {}))));
+  const title = '個人情報が漏れたらやること';
+  const description = 'ID・パスワード、クレジットカード番号、本人確認書類の画像、銀行口座、マイナンバーなど、漏れた情報の種類ごとに利用者がやることを、IPA・警視庁の案内をもとにまとめました。会社名で探せる事案ページへの入口です。';
+  let b = `<h1>${esc(title)}</h1>
+<p>会社から「個人情報が漏洩した（おそれがある）」と知らされたら、漏れた情報の種類に応じて、やることが決まります。ここでは種類ごとに、公的機関（IPA・警視庁・政府広報）が勧める対処をまとめています。<b>あなたが対象かは、会社からの連絡でご確認ください。</b></p>
+<p class="caption">会社名が分かっている方は <a href="${rel}incidents/">公表された情報漏洩の一覧</a> から、その会社のページをご覧ください。使っているサービスを選ぶと、関係ある事案とやることだけが揃います：<a href="${rel}#/services">サービスを選ぶ</a></p>
+<nav class="toc" aria-label="目次"><h2 class="sec">目次</h2><ul class="toc-list"><li><a href="#first">会社を名乗るメール・SMSが来たら</a></li>${infoTypesSorted.map((t) => `<li><a href="#t-${esc(t.key)}">${esc(t.label)}が漏れたとき</a></li>`).join('')}</ul></nav>`;
+  b += `<h2 id="first" tabindex="-1">会社を名乗るメール・SMSが来たら</h2><p class="caption">どの情報が漏れた場合でも、最初にこれだけは守ってください。</p><ol class="task-list">${cardLi(cards.always_first_card, 1)}</ol>`;
+  for (const t of infoTypesSorted) {
+    b += `<h2 id="t-${esc(t.key)}" tabindex="-1">${icon(t.icon)}${esc(t.label)}が漏れたとき${t.needs_research ? ' <span class="tag neutral">根拠を調査中</span>' : ''}</h2><ol class="task-list">`;
+    t.cards.forEach((c, i) => { b += cardLi(c, i + 1); });
+    if (t.skip_if && t.skip_if.length) b += `<li class="skip-note"><b>しなくてよい</b><span>${t.skip_if.map(esc).join('<br>')}</span></li>`;
+    b += '</ol>';
+    const incs = incsFor(t);
+    b += incs.length
+      ? `<p class="small">この情報が漏れたと公表された事案：${incs.map((inc) => `<a href="${rel}incidents/${esc(inc.id)}/">${esc(shortName(inc))}</a>`).join('、')}</p>`
+      : '<p class="small muted">この情報が漏れたと公表された事案は、いまのところ掲載していません。</p>';
+  }
+  b += `<p class="caption">根拠：${Object.values(cards.sources).map((s) => s.url ? ext(s.url, s.title, where, { allowMedia: true }) : esc(s.title)).join('、')}。企業の公式発表と公的機関の案内から事実項目だけを整理しています。誤りは <a href="${REPO_URL}/issues/new/choose" target="_blank" rel="noopener noreferrer">訂正の依頼</a> からお知らせください。</p>`;
+  const jsonLd = [
+    article({ headline: title, description, url: 'guide/', published: cards.updated || today, modified: today }),
+    breadcrumb([['ホーム', ''], [title, 'guide/']]),
+  ];
+  return page({ rel, title, description, body: b, canonical: 'guide/', ogType: 'article', jsonLd, trust: true });
 }
 
 function incidentIndexPage() {
@@ -311,6 +383,18 @@ function aboutPage() {
 <li>事案：企業の公式発表（プレスリリース・お知らせページ）だけを根拠にし、開発者が目視で照合したものだけを公開します。まとめサイトの文章は転載しません。</li>
 <li>やること：${Object.values(cards.sources).map((s) => s.url ? ext(s.url, s.title, 'about', { allowMedia: true }) : esc(s.title)).join('、')}</li>
 <li>電話番号・URL：公的機関と企業の公式ページで確認したものだけを表示します。企業の通知メールに書かれたリンクや番号は転記しません。</li>
+</ul>
+<h2>掲載する事案の基準</h2>
+<ul>
+<li>会員1万人以上の消費者向けサービス、または、クレジットカード・パスワード・本人確認書類・銀行口座のいずれかを含む事案で、企業が公式に発表したもの。</li>
+<li>「漏洩」と「漏洩のおそれ」を区別して表示します。企業が後から否定した事案は「漏洩なしと公表」として残し、取り下げの経緯も見えるようにします。</li>
+<li>速報性より正確性を優先します。公式発表を運営者（${esc(APPROVER)}）が目視で照合してから公開するため、公表から掲載まで数日かかることがあります。全事案は網羅していません。</li>
+</ul>
+<h2>運営者と作り方</h2>
+<ul>
+<li>運営・承認：${esc(APPROVER)}（個人）。企業・団体からの資金提供や広告は受けていません。</li>
+<li>事案の構造化の下書きには生成AIを使うことがありますが、公開するものはすべて運営者が公式発表と照合して承認します。利用者のデータをAIに渡すことはありません。</li>
+<li>訂正の記録：掲載内容の変更はすべて <a href="${REPO_URL}/commits/main" target="_blank" rel="noopener noreferrer">変更履歴（GitHub）</a> に残ります。削除ではなく、公式発表に基づく訂正として反映します。</li>
 </ul>
 <h2>本物のURL</h2>
 <p>本物のURLは <b>${esc(SITE_URL)}</b> だけです。独自ドメインは持っていません。似た名前の別サイトや、このサイトを名乗るメールにご注意ください。</p>
@@ -432,6 +516,8 @@ write('privacy.html', privacyPage());
 write('faq.html', faqPage());
 write('404.html', notFoundPage());
 write('incidents/index.html', incidentIndexPage());
+write('guide/index.html', guidePage());
+write('indexnow-key.txt', INDEXNOW_KEY);
 for (const inc of incidents) write(`incidents/${inc.id}/index.html`, incidentPage(inc));
 write('app.css', APP_CSS);
 write('app.js', APP_JS);
@@ -458,7 +544,7 @@ write('manifest.webmanifest', JSON.stringify({
 }, null, 2));
 write('robots.txt', `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}sitemap.xml\n`);
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-  [['', today], ['about.html', today], ['privacy.html', today], ['faq.html', today], ['incidents/', today], ...incidents.map((i) => [`incidents/${i.id}/`, i.last_updated])]
+  [['', today], ['about.html', today], ['privacy.html', today], ['faq.html', today], ['incidents/', today], ['guide/', today], ...incidents.map((i) => [`incidents/${i.id}/`, i.last_updated])]
     .map(([u, d]) => `  <url><loc>${esc(SITE_URL + u)}</loc><lastmod>${d}</lastmod></url>`).join('\n') + '\n</urlset>\n');
 write('.nojekyll', '');
 console.log(`built ${path.relative(root, outDir)}: incidents ${incidents.length}${includeDrafts ? ' (including drafts)' : ''}, site ${SITE_URL}`);
