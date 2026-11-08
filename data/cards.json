@@ -369,7 +369,7 @@
       "needs_research": false,
       "urgency": 1,
       "icon": "id",
-      "chip_label": "本人確認書類の画像"
+      "chip_label": "本人確認書類"
     },
     {
       "key": "bank_account",
