@@ -3,7 +3,8 @@
 //   省略     : git 追跡中の全ファイルを見る（CI で実行）
 // 見るもの：秘密情報（トークン・秘密鍵）、端末のパスやユーザー名、メールアドレス、プライベートIP、
 //          公開文書の「未完了」項目（SECURITY.md / docs/threat-model.md / CLAUDE.md は完了したことだけを書く）、
-//          .private-terms（git 管理外。絶対に公開しない語を1行1つで書く）に載っている語。
+//          .private-terms（git 管理外。絶対に公開しない語を1行1つで書く）に載っている語、
+//          private/ 配下（非公開リポジトリの clone。公開しない計画・調査・未完了項目を置く）。
 // Node 標準ライブラリのみ。違反があれば exit 1。
 import fs from 'node:fs';
 import path from 'node:path';
@@ -54,6 +55,7 @@ const errors = [];
 for (const f of files) {
   if (SKIP.has(f) || f === 'scripts/check-repo.mjs') continue;
   if (/^\.private-terms$|(^|\/)id_(rsa|ed25519|ecdsa)|\.(pem|key|p12|pfx)$|^\.env/.test(f)) { errors.push(`${f}: このファイルは公開リポジトリに入れない`); continue; }
+  if (/^private(\/|$)/.test(f)) { errors.push(`${f}: private/ は非公開リポジトリ。公開リポジトリにはコミットしない（docs/disclosure-research.md）`); continue; }
   let buf;
   try { buf = content(f); } catch { continue; }
   if (!isText(buf)) continue;
