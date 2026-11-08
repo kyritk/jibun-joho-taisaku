@@ -14,7 +14,7 @@ const includeDrafts = args.includes('--include-drafts');
 const outDir = path.resolve(root, opt('--out', 'dist'));
 const SITE_URL = opt('--site-url', 'https://kyritk.github.io/jibun-joho-taisaku/');
 const SITE_NAME = 'じぶんの情報対策';
-const TAGLINE = '使っているサービスの漏洩と、やることだけ。';
+const TAGLINE = 'サービスの情報漏洩と、やること確認。';
 const REPO_URL = 'https://github.com/kyritk/jibun-joho-taisaku';
 
 const read = (p) => JSON.parse(fs.readFileSync(path.join(root, p), 'utf8'));

@@ -7,7 +7,7 @@ REPO="${REPO:-jibun-joho-taisaku}"
 
 echo "1/5 公開リポジトリを作成（Pages 無料プランの条件）"
 gh repo create "$OWNER/$REPO" --public --source=. --remote=origin \
-  --description "じぶんの情報対策 — 使っているサービスの漏洩と、やることだけ"
+  --description "じぶんの情報対策 — サービスの情報漏洩と、やること確認"
 
 echo "2/5 GitHub Pages を Actions 配信で有効化（push より先に行う。deploy ワークフローが configure-pages で失敗しないように）"
 gh api -X POST "repos/$OWNER/$REPO/pages" -f build_type=workflow >/dev/null || \
